@@ -1,0 +1,39 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Notebook and runtime files
+.ipynb_checkpoints/
+*.log
+
+# Client and generated data stay local
+data/**
+!data/README.md
+!data/raw/
+data/raw/**
+!data/raw/README.md
+
+# Generated artefacts
+outputs/
+models/
+reports/generated/
