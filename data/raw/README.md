@@ -4,7 +4,7 @@ The private team repository tracks only source inputs that are directly required
 
 The tracked sources are:
 
-- `Ped_iRAP_merged.csv`, the compact client-derived target source used to check most site targets in `../processed/model_dataset.csv`;
+- `Ped_iRAP_merged.csv`, the compact client-derived target source used to check most site targets in `../processed/model_dataset.xlsx`;
 - `Road_Network.csv`, used to resolve Road Number and SLK intervals;
 - `AusRAP Data - Words - MSDS.xlsx`, used for road-segment matching and retained road attributes.
 
