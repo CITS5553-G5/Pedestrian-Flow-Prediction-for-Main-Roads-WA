@@ -7,7 +7,7 @@ This directory is versioned in the private team repository. It contains only the
 - `raw/` contains the curated client/source inputs used for target checking, road matching and AusRAP feature linkage. Treat tracked source files as immutable.
 - `external_raw/` contains dated snapshots of external/public datasets used by the feature pipeline. Preserve the source date and provider path.
 - `processed/` contains approved, reproducible project datasets. `model_dataset.csv` and `model_dataset.xlsx` are the current 49-site modelling foundation.
-- `templates/` contains the blank batch-input and prediction-output schemas in CSV and Excel form.
+- `templates/` contains the Excel-only batch-input and prediction-output workbooks used by the project workflow.
 - `work/`, `cache/` and `tmp/` are local scratch areas and are excluded from Git.
 
 The 147 macro-enabled observation workbooks are not routine project inputs because their site-level results have already been consolidated. They remain in approved archival storage outside the current Git tree and are needed only if the target aggregation must be independently reconstructed. Candidate datasets that have not been selected for the model are also excluded until a documented pipeline uses them.
@@ -46,7 +46,5 @@ Do not place API keys, access tokens, downloaded street imagery, fitted models, 
 
 ### Batch and output templates
 
-- `templates/batch_input.csv` — blank machine-readable schema for submitting new locations to the prediction pipeline or API.
-- `templates/batch_input.xlsx` — human-entry companion for batch locations, with Metadata first and the blank input table second.
-- `templates/prediction_output.csv` — blank machine-readable prediction and Dashboard output schema.
-- `templates/prediction_output.xlsx` — human-readable prediction-output companion with Metadata first and the blank result table second.
+- `templates/batch_input.xlsx` — authoritative Excel input template for new locations, with Metadata first and the blank input table second.
+- `templates/prediction_output.xlsx` — authoritative Excel prediction and Dashboard-output template, with Metadata first and the blank result table second.

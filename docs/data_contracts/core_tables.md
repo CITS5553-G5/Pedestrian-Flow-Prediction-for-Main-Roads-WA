@@ -1,18 +1,18 @@
 # Core table data contract
 
-This document defines the three flat tables used by the pedestrian-flow project. Each table has a CSV form for code/API use and an Excel companion for people. Every Excel workbook has exactly two worksheets: `Metadata` first and the flat data table second.
+This document defines the three flat tables used by the pedestrian-flow project. The model dataset retains matching CSV and Excel forms; batch input and prediction output use Excel only. Every Excel workbook has exactly two worksheets: `Metadata` first and the flat data table second.
 
 ## Files and Git policy
 
 | Logical table | CSV | Excel | Git treatment |
 |---|---|---|---|
 | Model dataset | `data/processed/model_dataset.csv` | `data/processed/model_dataset.xlsx` | Both tracked in the authorised private team repository |
-| Batch input | `data/templates/batch_input.csv` | `data/templates/batch_input.xlsx` | Both blank templates are tracked |
-| Prediction output | `data/templates/prediction_output.csv` | `data/templates/prediction_output.xlsx` | Both blank templates are tracked |
+| Batch input | — | `data/templates/batch_input.xlsx` | Authoritative blank Excel template is tracked |
+| Prediction output | — | `data/templates/prediction_output.xlsx` | Authoritative blank Excel template is tracked |
 
 The private repository is the authorised team workspace for the curated source inputs and the 49-row model dataset. Only sources directly required by the current target-checking, feature or spatial-linkage workflow are tracked; the 147 original survey workbooks and unselected candidate datasets remain outside the current Git tree. All retained files are stored in ordinary Git, so Git LFS is not required. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
 
-The model dataset, two empty CSV/Excel template pairs and this contract are intended for private Git sharing. Do not add example records to the templates because examples can be mistaken for real API requests or results. Generated prediction files should be committed only when the team deliberately treats them as an approved project dataset rather than a disposable run artefact.
+The model dataset, two empty Excel templates and this contract are intended for private Git sharing. Do not add example records to the templates because examples can be mistaken for real requests or results. Generated prediction workbooks should be committed only when the team deliberately treats them as an approved project dataset rather than a disposable run artefact.
 
 ## 1. Model dataset
 
@@ -53,7 +53,7 @@ Primary model development may use all 49 rows. Because two target values were co
 
 ## 2. Batch input
 
-`batch_input.csv` is the only table a client or dashboard upload process should populate manually. One row represents one requested location.
+`batch_input.xlsx` is the only workbook a user or dashboard upload process should populate manually. One row in `Batch_Input` represents one requested location.
 
 | Column | Type | Required | Definition |
 |---|---|---:|---|
@@ -68,7 +68,7 @@ Primary model development may use all 49 rows. Because two target values were co
 
 ## 3. Prediction output
 
-`prediction_output.csv` is one row per processed batch-input record. It is the download/API table and the tabular source for the dashboard.
+`prediction_output.xlsx` contains one row per processed batch-input record in `Prediction_Output`. It is the generated result workbook and the tabular source for the dashboard.
 
 | Column | Type | Required | Definition |
 |---|---|---:|---|
@@ -113,15 +113,15 @@ With the current small sample, the planned primary evaluation is grouped/spatial
 
 After model selection and honest out-of-fold evaluation, the selected deployment pipeline may be refitted on all approved observation sites. New batch-input locations are inference records, not additional training observations unless real survey targets are later collected and quality checked.
 
-## CSV conventions
+## Model dataset CSV conventions
 
 - UTF-8 encoding, comma delimiter and one header row.
-- One row is one site/request/result; no merged cells or multi-row headings.
+- One row is one observed site; no merged cells or multi-row headings.
 - Empty fields represent missing/not applicable values; do not use sentinel numbers such as `-999`.
 - Units are encoded in column names where material.
 - Identifiers are strings and must not be interpreted as measurements.
-- Schema changes require updating this document and, for prediction output, incrementing `feature_schema_version` where applicable.
+- Model-dataset schema changes require updating this document and keeping the CSV and Excel copies aligned.
 
 ## Excel conventions
 
-The first worksheet is `Metadata` and explains purpose, use, sharing status and every field. The second worksheet preserves the exact CSV headers and column order. The Excel files do not introduce training splits, calculations, hidden feature columns or dashboard-only formatting. Code should continue to treat the CSV schema as authoritative; the Excel files are human-friendly entry and review companions.
+The first worksheet is `Metadata` and explains purpose, use, sharing status and every field. The second worksheet contains the flat table with the documented headers and column order. The Excel files do not introduce training splits, calculations, hidden feature columns or dashboard-only formatting. `batch_input.xlsx` and `prediction_output.xlsx` are the authoritative input and output schemas for the Excel-based workflow. Changes to the prediction schema must increment `feature_schema_version` where applicable. The model dataset continues to keep CSV and Excel copies aligned so modelling code can read the compact CSV while team members review the same data in Excel.

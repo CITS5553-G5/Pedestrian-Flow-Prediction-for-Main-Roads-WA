@@ -1,1 +1,0 @@
-run_id,site_id,latitude,longitude,road_no,slk_km,road_name,matched_segment_id,pred_peak_cross_ped_per_h,pred_peak_along_ped_per_h,feature_completeness_pct,processing_status,model_version,feature_schema_version,predicted_at_utc
