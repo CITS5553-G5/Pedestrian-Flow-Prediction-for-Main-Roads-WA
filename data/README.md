@@ -6,7 +6,7 @@ This directory is versioned in the private team repository. It contains only the
 
 - `raw/` contains the curated client/source inputs used for target checking, road matching and AusRAP feature linkage. Treat tracked source files as immutable.
 - `external_raw/` contains dated snapshots of external/public datasets used by the feature pipeline. Preserve the source date and provider path.
-- `processed/` contains approved, reproducible project datasets. `model_dataset.csv` and `model_dataset.xlsx` are the current 49-site modelling foundation.
+- `processed/` contains approved, reproducible project datasets. `model_dataset.xlsx` is the authoritative 49-site modelling foundation.
 - `templates/` contains the Excel-only batch-input and prediction-output workbooks used by the project workflow.
 - `work/`, `cache/` and `tmp/` are local scratch areas and are excluded from Git.
 
@@ -39,10 +39,9 @@ Do not place API keys, access tokens, downloaded street imagery, fitted models, 
 - `external_raw/microsoft_building_footprints/2026-07-24/australia_tiles/310320120.csv.gz` — compressed Microsoft building-footprint tile required by the current WA site coverage.
 - `external_raw/microsoft_building_footprints/2026-07-24/australia_tiles/310320313.csv.gz` — compressed Microsoft building-footprint tile required by the current WA site coverage.
 
-### Model-development tables
+### Model-development table
 
-- `processed/model_dataset.csv` — code-authoritative, one-row-per-site training table containing 49 reconciled observation locations and targets.
-- `processed/model_dataset.xlsx` — human-readable companion with a Metadata worksheet followed by the same 49-site table.
+- `processed/model_dataset.xlsx` — authoritative Excel workbook containing Metadata followed by the 49 reconciled observation locations and targets.
 
 ### Batch and output templates
 

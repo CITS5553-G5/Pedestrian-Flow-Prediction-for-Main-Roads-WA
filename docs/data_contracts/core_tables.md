@@ -1,14 +1,14 @@
 # Core table data contract
 
-This document defines the three flat tables used by the pedestrian-flow project. The model dataset retains matching CSV and Excel forms; batch input and prediction output use Excel only. Every Excel workbook has exactly two worksheets: `Metadata` first and the flat data table second.
+This document defines the three Excel tables used by the pedestrian-flow project. Each workbook has exactly two worksheets: `Metadata` first and the flat data table second. These Excel workbooks are the authoritative shared input, model-development and output formats.
 
 ## Files and Git policy
 
-| Logical table | CSV | Excel | Git treatment |
-|---|---|---|---|
-| Model dataset | `data/processed/model_dataset.csv` | `data/processed/model_dataset.xlsx` | Both tracked in the authorised private team repository |
-| Batch input | — | `data/templates/batch_input.xlsx` | Authoritative blank Excel template is tracked |
-| Prediction output | — | `data/templates/prediction_output.xlsx` | Authoritative blank Excel template is tracked |
+| Logical table | Excel workbook | Git treatment |
+|---|---|---|
+| Model dataset | `data/processed/model_dataset.xlsx` | Authoritative 49-site workbook is tracked |
+| Batch input | `data/templates/batch_input.xlsx` | Authoritative blank Excel template is tracked |
+| Prediction output | `data/templates/prediction_output.xlsx` | Authoritative blank Excel template is tracked |
 
 The private repository is the authorised team workspace for the curated source inputs and the 49-row model dataset. Only sources directly required by the current target-checking, feature or spatial-linkage workflow are tracked; the 147 original survey workbooks and unselected candidate datasets remain outside the current Git tree. All retained files are stored in ordinary Git, so Git LFS is not required. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
 
@@ -16,7 +16,7 @@ The model dataset, two empty Excel templates and this contract are intended for 
 
 ## 1. Model dataset
 
-`model_dataset.csv` is the one-row-per-observation-site foundation table. It currently contains stable location fields and the two observed targets. Confirmed model feature columns will be joined programmatically after the feature pipeline is finalised; placeholder feature columns are intentionally excluded.
+`model_dataset.xlsx` is the one-row-per-observation-site foundation workbook. The `Model_Data` worksheet currently contains stable location fields and the two observed targets. Confirmed model feature columns will be joined programmatically after the feature pipeline is finalised; placeholder feature columns are intentionally excluded.
 
 | Column | Type | Required | Definition |
 |---|---|---:|---|
@@ -107,21 +107,20 @@ The dashboard can colour a road using either prediction column after joining `ma
 
 ## Model development and cross-validation
 
-Do not create permanent `train.csv`, `validation.csv` and `test.csv` copies. Model code reads `model_dataset.csv`, filters approved rows, and creates splits from `site_id` so that one observation location cannot appear in more than one role in the same fold.
+Do not create permanent train, validation and test copies or worksheets. Model code reads the `Model_Data` worksheet from `model_dataset.xlsx`, filters approved rows, and creates splits from `site_id` so that one observation location cannot appear in more than one role in the same fold.
 
 With the current small sample, the planned primary evaluation is grouped/spatial five-fold cross-validation. The split assignment, out-of-fold predictions and metrics are generated experiment artefacts and belong under the ignored `outputs/` directory. Feature preprocessing, imputation, scaling and feature selection must be fitted inside each training fold rather than on all sites before splitting.
 
 After model selection and honest out-of-fold evaluation, the selected deployment pipeline may be refitted on all approved observation sites. New batch-input locations are inference records, not additional training observations unless real survey targets are later collected and quality checked.
 
-## Model dataset CSV conventions
+## Flat-table conventions
 
-- UTF-8 encoding, comma delimiter and one header row.
-- One row is one observed site; no merged cells or multi-row headings.
-- Empty fields represent missing/not applicable values; do not use sentinel numbers such as `-999`.
+- The second worksheet has one header row and one site, request or result per subsequent row.
+- Empty cells represent missing or not applicable values; do not use sentinel numbers such as `-999`.
 - Units are encoded in column names where material.
-- Identifiers are strings and must not be interpreted as measurements.
-- Model-dataset schema changes require updating this document and keeping the CSV and Excel copies aligned.
+- Identifiers are text values and must not be interpreted as measurements.
+- Schema changes require updating this document and the relevant workbook Metadata.
 
 ## Excel conventions
 
-The first worksheet is `Metadata` and explains purpose, use, sharing status and every field. The second worksheet contains the flat table with the documented headers and column order. The Excel files do not introduce training splits, calculations, hidden feature columns or dashboard-only formatting. `batch_input.xlsx` and `prediction_output.xlsx` are the authoritative input and output schemas for the Excel-based workflow. Changes to the prediction schema must increment `feature_schema_version` where applicable. The model dataset continues to keep CSV and Excel copies aligned so modelling code can read the compact CSV while team members review the same data in Excel.
+The first worksheet is `Metadata` and explains purpose, use, sharing status and every field. The second worksheet contains the flat table with the documented headers and column order. The Excel files do not introduce permanent training splits, hidden feature columns or dashboard-only formatting. `model_dataset.xlsx`, `batch_input.xlsx` and `prediction_output.xlsx` are the authoritative shared workbooks. Changes to the prediction schema must increment `feature_schema_version` where applicable.
