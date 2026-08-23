@@ -1,5 +1,0 @@
-# Large source data directly used by the project are stored with Git LFS.
-data/raw/**/*.xlsx filter=lfs diff=lfs merge=lfs -text
-data/raw/Road_Network.csv filter=lfs diff=lfs merge=lfs -text
-data/external_raw/**/*.xlsx filter=lfs diff=lfs merge=lfs -text
-data/external_raw/**/*.csv.gz filter=lfs diff=lfs merge=lfs -text

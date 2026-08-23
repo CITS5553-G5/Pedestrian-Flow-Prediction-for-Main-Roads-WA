@@ -10,7 +10,7 @@ This document defines the three flat tables used by the pedestrian-flow project.
 | Batch input | `data/templates/batch_input.csv` | `data/templates/batch_input.xlsx` | Both blank templates are tracked |
 | Prediction output | `data/templates/prediction_output.csv` | `data/templates/prediction_output.xlsx` | Both blank templates are tracked |
 
-The private repository is the authorised team workspace for the curated source inputs and the 49-row model dataset. Only sources directly required by the current target-checking, feature or spatial-linkage workflow are tracked; the 147 original survey workbooks and unselected candidate datasets remain outside the current Git tree. Large retained sources are stored through Git LFS. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
+The private repository is the authorised team workspace for the curated source inputs and the 49-row model dataset. Only sources directly required by the current target-checking, feature or spatial-linkage workflow are tracked; the 147 original survey workbooks and unselected candidate datasets remain outside the current Git tree. All retained files are stored in ordinary Git, so Git LFS is not required. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
 
 The model dataset, two empty CSV/Excel template pairs and this contract are intended for private Git sharing. Do not add example records to the templates because examples can be mistaken for real API requests or results. Generated prediction files should be committed only when the team deliberately treats them as an approved project dataset rather than a disposable run artefact.
 
@@ -27,7 +27,7 @@ The model dataset, two empty CSV/Excel template pairs and this contract are inte
 | `road_no` | string | Yes | Standardised Main Roads/AusRAP road number |
 | `slk_km` | number | Yes | Straight Line Kilometre position, in kilometres |
 | `road_name` | string | Yes | Standardised road name |
-| `survey_location_name` | string | Yes | Location wording preserved from the source survey filename |
+| `survey_location_name` | string | Yes | Human-readable survey location label; standardised when an internal workbook label resolves a filename error |
 | `latitude` | number | Yes | WGS84 latitude derived from the containing AusRAP segment |
 | `longitude` | number | Yes | WGS84 longitude derived from the containing AusRAP segment |
 | `coordinate_crs` | string | Yes | Coordinate reference system; currently `EPSG:4326` |
@@ -38,18 +38,18 @@ The model dataset, two empty CSV/Excel template pairs and this contract are inte
 | `obs_peak_along_ped_per_h` | number | Yes | Observed peak-hour along-road pedestrian target, pedestrians/hour |
 | `target_source` | string | Yes | File or reconstruction path supplying the target values |
 | `qa_status` | enum | Yes | `ready` or `review_required` |
-| `qa_note` | string | No | Reason a row requires reconciliation before training |
+| `qa_note` | string | No | Reconciliation or audit note; a ready row may retain a documented correction |
 
 The target aggregation follows the client R logic: calculate hourly values, average the three survey days at each time of day, then take the maximum of that mean hourly profile separately for across-road and along-road movement. The resulting site-level values are already stored in this table; the raw macro-enabled workbooks are archival audit inputs rather than routine training inputs.
 
-The local file contains 49 unique `site_id` values and 49 unique `location_id` values. At the time of creation, 44 rows are `ready` and five are `review_required`:
+The local file contains 49 unique `site_id` values and 49 unique `location_id` values, and all 49 rows are `ready` after source reconciliation:
 
-- `250341-04`: raw hourly reconstruction does not reproduce the client-derived Fitzroy Crossing targets.
-- `260335-38`: the Carnarvon SLK 5.04 workbook uses a special layout and does not reproduce the client-derived along-road target.
-- `260335-31` and `260335-32`: the client script uses `M010`, while Road Network/AusRAP matching indicates `H010`; the table uses `H010` but requires confirmation.
-- `260335-40`: the location is absent from `Ped_iRAP_merged.csv`; targets were reconstructed from its three raw survey workbooks.
+- `250341-04`: the client compact values (125 cross, 25.5 along) exactly reproduce a Thursday-Friday average. Recalculation from all three survey days, independently confirmed by the workbooks' embedded hourly values, gives 87 cross and 17.3333 along.
+- `260335-38`: the special Carnarvon layout contains one 15-minute along-road table. Treating embedded hourly columns as additional 15-minute inputs caused the client value 29.6667; the actual 15-minute series and embedded hourly values both give 18.3333 along.
+- `260335-31` and `260335-32`: `M010` is Chidlow York Road, while Road Network places Coolgardie Esperance Highway SLK 366.85 and 165.45 on `H010`. The standardised identifiers therefore use `H010`; observed targets independently reproduce from the workbooks.
+- `260335-40`: the location is absent from `Ped_iRAP_merged.csv`, but all three raw workbooks and their embedded hourly values reproduce the stored targets. The internal workbook label also resolves the filename's “Norseman” wording to Northampton.
 
-Model code must exclude `review_required` rows by default until the relevant issue is resolved and the derivation is regenerated. Do not change `qa_status` merely to increase the sample size.
+Primary model development may use all 49 rows. Because two target values were corrected from the client compact table, final reporting must also include a sensitivity check that repeats the evaluation without `250341-04` and `260335-38`; this tests whether either correction materially changes the model conclusion.
 
 ## 2. Batch input
 
