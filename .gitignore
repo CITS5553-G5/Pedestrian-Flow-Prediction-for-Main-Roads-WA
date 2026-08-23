@@ -26,14 +26,16 @@ htmlcov/
 .ipynb_checkpoints/
 *.log
 
-# Client and generated data stay local
-data/**
-!data/README.md
-!data/raw/
-data/raw/**
-!data/raw/README.md
+# Private-team data policy
+# Source snapshots, approved processed datasets and schemas under data/ are
+# intentionally versioned. Large binary/source files are routed through Git LFS
+# by .gitattributes.
+data/work/
+data/cache/
+data/tmp/
 
 # Generated artefacts
 outputs/
 models/
 reports/generated/
+tmp/
