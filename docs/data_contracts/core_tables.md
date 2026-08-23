@@ -10,7 +10,7 @@ This document defines the three flat tables used by the pedestrian-flow project.
 | Batch input | `data/templates/batch_input.csv` | `data/templates/batch_input.xlsx` | Both blank templates are tracked |
 | Prediction output | `data/templates/prediction_output.csv` | `data/templates/prediction_output.xlsx` | Both blank templates are tracked |
 
-The private repository is now the authorised team workspace for the source snapshots and the 49-row model dataset. Large binary sources are stored through Git LFS. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
+The private repository is the authorised team workspace for the curated source inputs and the 49-row model dataset. Only sources directly required by the current target-checking, feature or spatial-linkage workflow are tracked; the 147 original survey workbooks and unselected candidate datasets remain outside the current Git tree. Large retained sources are stored through Git LFS. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
 
 The model dataset, two empty CSV/Excel template pairs and this contract are intended for private Git sharing. Do not add example records to the templates because examples can be mistaken for real API requests or results. Generated prediction files should be committed only when the team deliberately treats them as an approved project dataset rather than a disposable run artefact.
 
@@ -40,7 +40,7 @@ The model dataset, two empty CSV/Excel template pairs and this contract are inte
 | `qa_status` | enum | Yes | `ready` or `review_required` |
 | `qa_note` | string | No | Reason a row requires reconciliation before training |
 
-The target aggregation follows the client R logic: calculate hourly values, average the three survey days at each time of day, then take the maximum of that mean hourly profile separately for across-road and along-road movement.
+The target aggregation follows the client R logic: calculate hourly values, average the three survey days at each time of day, then take the maximum of that mean hourly profile separately for across-road and along-road movement. The resulting site-level values are already stored in this table; the raw macro-enabled workbooks are archival audit inputs rather than routine training inputs.
 
 The local file contains 49 unique `site_id` values and 49 unique `location_id` values. At the time of creation, 44 rows are `ready` and five are `review_required`:
 

@@ -1,14 +1,13 @@
-# Immutable raw data
+# Curated source inputs
 
-Files in this directory are source evidence shared through the private team repository. Do not edit, overwrite, rename, or delete them during cleaning or analysis.
+The private team repository tracks only source inputs that are directly required by the current project workflow. Do not edit or overwrite these files during cleaning or analysis.
 
-The supplied sources include:
+The tracked sources are:
 
-- three batches of macro-enabled pedestrian survey workbooks;
-- `Road_Network.csv` with Road Number and SLK intervals;
-- a large AusRAP road-segment workbook containing road attributes and raw BF/BG/BH exposure categories;
-- the client `Ped_iRAP_merged` files and R linkage scripts.
+- `Ped_iRAP_merged.csv`, the compact client-derived target source used to check most site targets in `../processed/model_dataset.csv`;
+- `Road_Network.csv`, used to resolve Road Number and SLK intervals;
+- `AusRAP Data - Words - MSDS.xlsx`, used for road-segment matching and retained road attributes.
 
-Binary and large files are managed by Git LFS.
+The 147 macro-enabled observation workbooks, R linkage files and duplicate FST form are excluded from the current Git tree. The observation workbooks are already consolidated into the 49-site modelling table and are only required when the team needs to reconstruct or audit the target aggregation. Keep them in approved archival storage; do not copy them into a public service.
 
-Write extracted, cleaned and feature-engineered forms to `../processed/` only when they are approved team datasets. Put disposable intermediate files under `../work/`, which is excluded from Git.
+Candidate PBI index files are also excluded until the team selects them as model features and implements a reproducible join. Write approved, cleaned and feature-engineered forms to `../processed/`. Put disposable intermediate files under `../work/`, which is excluded from Git.

@@ -26,8 +26,8 @@ Members can develop different approaches independently. After comparison, the te
 
 ## Data rule
 
-This private repository is the authorised team workspace for the source snapshots and the three core project tables under `data/`. Access must remain limited to approved project collaborators; do not make the repository public, create public mirrors, or copy client files into an unapproved service.
+This private repository is the authorised team workspace for the curated source inputs and the three core project tables under `data/`. Only data directly used by the current target-checking, feature or spatial-linkage workflow are tracked. Access must remain limited to approved project collaborators; do not make the repository public, create public mirrors, or copy client files into an unapproved service.
 
-Large Excel and binary source files are managed by Git LFS so that ordinary Git history remains usable. Every collaborator must install Git LFS once and then run `git lfs install`. A normal clone or pull will retrieve the current large files; if only pointer files appear, run `git lfs pull`.
+Large retained source files are managed by Git LFS so that ordinary Git history remains usable. Every collaborator must install Git LFS once and then run `git lfs install`. A normal clone or pull will retrieve the current large files; if only pointer files appear, run `git lfs pull`.
 
-The sharing rule does not extend to secrets or disposable artefacts. API keys and `.env` files, downloaded imagery, temporary working files, experiment outputs, fitted models and generated reports remain excluded. Original files under `data/raw/` are immutable evidence: analysis code may read them but must never overwrite them. See `data/README.md` for the folder contract.
+The sharing rule does not extend to archival survey workbooks, unselected candidate datasets, secrets or disposable artefacts. API keys and `.env` files, downloaded imagery, temporary working files, experiment outputs, fitted models and generated reports remain excluded. Tracked source files under `data/raw/` are immutable inputs: analysis code may read them but must never overwrite them. See `data/README.md` for the folder contract.
