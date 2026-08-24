@@ -8,8 +8,9 @@ This private repository is the CITS5553 Group 5 day-to-day development workspace
 2. `02_feature_extraction` — obtain approved external sources and extract additional spatial or imagery features.
 3. `03_model_development` — train, compare and select models.
 4. `04_prediction_pipeline` — integrate validated preparation, feature and model code into one reproducible prediction workflow.
+5. `05_application` — provide the backend and frontend used to run the agreed prediction workflow and present its results.
 
-When application development begins, use `05_application/backend/` for the API and `05_application/frontend/` for the user interface. Keep the prediction logic in `04_prediction_pipeline/`; the backend should call it rather than duplicate it. `06_test/` is a personal local experiment copy and is excluded from Git, not the team's formal test suite.
+Use `05_application/backend/` for the API and application-side validation, and `05_application/frontend/` for the user interface. Keep prediction logic in `04_prediction_pipeline/`; the backend should call it rather than duplicate it. The application technology has not yet been selected. `06_test/` is a personal local experiment copy and is excluded from Git, not the team's formal test suite.
 
 `docs/01_data_preparation/` contains Haoqi's shared table-format and verified-correction notes. `docs/02_feature_extraction/` contains a short summary of the features produced by the shared Stage 2 notebooks. Detailed personal working notes are excluded from Git. `data/` contains only authorised, intentionally shared inputs and approved project tables. Generated artefacts belong under `outputs/`, which is excluded from Git.
 
