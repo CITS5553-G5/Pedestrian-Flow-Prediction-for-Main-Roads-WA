@@ -8,7 +8,7 @@ This directory is versioned in the private team repository. It contains only the
 - `external_raw/` contains dated snapshots of external/public datasets used by the feature pipeline. Preserve the source date and provider path.
 - `processed/` contains approved, reproducible project datasets. `model_dataset.xlsx` is the authoritative 49-site modelling foundation.
 - `templates/` contains the Excel-only batch-input and prediction-output workbooks used by the project workflow.
-- `work/`, `cache/` and `tmp/` are local scratch areas and are excluded from Git.
+- `cache/` and `tmp/` are local scratch areas and are excluded from Git.
 
 The 147 macro-enabled observation workbooks are not routine project inputs because their site-level results have already been consolidated. They remain in approved archival storage outside the current Git tree and are needed only if the target aggregation must be independently reconstructed. Candidate datasets that have not been selected for the model are also excluded until a documented pipeline uses them.
 

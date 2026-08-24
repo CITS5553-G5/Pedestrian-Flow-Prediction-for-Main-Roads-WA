@@ -30,7 +30,6 @@ htmlcov/
 # Only source files directly used by the current feature/model pipeline,
 # approved processed datasets and shared schemas are versioned. Original survey
 # evidence and unselected candidate datasets remain in approved archival storage.
-data/work/
 data/cache/
 data/tmp/
 data/raw/Obs Count Data/

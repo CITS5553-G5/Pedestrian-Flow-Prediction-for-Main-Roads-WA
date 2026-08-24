@@ -10,4 +10,4 @@ The tracked sources are:
 
 The 147 macro-enabled observation workbooks, R linkage files and duplicate FST form are excluded from the current Git tree. The observation workbooks are already consolidated into the 49-site modelling table and are only required when the team needs to reconstruct or audit the target aggregation. Keep them in approved archival storage; do not copy them into a public service.
 
-Candidate PBI index files are also excluded until the team selects them as model features and implements a reproducible join. Write approved, cleaned and feature-engineered forms to `../processed/`. Put disposable intermediate files under `../work/`, which is excluded from Git.
+Candidate PBI index files are also excluded until the team selects them as model features and implements a reproducible join. Write approved, cleaned and feature-engineered forms to `../processed/`. Keep disposable intermediate files outside `data/` and Git.
