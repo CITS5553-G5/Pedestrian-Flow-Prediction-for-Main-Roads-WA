@@ -52,3 +52,11 @@ tmp/
 /02_imagery_features/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
 /02_imagery_features/02_060_haoqi_dplh_activity_centres.ipynb
 /02_imagery_features/02_haoqi_imagery_llm_apis.ipynb
+
+# External source caches downloaded automatically by notebooks
+data/external_raw/dplh_activity_centres/
+data/external_raw/dplh_region_scheme_boundaries/
+data/external_raw/pta_stops/
+data/external_raw/wa_education/
+data/external_raw/wa_health_establishments/
+data/external_raw/microsoft_building_footprints/*/australia_tiles/*.csv.gz
