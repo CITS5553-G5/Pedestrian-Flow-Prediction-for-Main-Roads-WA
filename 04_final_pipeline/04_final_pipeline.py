@@ -1,8 +1,8 @@
-"""Haoqi's Stage 5 work: integrate the final prediction pipeline."""
+"""Shared Stage 4 entry point for the final prediction pipeline."""
 
 
 def main() -> None:
-    print("Stage 5: final pipeline")
+    print("Stage 4: final pipeline")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 ## Model dataset ETL and reconciliation audit
 
-Open `01-haoqi-model-dataset-etl-reconciliation.ipynb` to review the complete preparation flow for the 49-site modelling dataset. Each explanation is provided first in English and then in Chinese. The notebook reads the current source tables, reproduces the documented reconciliation and quality checks, verifies that `data/processed/model_dataset.xlsx` is unchanged, and then generates `model_dataset_candidate.xlsx` in this same folder for direct review. The authoritative workbook is never overwritten.
+Open `01_01_haoqi_model_dataset_etl_reconciliation.ipynb` to review the complete preparation flow for the 49-site modelling dataset. Each explanation is provided first in English and then in Chinese. The notebook reads the current source tables, reproduces the documented reconciliation and quality checks, verifies that `data/processed/model_dataset.xlsx` is unchanged, and then generates `model_dataset_candidate.xlsx` in this same folder for direct review. The authoritative workbook is never overwritten.
 
 ## Survey sample map
 

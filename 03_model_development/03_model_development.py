@@ -1,8 +1,8 @@
-"""Haoqi's Stage 4 work: train, evaluate and select models."""
+"""Shared Stage 3 entry point for training, evaluating and selecting models."""
 
 
 def main() -> None:
-    print("Stage 4: model development")
+    print("Stage 3: model development")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Haoqi's Stage 1 work: prepare and link the project data."""
+"""Shared Stage 1 entry point for preparing and linking project data."""
 
 
 def main() -> None:

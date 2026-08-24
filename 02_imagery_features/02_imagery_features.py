@@ -1,8 +1,8 @@
-"""Haoqi's Stage 3 work: retrieve imagery and extract features."""
+"""Shared Stage 2 entry point for retrieving sources and extracting features."""
 
 
 def main() -> None:
-    print("Stage 3: imagery features")
+    print("Stage 2: imagery features")
 
 
 if __name__ == "__main__":
