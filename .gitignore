@@ -25,6 +25,7 @@ htmlcov/
 # Notebook and runtime files
 .ipynb_checkpoints/
 *.log
+*.part
 
 # Private-team data policy
 # Only source files directly used by the current feature/model pipeline,
@@ -43,3 +44,11 @@ outputs/
 models/
 reports/generated/
 tmp/
+
+# Personal local experiment copy; not a shared test suite
+05_test/
+
+# Local-only Stage 2 notebooks; intentionally not shared
+/02_imagery_features/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
+/02_imagery_features/02_060_haoqi_dplh_activity_centres.ipynb
+/02_imagery_features/02_haoqi_imagery_llm_apis.ipynb
