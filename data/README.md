@@ -47,5 +47,5 @@ Before staging a new source snapshot, confirm its sharing permission, record its
 
 ### Batch and output templates
 
-- `templates/batch_input.xlsx` — authoritative Excel input template for new locations, with Metadata first and the blank input table second.
-- `templates/prediction_output.xlsx` — authoritative Excel prediction and Dashboard-output template, with Metadata first and the blank result table second.
+- `templates/batch_input.xlsx` — populated 100-location API test input, with 49 observed benchmarks and 51 reproducibly sampled new AusRAP-linked locations.
+- `templates/prediction_output.xlsx` — prefilled 100-location comparison and Dashboard table; source context is populated and model prediction fields remain blank.
