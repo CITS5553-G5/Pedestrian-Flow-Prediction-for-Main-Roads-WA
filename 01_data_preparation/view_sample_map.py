@@ -3,7 +3,7 @@
 
 Run from the project directory:
 
-    python3 tools/view_sample_map.py
+    python3 01_data_preparation/view_sample_map.py
 
 The command regenerates outputs/internal_sample_map.html, starts a local web
 server, opens the default browser, and keeps the server running until Ctrl+C.
