@@ -5,15 +5,17 @@ This private repository is the CITS5553 Group 5 day-to-day development workspace
 ## Project stages
 
 1. `01_data_preparation` — prepare, reconcile and link the survey, AusRAP and road-network data.
-2. `02_imagery_features` — obtain approved external sources and extract additional spatial or imagery features.
+2. `02_feature_extraction` — obtain approved external sources and extract additional spatial or imagery features.
 3. `03_model_development` — train, compare and select models.
-4. `04_final_pipeline` — integrate the agreed code and generate final predictions.
+4. `04_prediction_pipeline` — integrate validated preparation, feature and model code into one reproducible prediction workflow.
 
-`docs/` contains data contracts, quality decisions and feature-source guidance. `data/` contains only authorised, intentionally shared inputs and approved project tables. Generated artefacts belong under `outputs/`, which is excluded from Git.
+When application development begins, use `05_application/backend/` for the API and `05_application/frontend/` for the user interface. Keep the prediction logic in `04_prediction_pipeline/`; the backend should call it rather than duplicate it. `06_test/` is a personal local experiment copy and is excluded from Git, not the team's formal test suite.
+
+`docs/01_data_preparation/` contains Haoqi's shared table-format and verified-correction notes. `docs/02_feature_extraction/` contains a short summary of the features produced by the shared Stage 2 notebooks. Detailed personal working notes are excluded from Git. `data/` contains only authorised, intentionally shared inputs and approved project tables. Generated artefacts belong under `outputs/`, which is excluded from Git.
 
 ## File naming
 
-Shared integration files use the stage number and purpose without a member name, for example `02_imagery_features.py`.
+Shared integration files use the stage number and purpose without a member name, for example `02_feature_extraction.py`.
 
 Personal notebooks use this format:
 
@@ -34,7 +36,7 @@ Use lowercase letters, two-digit numbers and underscores. Do not use spaces. The
 
 Python 3.11 is the supported team version. Clone the repository to any local folder; code must not depend on the host folder name or an absolute path.
 
-On Windows PowerShell:
+The following setup is required once after cloning. On Windows PowerShell:
 
 ```powershell
 py -3.11 -m venv .venv
@@ -53,6 +55,8 @@ python -m pip install -r requirements.txt
 ```
 
 Open the repository root in VS Code and select the `.venv` Python interpreter. The repository path may differ between members. Python code and notebooks should build paths from the discovered repository root with `pathlib.Path`.
+
+The `.venv` folder remains on the computer. Do not recreate it or reinstall all packages every time. In a new terminal, activate it only when the prompt does not already show `(.venv)`: use `.venv\Scripts\Activate.ps1` on Windows or `source .venv/bin/activate` on macOS. VS Code may activate the selected interpreter automatically.
 
 The single `requirements.txt` contains the shared analysis, notebook, code-quality and optional database packages so every member uses the same straightforward installation command.
 
@@ -85,6 +89,6 @@ Tracked files under `data/raw/` are immutable inputs: analysis code may read the
 
 ## Git workflow
 
-`main` is the shared stable branch. After this initial repository cleanup, normal work should use a short-lived branch such as `haoqi/02-abs-mesh-block`, followed by a Pull Request into `main`. Do not force-push or delete `main`.
+`main` is the shared stable branch. Normal Stage 2 work should use one personal stage branch per member, such as `haoqi/02-extract-features`, followed by a Pull Request into `main`. A branch becomes visible to the team only after it is pushed to GitHub. Team members can review its Pull Request without downloading that branch. Do not force-push or delete `main`.
 
-Before committing, check that notebook outputs contain no credentials or personal absolute paths, and stage files deliberately rather than using an unchecked `git add .`. See `CONTRIBUTING.md` for the team workflow.
+Before committing, check that notebook outputs contain no credentials or personal absolute paths, and stage files deliberately rather than using an unchecked `git add .`. See `GIT_WORKFLOW.md` for direct team instructions and `CONTRIBUTING.md` for repository rules. The local Chinese guide is intentionally excluded from Git.

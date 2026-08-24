@@ -26,6 +26,7 @@ htmlcov/
 .ipynb_checkpoints/
 *.log
 *.part
+*.inspect.ndjson
 
 # Private-team data policy
 # Only source files directly used by the current feature/model pipeline,
@@ -46,12 +47,16 @@ reports/generated/
 tmp/
 
 # Personal local experiment copy; not a shared test suite
-05_test/
+06_test/
+
+# Personal guidance and working notes; not shared with the team
+/GIT_WORKFLOW_ZH.md
+/docs/personal_notes/
 
 # Local-only Stage 2 notebooks; intentionally not shared
-/02_imagery_features/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
-/02_imagery_features/02_060_haoqi_dplh_activity_centres.ipynb
-/02_imagery_features/02_haoqi_imagery_llm_apis.ipynb
+/02_feature_extraction/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
+/02_feature_extraction/02_060_haoqi_dplh_activity_centres.ipynb
+/02_feature_extraction/02_haoqi_imagery_llm_apis.ipynb
 
 # External source caches downloaded automatically by notebooks
 data/external_raw/dplh_activity_centres/
