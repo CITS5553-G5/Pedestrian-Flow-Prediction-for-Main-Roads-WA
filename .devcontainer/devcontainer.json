@@ -3,12 +3,22 @@
   "dockerComposeFile": "compose.yaml",
   "service": "app",
   "runServices": [
-    "app",
-    "postgres",
-    "pgadmin"
+    "app"
   ],
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Pedestrian Flow Frontend",
+      "onAutoForward": "notify"
+    }
+  },
   "customizations": {
     "vscode": {
       "settings": {
@@ -25,10 +35,9 @@
         "ms-toolsai.jupyter",
         "ms-toolsai.jupyter-renderers",
         "ms-toolsai.datawrangler",
-        "mechatroner.rainbow-csv",
-        "ckolkman.vscode-postgres"
+        "mechatroner.rainbow-csv"
       ]
     }
   },
-  "postCreateCommand": "python -m pip install --user -r requirements.txt"
+  "postCreateCommand": "sudo chown -R vscode:vscode /workspace/05_application/frontend/node_modules && python -m pip install --user -r requirements.txt"
 }

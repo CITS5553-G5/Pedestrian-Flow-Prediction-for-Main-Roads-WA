@@ -2,217 +2,82 @@
 
 This environment is optional. The shared code and notebooks must also run in a Python 3.11 virtual environment on Windows or macOS as documented in the repository `README.md`.
 
-## 1. Environment Overview
+## Current environment
 
-The development environment is managed as one Docker Compose project named `pedestrian-exposure-wa`.
+The development environment currently starts one service named `app`, using the `pedestrian-exposure-wa-app` container. It provides Python 3.11 and Node.js 22 development and mounts the repository at `/workspace`.
 
-It contains three services:
+PostgreSQL, PostGIS and pgAdmin are not started by the current Compose configuration. Their setup files remain under `.devcontainer/postgres/` so database support can be restored later if the project needs it. Previously created Docker database volumes are not deleted by this configuration change.
 
-| Service | Container | Purpose |
-| --- | --- | --- |
-| `app` | `pedestrian-exposure-wa-app` | Python 3.11 development, spatial analysis, statistical modelling and machine learning |
-| `postgres` | `pedestrian-exposure-wa-postgres` | PostgreSQL 17 database with PostGIS |
-| `pgadmin` | `pedestrian-exposure-wa-pgadmin` | Browser-based PostgreSQL and PostGIS administration |
+The frontend dependency directory is mounted as the Docker named volume `pedestrian-exposure-wa-frontend-node-modules`. Packages installed at `/workspace/05_application/frontend/node_modules` therefore remain inside Docker storage rather than being written into the host project directory.
 
-The project directory is mounted into the Python container at `/workspace`. Client data remains in the local `data/raw/` directory and is not copied into a Docker image.
-
-## 2. Prerequisites
-
-Install the following software before opening the environment:
+## Prerequisites
 
 - OrbStack or Docker Desktop
 - Visual Studio Code
 - The Microsoft Dev Containers extension for Visual Studio Code
 
-## 3. Local Environment File
-
-Copy `.devcontainer/.env.example` to `.devcontainer/.env` before the containers are created. The resulting file is local and excluded from Git. It has the following structure:
-
-```dotenv
-POSTGRES_DB=pedestrian_exposure_wa
-POSTGRES_USER=pedestrian_exposure_user
-POSTGRES_PASSWORD=<local-database-password>
-
-PGADMIN_EMAIL=<local-pgadmin-email>
-PGADMIN_PASSWORD=<local-pgadmin-password>
-
-JUPYTER_TOKEN=<local-jupyter-token>
-```
-
-Replace every placeholder with the locally supplied value. Do not place passwords directly in `compose.yaml`, Python scripts or notebooks.
-
-## 4. Open the Project in the Development Container
+## Open the project in the container
 
 1. Start OrbStack or Docker Desktop.
 2. Open the cloned repository root in Visual Studio Code.
 3. Open the Command Palette with `Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Windows/Linux.
 4. Select `Dev Containers: Reopen in Container`.
-5. Wait while Docker builds the PostGIS image, downloads the remaining images and installs the Python packages in `requirements.txt`.
+5. Wait while the container starts and the Python packages in `requirements.txt` are installed.
 
-Visual Studio Code should reopen in the `app` service with `/workspace` as the project directory. The first build takes longer than later starts because images and Python packages must be downloaded.
+Visual Studio Code should reopen in the `app` service with `/workspace` as the project directory.
 
-## 5. Verify the Python Environment
+## Verify Python
 
-Open a Visual Studio Code terminal after the container starts and run:
+Run the following commands inside the container:
 
 ```bash
 python --version
 python -c "import pandas, geopandas, sklearn, statsmodels, xgboost; print('Python environment: OK')"
 ```
 
-The Python version should be 3.11 and the import test should print:
+The Python version should be 3.11 and the import test should print `Python environment: OK`.
 
-```text
-Python environment: OK
-```
+## Install and run the frontend
 
-## 6. Verify PostgreSQL and PostGIS
-
-From the terminal inside the `app` container, run:
+Run these commands inside the container:
 
 ```bash
-python -c "import os, psycopg; conn = psycopg.connect(host=os.environ['POSTGRES_HOST'], port=os.environ['POSTGRES_PORT'], dbname=os.environ['POSTGRES_DB'], user=os.environ['POSTGRES_USER'], password=os.environ['POSTGRES_PASSWORD']); cur = conn.cursor(); cur.execute('SELECT PostGIS_Version();'); print(cur.fetchone()[0]); conn.close()"
+cd /workspace/05_application/frontend
+npm ci
+npm run dev -- --host 0.0.0.0
 ```
 
-A PostGIS version number confirms that:
+Open `http://localhost:5173` on the host after VS Code reports that port 5173 has been forwarded.
 
-- the Python container can reach PostgreSQL;
-- the database credentials are correct; and
-- the PostGIS extension is enabled.
+The first `npm ci` populates the Docker volume. Later container rebuilds reuse that volume unless it is explicitly removed. If `package-lock.json` changes, run `npm ci` again.
 
-Within the Compose network, use the following database connection settings:
+The container creation process assigns this volume to the `vscode` user before installing packages. If an older container was created before that setup was added, repair it once with `sudo chown -R vscode:vscode /workspace/05_application/frontend/node_modules`.
 
-```text
-Host: postgres
-Port: 5432
-Database: pedestrian_exposure_wa
-User: pedestrian_exposure_user
-Password: value of POSTGRES_PASSWORD in .devcontainer/.env
-```
+## Project data
 
-Use `postgres`, not `localhost`, when connecting from the `app` or `pgadmin` container.
+Place authorised source data in the repository-relative directory `data/raw/`. Inside the container, the same directory is `/workspace/data/raw/`. Use project-relative paths in code whenever possible.
 
-## 7. Open and Configure pgAdmin
+## Start, stop and rebuild
 
-Open the following address in a browser:
-
-```text
-http://localhost:5050
-```
-
-Sign in using `PGADMIN_EMAIL` and `PGADMIN_PASSWORD` from `.devcontainer/.env`.
-
-To register the project database for the first time:
-
-1. Select `Add New Server`.
-2. On the **General** tab, enter `Pedestrian Exposure WA` as the server name.
-3. On the **Connection** tab, enter:
-
-```text
-Host name/address: postgres
-Port: 5432
-Maintenance database: pedestrian_exposure_wa
-Username: pedestrian_exposure_user
-Password: value of POSTGRES_PASSWORD
-```
-
-4. Enable `Save password` for the local development environment if appropriate.
-5. Select `Save`.
-
-## 8. Project Data Location
-
-Place authorised source data in the repository-relative directory:
-
-```text
-data/raw/
-```
-
-Inside the Python container, the same directory is available at:
-
-```text
-/workspace/data/raw/
-```
-
-Use project-relative paths in Python whenever possible:
-
-```python
-from pathlib import Path
-
-RAW_DATA_DIR = Path("data/raw")
-```
-
-Do not build client data into container images or store it in the PostgreSQL image layer. Database records are persisted separately in the Docker volume `pedestrian-exposure-wa-postgres-data`.
-
-## 9. Start and Stop the Environment
-
-The recommended method is to use `Dev Containers: Reopen in Container` in Visual Studio Code.
-
-The environment can also be managed from the `.devcontainer` directory:
+The recommended method is `Dev Containers: Reopen in Container`. The environment can also be managed from `.devcontainer`:
 
 ```bash
-docker compose --env-file .env -f compose.yaml up -d
-docker compose --env-file .env -f compose.yaml ps
-docker compose --env-file .env -f compose.yaml stop
-docker compose --env-file .env -f compose.yaml down
+docker compose -f compose.yaml up -d
+docker compose -f compose.yaml ps
+docker compose -f compose.yaml stop
+docker compose -f compose.yaml down
 ```
 
-`stop` stops the containers without removing them. `down` removes the containers and network but preserves the named PostgreSQL and pgAdmin volumes.
+Use `Dev Containers: Rebuild Container` after changing `compose.yaml`, `devcontainer.json` or the base image. A normal rebuild recreates the app container but retains repository files and the named frontend dependency volume.
 
-## 10. Rebuild After Configuration Changes
-
-Rebuild the development environment after changing any of the following files:
-
-- `.devcontainer/compose.yaml`
-- `.devcontainer/devcontainer.json`
-- `.devcontainer/postgres/Dockerfile`
-- `requirements.txt`
-
-In Visual Studio Code, run:
-
-```text
-Dev Containers: Rebuild Container
-```
-
-Changing `.devcontainer/postgres/init-postgis.sql` does not rerun it against an existing database volume. The script is executed only when PostgreSQL creates a new database volume for the first time.
-
-## 11. Check Container Status and Logs
-
-From `.devcontainer`, use:
+To inspect the app service logs, run:
 
 ```bash
-docker compose --env-file .env -f compose.yaml ps
-docker compose --env-file .env -f compose.yaml logs postgres
-docker compose --env-file .env -f compose.yaml logs pgadmin
-docker compose --env-file .env -f compose.yaml logs app
+docker compose -f compose.yaml logs app
 ```
 
-The PostgreSQL service should report `healthy` before the Python and pgAdmin services are considered ready.
+## Persistence and removal
 
-## 12. Database Reset
+Stopping, rebuilding or running `docker compose down` does not normally remove named volumes. Do not add `--volumes` unless the stored frontend dependencies can be discarded.
 
-Removing the PostgreSQL volume permanently deletes the local container database. It does not delete files in `data/raw/`, but any tables imported into PostgreSQL will need to be recreated.
-
-Only perform a reset when the local database can be safely discarded:
-
-```bash
-docker compose --env-file .env -f compose.yaml down
-docker volume rm pedestrian-exposure-wa-postgres-data
-docker compose --env-file .env -f compose.yaml up -d
-```
-
-After a new volume is created, `init-postgis.sql` runs again and enables PostGIS in the new database.
-
-## 13. Current Scope
-
-This environment currently supports:
-
-- Python 3.11 development;
-- tabular and Excel data processing;
-- geospatial analysis;
-- PostgreSQL and PostGIS;
-- traditional statistical modelling;
-- machine learning;
-- Jupyter development; and
-- automated tests and Python code-quality checks.
-
-Deep-learning libraries are intentionally not included in the current environment. They can be added later if the imagery-feature methodology requires them.
+Removing `pedestrian-exposure-wa-frontend-node-modules` only deletes installed frontend packages; they can be restored with `npm ci`. Previously created PostgreSQL or pgAdmin volumes are independent and remain untouched unless someone explicitly removes them.
