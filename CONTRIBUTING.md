@@ -16,7 +16,7 @@ Do not use a long-lived `develop` branch. Do not force-push or delete `main`. Re
 - Run `git status` and stage only files that belong to the task.
 - Do not commit `.env`, passwords, API keys, tokens or personal credentials.
 - Clear notebook execution outputs when they contain personal paths, large results or credentials.
-- Keep generated files under `outputs/`, temporary files under `tmp/` and personal experiments under the ignored `06_test/` directory.
+- Keep only reviewed, reproducible team outputs under `06_outputs/`, and update each output together with the notebook or script that generated it. Keep temporary files under `tmp/` and personal experiments under the ignored `07_test/` directory.
 - Confirm that any new data is authorised, documented and required for a reproducible project workflow.
 - Check that code uses repository-relative paths and runs from a clone with an arbitrary folder name.
 

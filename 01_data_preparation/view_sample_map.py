@@ -5,7 +5,7 @@ Run from the project directory:
 
     python3 01_data_preparation/view_sample_map.py
 
-The command regenerates outputs/internal_sample_map.html, starts a local web
+The command regenerates 06_outputs/internal_sample_map.html, starts a local web
 server, opens the default browser, and keeps the server running until Ctrl+C.
 Use --write-only to generate the HTML without opening a browser.
 """
@@ -33,7 +33,7 @@ except ModuleNotFoundError as exc:
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKBOOK = PROJECT_ROOT / "data" / "processed" / "model_dataset.xlsx"
-DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / "internal_sample_map.html"
+DEFAULT_OUTPUT = PROJECT_ROOT / "06_outputs" / "internal_sample_map.html"
 REQUIRED_COLUMNS = {
     "site_id",
     "survey_batch_id",

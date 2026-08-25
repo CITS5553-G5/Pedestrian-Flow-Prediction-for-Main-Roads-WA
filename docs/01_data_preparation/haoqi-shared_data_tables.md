@@ -138,7 +138,7 @@ The browser therefore does not need to reopen and parse the generated Excel file
 
 Do not create permanent train, validation and test copies or worksheets. Model code reads the `Model_Data` worksheet from `model_dataset.xlsx`, filters approved rows, and creates splits from `site_id` so that one observation location cannot appear in more than one role in the same fold.
 
-With the current small sample, the planned primary evaluation is grouped/spatial five-fold cross-validation. The split assignment, out-of-fold predictions and metrics are generated experiment artefacts and belong under the ignored `outputs/` directory. Feature preprocessing, imputation, scaling and feature selection must be fitted inside each training fold rather than on all sites before splitting.
+With the current small sample, the planned primary evaluation is grouped/spatial five-fold cross-validation. Working split assignments, out-of-fold predictions and metrics are experiment artefacts and remain outside Git until the team deliberately promotes a reviewed result into `06_outputs/`. Feature preprocessing, imputation, scaling and feature selection must be fitted inside each training fold rather than on all sites before splitting.
 
 After model selection and honest out-of-fold evaluation, the selected deployment pipeline may be refitted on all approved observation sites. New batch-input locations are inference records, not additional training observations unless real survey targets are later collected and quality checked.
 

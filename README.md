@@ -9,10 +9,13 @@ This private repository is the CITS5553 Group 5 day-to-day development workspace
 3. `03_model_development` — train, compare and select models.
 4. `04_prediction_pipeline` — integrate validated preparation, feature and model code into one reproducible prediction workflow.
 5. `05_application` — provide the backend and frontend used to run the agreed prediction workflow and present its results.
+6. `06_outputs` — store reviewed outputs that teammates may use without rerunning every upstream notebook.
 
-Use `05_application/backend/` for the API and application-side validation, and `05_application/frontend/` for the user interface. Keep prediction logic in `04_prediction_pipeline/`; the backend should call it rather than duplicate it. The application technology has not yet been selected.
+Use `05_application/backend/` for the API and application-side validation, and `05_application/frontend/` for the user interface. Keep prediction logic in `04_prediction_pipeline/`; the backend should call it rather than duplicate it.
 
-`docs/01_data_preparation/` contains table-format and verified-correction notes. `docs/02_feature_extraction/` contains a short summary of the features produced by the shared Stage 2 notebooks. Detailed personal working notes are excluded from Git. `data/` contains only authorised, intentionally shared inputs and approved project tables. Generated artefacts belong under `outputs/`, which is excluded from Git.
+`docs/01_data_preparation/` contains table-format and verified-correction notes. `docs/02_feature_extraction/` contains a short summary of the features produced by the shared Stage 2 notebooks. Detailed personal working notes are excluded from Git. `data/` contains only authorised, intentionally shared inputs and approved project tables.
+
+Reviewed feature tables and other small results that the team needs directly belong under `06_outputs/`. Update a shared output in the same commit as the notebook or script that generated it. Temporary runs, exploratory results, fitted models and large generated files must remain outside Git.
 
 ## File naming
 
@@ -86,7 +89,7 @@ Local imagery API experiments are intentionally excluded from Git until the team
 
 This private repository may contain only data that the client or source licence permits the approved project collaborators to share. A file being public or small enough for Git does not by itself authorise redistribution.
 
-Tracked files under `data/raw/` are immutable inputs: analysis code may read them but must not overwrite them. API keys, `.env` files, downloaded imagery, disposable caches, fitted models and generated reports must remain outside Git. Before adding or replacing source data, record the provider, source URL, snapshot date, licence and the notebook or script that uses it. See `data/README.md` for the folder contract.
+Tracked files under `data/raw/` are immutable inputs: analysis code may read them but must not overwrite them. API keys, `.env` files, downloaded imagery, disposable caches, fitted models and unreviewed generated reports must remain outside Git. Reviewed feature tables under `06_outputs/` are the exception because they let teammates use the agreed results directly. Before adding or replacing source data, record the provider, source URL, snapshot date, licence and the notebook or script that uses it. See `data/README.md` for the folder contract.
 
 ## Git workflow
 

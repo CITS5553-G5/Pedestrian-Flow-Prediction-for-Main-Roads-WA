@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WA Pedestrian Survey Sample Explorer</title>
+  <style>
+    /* Required Leaflet 1.9 layout rules are embedded so the local map does not
+       depend on a second external stylesheet request. */
+    .leaflet-pane, .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow,
+    .leaflet-tile-container, .leaflet-pane > svg, .leaflet-pane > canvas,
+    .leaflet-zoom-box, .leaflet-image-layer, .leaflet-layer {
+      position: absolute; left: 0; top: 0;
+    }
+    .leaflet-container { overflow: hidden; outline-offset: 1px; -webkit-tap-highlight-color: transparent; }
+    .leaflet-container .leaflet-overlay-pane svg { max-width: none !important; max-height: none !important; }
+    .leaflet-container .leaflet-tile-pane img, .leaflet-container .leaflet-tile {
+      max-width: none !important; max-height: none !important; width: auto; padding: 0;
+    }
+    .leaflet-tile { user-select: none; -webkit-user-drag: none; visibility: hidden; }
+    .leaflet-tile-loaded { visibility: inherit; }
+    .leaflet-pane { z-index: 400; }
+    .leaflet-tile-pane { z-index: 200; }
+    .leaflet-overlay-pane { z-index: 400; }
+    .leaflet-shadow-pane { z-index: 500; }
+    .leaflet-marker-pane { z-index: 600; }
+    .leaflet-tooltip-pane { z-index: 650; }
+    .leaflet-popup-pane { z-index: 700; }
+    .leaflet-map-pane canvas { z-index: 100; }
+    .leaflet-map-pane svg { z-index: 200; }
+    .leaflet-control { position: relative; z-index: 800; pointer-events: auto; }
+    .leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; pointer-events: none; }
+    .leaflet-top { top: 0; }
+    .leaflet-right { right: 0; }
+    .leaflet-bottom { bottom: 0; }
+    .leaflet-left { left: 0; }
+    .leaflet-control { float: left; clear: both; }
+    .leaflet-right .leaflet-control { float: right; }
+    .leaflet-top .leaflet-control { margin-top: 10px; }
+    .leaflet-bottom .leaflet-control { margin-bottom: 10px; }
+    .leaflet-left .leaflet-control { margin-left: 10px; }
+    .leaflet-right .leaflet-control { margin-right: 10px; }
+    .leaflet-zoom-animated { transform-origin: 0 0; }
+    .leaflet-zoom-anim .leaflet-zoom-animated { transition: transform 0.25s cubic-bezier(0,0,0.25,1); }
+    .leaflet-zoom-anim .leaflet-zoom-hide { visibility: hidden; }
+    .leaflet-interactive { cursor: pointer; }
+    .leaflet-grab { cursor: grab; }
+    .leaflet-dragging .leaflet-grab { cursor: grabbing; }
+    .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-image-layer,
+    .leaflet-pane > svg path, .leaflet-tile-container { pointer-events: none; }
+    .leaflet-pane > svg path.leaflet-interactive { pointer-events: auto; }
+    .leaflet-container { font: 12px/1.5 "Helvetica Neue", Arial, sans-serif; }
+    .leaflet-container a { color: #0078a8; }
+    .leaflet-bar { box-shadow: 0 1px 5px rgba(0,0,0,0.45); border-radius: 4px; }
+    .leaflet-bar a {
+      background: #fff; border-bottom: 1px solid #ccc; color: #111; display: block;
+      height: 30px; line-height: 30px; text-align: center; text-decoration: none; width: 30px;
+    }
+    .leaflet-bar a:first-child { border-radius: 4px 4px 0 0; }
+    .leaflet-bar a:last-child { border-bottom: 0; border-radius: 0 0 4px 4px; }
+    .leaflet-control-zoom-in, .leaflet-control-zoom-out { font: bold 20px "Lucida Console", monospace; }
+    .leaflet-container .leaflet-control-attribution {
+      background: rgba(255,255,255,0.85); color: #333; line-height: 1.4; margin: 0; padding: 0 5px;
+    }
+    .leaflet-control-attribution a { text-decoration: none; }
+    .leaflet-popup { position: absolute; text-align: center; margin-bottom: 20px; }
+    .leaflet-popup-content-wrapper {
+      background: #fff; color: #333; padding: 1px; text-align: left;
+      border-radius: 9px; box-shadow: 0 3px 14px rgba(0,0,0,0.35);
+    }
+    .leaflet-popup-content { margin: 13px 24px 13px 20px; line-height: 1.3; min-height: 1px; }
+    .leaflet-popup-tip-container {
+      width: 40px; height: 20px; position: absolute; left: 50%; margin-left: -20px;
+      margin-top: -1px; overflow: hidden; pointer-events: none;
+    }
+    .leaflet-popup-tip {
+      width: 17px; height: 17px; margin: -10px auto 0; padding: 1px;
+      background: #fff; box-shadow: 0 3px 14px rgba(0,0,0,0.35); transform: rotate(45deg);
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+      position: absolute; top: 0; right: 0; width: 24px; height: 24px; border: 0;
+      background: transparent; color: #666; font: 16px/24px Tahoma, sans-serif;
+      text-align: center; text-decoration: none;
+    }
+    .leaflet-tooltip {
+      position: absolute; padding: 6px; background: #fff; border: 1px solid #fff;
+      border-radius: 3px; color: #222; white-space: nowrap; pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    }
+    .leaflet-tooltip-top { margin-top: -6px; }
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f5f7fa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; }
+    header {
+      padding: 16px 20px 14px;
+      background: #ffffff;
+      border-bottom: 1px solid #d8dee8;
+    }
+    h1 { margin: 0 0 4px; font-size: 22px; font-weight: 650; }
+    header p { margin: 0; color: #5d687b; font-size: 14px; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(270px, 330px) minmax(0, 1fr);
+      min-height: calc(100vh - 80px);
+    }
+    aside {
+      padding: 18px;
+      background: #ffffff;
+      border-right: 1px solid #d8dee8;
+      overflow-y: auto;
+    }
+    label { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 650; }
+    select, button {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #b8c1cf;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #172033;
+      font: inherit;
+    }
+    select { margin-bottom: 16px; padding: 8px 10px; }
+    button { padding: 8px 12px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #f0f3f7; }
+    .detail {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #d8dee8;
+    }
+    .detail h2 { margin: 0 0 10px; font-size: 16px; }
+    .detail dl { margin: 0; display: grid; grid-template-columns: 92px 1fr; gap: 7px 10px; font-size: 13px; }
+    .detail dt { color: #667085; }
+    .detail dd { margin: 0; overflow-wrap: anywhere; }
+    .hint { margin: 12px 0 0; color: #667085; font-size: 12px; line-height: 1.45; }
+    #map { min-height: calc(100vh - 80px); background: #e8edf2; }
+    .map-legend {
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid #cbd3df;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(23, 32, 51, 0.15);
+      color: #172033;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .legend-row { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+    .legend-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; }
+    .popup-table { border-collapse: collapse; font-size: 12px; min-width: 250px; }
+    .popup-table th, .popup-table td { padding: 3px 5px; text-align: left; vertical-align: top; }
+    .popup-table th { color: #5d687b; font-weight: 600; white-space: nowrap; }
+    @media (max-width: 720px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid #d8dee8; overflow: visible; }
+      #map { min-height: 65vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WA Pedestrian Survey Sample Explorer</h1>
+    <p>49 surveyed locations · Source: model_dataset.xlsx · Select a site to zoom to its city and road context.</p>
+  </header>
+  <main>
+    <aside>
+      <label for="display-mode">Display markers by</label>
+      <select id="display-mode">
+        <option value="batch">Survey batch</option>
+        <option value="cross">Peak cross-road pedestrian flow</option>
+        <option value="along">Peak along-road pedestrian flow</option>
+      </select>
+
+      <label for="site-select">Find a site, locality or road</label>
+      <select id="site-select">
+        <option value="">All surveyed locations</option>
+      </select>
+      <button id="reset-view" type="button">Show all Western Australia sites</button>
+
+      <section class="detail" aria-live="polite">
+        <h2>Selected location</h2>
+        <div id="site-detail">Choose a location from the list or click a marker.</div>
+      </section>
+      <p class="hint">Zoom in to read city, suburb and road labels from the OpenStreetMap basemap. Marker tooltips show the survey location label.</p>
+    </aside>
+    <div id="map" role="application" aria-label="Interactive map of Western Australian pedestrian survey locations"></div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    const sites = [{"site_id":"250303-01","survey_batch_id":"250303","source_location_id":"M074-52.8","location_id":"M074-52.8","road_no":"M074","slk_km":52.8,"road_name":"Melville Mandurah Hwy","survey_location_name":"Melville Mandurah Hwy Mandurah","latitude":-32.8662817,"longitude":115.70516258,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":0.333333333333333,"obs_peak_along_ped_per_h":12.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-02","survey_batch_id":"250303","source_location_id":"H009-155.15","location_id":"H009-155.15","road_no":"H009","slk_km":155.15,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Bunbury","latitude":-33.359642215,"longitude":115.67804115,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":4.0,"obs_peak_along_ped_per_h":7.66666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-03","survey_batch_id":"250303","source_location_id":"H045-36.1","location_id":"H045-36.1","road_no":"H045","slk_km":36.1,"road_name":"Coalfields Hwy","survey_location_name":"Coalfields Hwy Collie","latitude":-33.360624217,"longitude":116.15473817,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":47.0,"obs_peak_along_ped_per_h":101.333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-04","survey_batch_id":"250303","source_location_id":"H009-278.3","location_id":"H009-278.3","road_no":"H009","slk_km":278.3,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Manjimup","latitude":-34.238746412,"longitude":116.14949095,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":16.0,"obs_peak_along_ped_per_h":11.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-05","survey_batch_id":"250303","source_location_id":"H009-57.9","location_id":"H009-57.9","road_no":"H009","slk_km":57.9,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Pinjarra","latitude":-32.62891769,"longitude":115.8746123,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":57.3333333333333,"obs_peak_along_ped_per_h":108.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-06","survey_batch_id":"250303","source_location_id":"H009-111.3","location_id":"H009-111.3","road_no":"H009","slk_km":111.3,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Harvey","latitude":-33.08250641,"longitude":115.9057239,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":52.0,"obs_peak_along_ped_per_h":21.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-07","survey_batch_id":"250303","source_location_id":"H009-185.5","location_id":"H009-185.5","road_no":"H009","slk_km":185.5,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Donnybrook","latitude":-33.574457561,"longitude":115.824750145,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":46.6666666666667,"obs_peak_along_ped_per_h":52.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-08","survey_batch_id":"250303","source_location_id":"M042-1.1","location_id":"M042-1.1","road_no":"M042","slk_km":1.1,"road_name":"Goodwood Rd","survey_location_name":"Goodwood Rd Capel","latitude":-33.55335399,"longitude":115.5632645,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":34.3333333333333,"obs_peak_along_ped_per_h":53.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-09","survey_batch_id":"250303","source_location_id":"H009-83.5","location_id":"H009-83.5","road_no":"H009","slk_km":83.5,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Waroona","latitude":-32.84577231,"longitude":115.92262235,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":26.3333333333333,"obs_peak_along_ped_per_h":13.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-10","survey_batch_id":"250303","source_location_id":"H009-242.9","location_id":"H009-242.9","road_no":"H009","slk_km":242.9,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Bridgetown","latitude":-33.959022713,"longitude":116.13690154,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":96.6666666666667,"obs_peak_along_ped_per_h":349.666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-11","survey_batch_id":"250303","source_location_id":"H043-85.8","location_id":"H043-85.8","road_no":"H043","slk_km":85.8,"road_name":"Bussell Hwy","survey_location_name":"Bussell Hwy Cowaramup","latitude":-33.850564716,"longitude":115.10324313,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":192.333333333333,"obs_peak_along_ped_per_h":328.666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-12","survey_batch_id":"250303","source_location_id":"H043-140.6","location_id":"H043-140.6","road_no":"H043","slk_km":140.6,"road_name":"Bussell Hwy","survey_location_name":"Bussell Hwy Augusta","latitude":-34.31490004,"longitude":115.159261,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":52.0,"obs_peak_along_ped_per_h":91.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-13","survey_batch_id":"250303","source_location_id":"H009-170.3","location_id":"H009-170.3","road_no":"H009","slk_km":170.3,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Boyanup","latitude":-33.48413435,"longitude":115.7279814,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":3.0,"obs_peak_along_ped_per_h":12.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-14","survey_batch_id":"250303","source_location_id":"H009-131.65","location_id":"H009-131.65","road_no":"H009","slk_km":131.65,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Brunswick","latitude":-33.25360255,"longitude":115.8388981,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":32.3333333333333,"obs_peak_along_ped_per_h":30.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-15","survey_batch_id":"250303","source_location_id":"M074-7.2","location_id":"M074-7.2","road_no":"M074","slk_km":7.2,"road_name":"Lakelands Lake Clifton","survey_location_name":"Lakelands Lake Clifton Mandurah","latitude":-32.5257586175,"longitude":115.747576125,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":0.333333333333333,"obs_peak_along_ped_per_h":5.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-16","survey_batch_id":"250303","source_location_id":"M023-19.16","location_id":"M023-19.16","road_no":"M023","slk_km":19.16,"road_name":"Pinjarra Rd","survey_location_name":"Pinjarra Rd Pinjarra","latitude":-32.628933292,"longitude":115.87239438,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":15.0,"obs_peak_along_ped_per_h":30.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250303-17","survey_batch_id":"250303","source_location_id":"H043-3.9","location_id":"H043-3.9","road_no":"H043","slk_km":3.9,"road_name":"Bussell Hwy","survey_location_name":"Bussell Hwy Bunbury","latitude":-33.375550581,"longitude":115.64708733500001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":0.333333333333333,"obs_peak_along_ped_per_h":10.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250341-01","survey_batch_id":"250341","source_location_id":"H042-31.6","location_id":"H042-31.6","road_no":"H042","slk_km":31.6,"road_name":"Broome Hwy","survey_location_name":"Broome Hwy - Broome","latitude":-17.930299018,"longitude":122.23313676,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":8.33333333333333,"obs_peak_along_ped_per_h":20.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250341-02","survey_batch_id":"250341","source_location_id":"H011-44.46","location_id":"H011-44.46","road_no":"H011","slk_km":44.46,"road_name":"Victoria Hwy","survey_location_name":"Victoria Hwy - Kununurra","latitude":-15.782698652,"longitude":128.73777096,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":10.6666666666667,"obs_peak_along_ped_per_h":10.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250341-03","survey_batch_id":"250341","source_location_id":"H047-41.88","location_id":"H047-41.88","road_no":"H047","slk_km":41.88,"road_name":"Derby Hwy","survey_location_name":"Derby Hwy - Derby","latitude":-17.305547818,"longitude":123.63371703,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":5.33333333333333,"obs_peak_along_ped_per_h":15.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250341-04","survey_batch_id":"250341","source_location_id":"H006-2522.8","location_id":"H006-2522.8","road_no":"H006","slk_km":2522.8,"road_name":"GNH","survey_location_name":"GNH - Fitzroy Crossing","latitude":-18.196518824,"longitude":125.56587508,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":87.0,"obs_peak_along_ped_per_h":17.3333333333333,"target_source":"raw_survey_workbooks_three_day_reconstruction","qa_status":"ready","qa_note":"Corrected from client compact values (125 cross, 25.5 along), which reproduce Thursday-Friday only; all three raw days and embedded hourly values give 87 cross and 17.3333 along."},{"site_id":"250341-05","survey_batch_id":"250341","source_location_id":"H046-0.06","location_id":"H046-0.06","road_no":"H046","slk_km":0.06,"road_name":"Dampier Rd","survey_location_name":"Dampier Rd - Karratha","latitude":-20.746288312,"longitude":116.78880909,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":0.666666666666667,"obs_peak_along_ped_per_h":0.666666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250341-06","survey_batch_id":"250341","source_location_id":"H051-7.03","location_id":"H051-7.03","road_no":"H051","slk_km":7.03,"road_name":"Port Hedland Rd","survey_location_name":"Port Hedland Rd - Port Hedland","latitude":-20.312600220999997,"longitude":118.60968076,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":0.0,"obs_peak_along_ped_per_h":1.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"250341-07","survey_batch_id":"250341","source_location_id":"H044-4.59","location_id":"H044-4.59","road_no":"H044","slk_km":4.59,"road_name":"Carnarvon Rd","survey_location_name":"Carnarvon Rd - Carnarvon","latitude":-24.8785516795,"longitude":113.66090582000001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":2.66666666666667,"obs_peak_along_ped_per_h":28.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-28","survey_batch_id":"260335","source_location_id":"H005-553.12","location_id":"H005-553.12","road_no":"H005","slk_km":553.12,"road_name":"GEH","survey_location_name":"GEH Coolgardie","latitude":-30.9546712,"longitude":121.16230490000001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":3.33333333333333,"obs_peak_along_ped_per_h":11.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-29","survey_batch_id":"260335","source_location_id":"H005-589.84","location_id":"H005-589.84","road_no":"H005","slk_km":589.84,"road_name":"GEH","survey_location_name":"GEH Kalgoorlie","latitude":-30.761932002,"longitude":121.45669483500001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":9.33333333333333,"obs_peak_along_ped_per_h":10.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-30","survey_batch_id":"260335","source_location_id":"H049-19.47","location_id":"H049-19.47","road_no":"H049","slk_km":19.47,"road_name":"Goldfields Hwy","survey_location_name":"Goldfields Hwy Kambalda","latitude":-31.199041355,"longitude":121.65157546,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":5.66666666666667,"obs_peak_along_ped_per_h":1.66666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-31","survey_batch_id":"260335","source_location_id":"M010-366.85","location_id":"H010-366.85","road_no":"H010","slk_km":366.85,"road_name":"Coolgardie Esperance Hwy","survey_location_name":"Coolgardie Esperance Hwy Esperance","latitude":-33.843249478,"longitude":121.88741736,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":3.0,"obs_peak_along_ped_per_h":8.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":"Road code corrected from client M010 (Chidlow York Rd) to H010 (Coolgardie Esperance Hwy); Road Network contains SLK 366.85 on H010 and the raw targets reproduce."},{"site_id":"260335-32","survey_batch_id":"260335","source_location_id":"M010-165.45","location_id":"H010-165.45","road_no":"H010","slk_km":165.45,"road_name":"Coolgardie Esperance Hwy","survey_location_name":"Coolgardie Esperance Hwy Norseman","latitude":-32.196067564,"longitude":121.77883002,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":2.0,"obs_peak_along_ped_per_h":12.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":"Road code corrected from client M010 (Chidlow York Rd) to H010 (Coolgardie Esperance Hwy); Road Network contains SLK 165.45 on H010 and the raw targets reproduce."},{"site_id":"260335-33","survey_batch_id":"260335","source_location_id":"H001-402.89","location_id":"H001-402.89","road_no":"H001","slk_km":402.89,"road_name":"Albany Hwy","survey_location_name":"Albany Hwy Albany","latitude":-34.9935781725,"longitude":117.857386435,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":107.333333333333,"obs_peak_along_ped_per_h":137.333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-34","survey_batch_id":"260335","source_location_id":"M031-270.1","location_id":"M031-270.1","road_no":"M031","slk_km":270.1,"road_name":"Great Southern Hwy","survey_location_name":"Great Southern Hwy Katanning","latitude":-33.696413715714286,"longitude":117.54712668571429,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":1.66666666666667,"obs_peak_along_ped_per_h":3.66666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-35","survey_batch_id":"260335","source_location_id":"H009-463.98","location_id":"H009-463.98","road_no":"H009","slk_km":463.98,"road_name":"South Western Hwy","survey_location_name":"South Western Hwy Denmark","latitude":-34.960029021,"longitude":117.35471622,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":128.666666666667,"obs_peak_along_ped_per_h":126.333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-36","survey_batch_id":"260335","source_location_id":"H001-356.36","location_id":"H001-356.36","road_no":"H001","slk_km":356.36,"road_name":"Albany Hwy","survey_location_name":"Albany Hwy Mt Barker","latitude":-34.618832338,"longitude":117.66146116,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":18.6666666666667,"obs_peak_along_ped_per_h":37.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-37","survey_batch_id":"260335","source_location_id":"H008-0.6","location_id":"H008-0.6","road_no":"H008","slk_km":0.6,"road_name":"South Coast Hwy","survey_location_name":"South Coast Hwy Albany","latitude":-34.9991851,"longitude":117.8702822,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":10.0,"obs_peak_along_ped_per_h":24.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-38","survey_batch_id":"260335","source_location_id":"H044-5.04","location_id":"H044-5.04","road_no":"H044","slk_km":5.04,"road_name":"Carnarvon Rd","survey_location_name":"Carnarvon Rd Carnarvon","latitude":-24.881911703846153,"longitude":113.65865085769231,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":4.33333333333333,"obs_peak_along_ped_per_h":18.3333333333333,"target_source":"raw_survey_workbooks_schema_aware_reconstruction","qa_status":"ready","qa_note":"Corrected along target from 29.6667 to 18.3333; the special layout has one 15-minute along-road table, and its rolling result matches the embedded hourly values."},{"site_id":"260335-39","survey_batch_id":"260335","source_location_id":"H004-366.31","location_id":"H004-366.31","road_no":"H004","slk_km":366.31,"road_name":"Brand Hwy","survey_location_name":"Brand Hwy Geraldton","latitude":-28.8009554955,"longitude":114.620589355,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":3.0,"obs_peak_along_ped_per_h":14.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-40","survey_batch_id":"260335","source_location_id":"","location_id":"H007-52.5","road_no":"H007","slk_km":52.5,"road_name":"North West Coastal Hwy","survey_location_name":"North West Coastal Hwy Northampton","latitude":-28.348677794,"longitude":114.63148962,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":53.666666666666664,"obs_peak_along_ped_per_h":66.33333333333333,"target_source":"raw_survey_workbooks_three_day_reconstruction","qa_status":"ready","qa_note":"Absent from the client compact table; all three raw workbooks and embedded hourly values reproduce the targets. The workbook internal label resolves the filename's Norseman wording to NWCH Northampton."},{"site_id":"260335-41","survey_batch_id":"260335","source_location_id":"M045-168.38","location_id":"M045-168.38","road_no":"M045","slk_km":168.38,"road_name":"Indian Ocean Dr","survey_location_name":"Indian Ocean Dr Jurien Bay","latitude":-30.303645896,"longitude":115.04189088,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":7.33333333333333,"obs_peak_along_ped_per_h":14.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-42","survey_batch_id":"260335","source_location_id":"M032-0.55","location_id":"M032-0.55","road_no":"M032","slk_km":0.55,"road_name":"Northam Pithara Rd","survey_location_name":"Northam Pithara Rd Northam","latitude":-31.645323124999997,"longitude":116.67709310000001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":3.33333333333333,"obs_peak_along_ped_per_h":12.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-43","survey_batch_id":"260335","source_location_id":"H053-30.57","location_id":"H053-30.57","road_no":"H053","slk_km":30.57,"road_name":"Williams Narrogin Hwy","survey_location_name":"Williams Narrogin Hwy Narrogin","latitude":-32.93477801,"longitude":117.17296618,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":32.0,"obs_peak_along_ped_per_h":36.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-44","survey_batch_id":"260335","source_location_id":"M031-34.78","location_id":"M031-34.78","road_no":"M031","slk_km":34.78,"road_name":"Northam Cranbrook Rd","survey_location_name":"Northam Cranbrook Rd York","latitude":-31.89127655,"longitude":116.77339218,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":1.0,"obs_peak_along_ped_per_h":3.0,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-45","survey_batch_id":"260335","source_location_id":"H005-257.49","location_id":"H005-257.49","road_no":"H005","slk_km":257.49,"road_name":"Great Eastern Hwy","survey_location_name":"Great Eastern Hwy Merredin","latitude":-31.483504936,"longitude":118.27984550000001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":11.3333333333333,"obs_peak_along_ped_per_h":4.66666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-46","survey_batch_id":"260335","source_location_id":"M002-86.13","location_id":"M002-86.13","road_no":"M002","slk_km":86.13,"road_name":"Bindoon Moora Rd","survey_location_name":"Bindoon Moora Rd Moora","latitude":-30.64219011,"longitude":116.0082917,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":1.66666666666667,"obs_peak_along_ped_per_h":9.66666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-47","survey_batch_id":"260335","source_location_id":"M031-216.22","location_id":"M031-216.22","road_no":"M031","slk_km":216.22,"road_name":"Great Southern Hwy","survey_location_name":"Great Southern Hwy Wagin","latitude":-33.309062428,"longitude":117.3447757,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":7.33333333333333,"obs_peak_along_ped_per_h":11.6666666666667,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-48","survey_batch_id":"260335","source_location_id":"M026-40.44","location_id":"M026-40.44","road_no":"M026","slk_km":40.44,"road_name":"Toodyay Rd","survey_location_name":"Toodyay Rd Toodyay","latitude":-31.555624751666667,"longitude":116.47529036666667,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":5.66666666666667,"obs_peak_along_ped_per_h":6.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-49","survey_batch_id":"260335","source_location_id":"M031-66.8","location_id":"M031-66.8","road_no":"M031","slk_km":66.8,"road_name":"Northam Cranbrook Rd","survey_location_name":"Northam Cranbrook Rd Beverley","latitude":-32.11023885,"longitude":116.92358180000001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":5.66666666666667,"obs_peak_along_ped_per_h":7.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-50","survey_batch_id":"260335","source_location_id":"H006-233.1","location_id":"H006-233.1","road_no":"H006","slk_km":233.1,"road_name":"Great Northern Hwy","survey_location_name":"Great Northern Hwy Dalwallinu","latitude":-30.275919786,"longitude":116.66387109,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":4.66666666666667,"obs_peak_along_ped_per_h":4.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-51","survey_batch_id":"260335","source_location_id":"M028-22.51","location_id":"M028-22.51","road_no":"M028","slk_km":22.51,"road_name":"Midlands Rd","survey_location_name":"Midlands Rd Moora","latitude":-30.638419114,"longitude":116.00553224000001,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"1","n_survey_days":"3","obs_peak_cross_ped_per_h":16.6666666666667,"obs_peak_along_ped_per_h":35.3333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""},{"site_id":"260335-52","survey_batch_id":"260335","source_location_id":"M041-193.82","location_id":"M041-193.82","road_no":"M041","slk_km":193.82,"road_name":"York-Merredin Rd","survey_location_name":"York-Merredin Rd Merredin","latitude":-31.4833797565,"longitude":118.275499505,"coordinate_crs":"EPSG:4326","coordinate_method":"ausrap_segment_linear_interpolation","ausrap_segment_match_count":"2","n_survey_days":"3","obs_peak_cross_ped_per_h":6.0,"obs_peak_along_ped_per_h":4.33333333333333,"target_source":"Ped_iRAP_merged.csv","qa_status":"ready","qa_note":""}];
+    const batchPalette = ["#2563eb", "#f97316", "#16a34a", "#9333ea", "#dc2626", "#0891b2"];
+    const batchIds = [...new Set(sites.map(d => String(d.survey_batch_id)))].sort();
+    const batchColors = Object.fromEntries(batchIds.map((id, index) => [id, batchPalette[index % batchPalette.length]]));
+    const modeSelect = document.getElementById("display-mode");
+    const siteSelect = document.getElementById("site-select");
+    const detail = document.getElementById("site-detail");
+
+    const map = L.map("map", { zoomControl: true, preferCanvas: true });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    const bounds = L.latLngBounds(sites.map(d => [d.latitude, d.longitude]));
+    const markerById = new Map();
+    let selectedSiteId = "";
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+      })[ch]);
+    }
+
+    function number(value, digits = 1) {
+      return Number(value).toLocaleString("en-AU", { maximumFractionDigits: digits });
+    }
+
+    function markerRadius(site, mode) {
+      if (mode === "batch") return 6;
+      const key = mode === "cross" ? "obs_peak_cross_ped_per_h" : "obs_peak_along_ped_per_h";
+      const maxValue = Math.max(...sites.map(d => Number(d[key])), 1);
+      return 4 + 13 * Math.sqrt(Math.max(0, Number(site[key])) / maxValue);
+    }
+
+    function markerColor(site, mode) {
+      if (mode === "batch") return batchColors[String(site.survey_batch_id)];
+      return mode === "cross" ? "#2563eb" : "#f97316";
+    }
+
+    function popupHtml(site) {
+      return `<table class="popup-table">
+        <tr><th>Site ID</th><td>${esc(site.site_id)}</td></tr>
+        <tr><th>Locality / label</th><td>${esc(site.survey_location_name)}</td></tr>
+        <tr><th>Road</th><td>${esc(site.road_no)} · ${esc(site.road_name)}</td></tr>
+        <tr><th>SLK</th><td>${number(site.slk_km, 3)} km</td></tr>
+        <tr><th>Coordinates</th><td>${number(site.latitude, 6)}, ${number(site.longitude, 6)}</td></tr>
+        <tr><th>Survey batch</th><td>${esc(site.survey_batch_id)}</td></tr>
+        <tr><th>Cross-road peak</th><td>${number(site.obs_peak_cross_ped_per_h, 3)} pedestrians/hour</td></tr>
+        <tr><th>Along-road peak</th><td>${number(site.obs_peak_along_ped_per_h, 3)} pedestrians/hour</td></tr>
+        <tr><th>QA status</th><td>${esc(site.qa_status)}</td></tr>
+      </table>`;
+    }
+
+    function updateDetail(site) {
+      if (!site) {
+        detail.textContent = "Choose a location from the list or click a marker.";
+        return;
+      }
+      detail.innerHTML = `<dl>
+        <dt>Site ID</dt><dd>${esc(site.site_id)}</dd>
+        <dt>Locality</dt><dd>${esc(site.survey_location_name)}</dd>
+        <dt>Road</dt><dd>${esc(site.road_no)} · ${esc(site.road_name)}</dd>
+        <dt>SLK</dt><dd>${number(site.slk_km, 3)} km</dd>
+        <dt>Cross-road</dt><dd>${number(site.obs_peak_cross_ped_per_h, 3)} pedestrians/hour</dd>
+        <dt>Along-road</dt><dd>${number(site.obs_peak_along_ped_per_h, 3)} pedestrians/hour</dd>
+      </dl>`;
+    }
+
+    function selectSite(site, zoom = true) {
+      selectedSiteId = site.site_id;
+      siteSelect.value = site.site_id;
+      updateDetail(site);
+      updateMarkers();
+      const marker = markerById.get(site.site_id);
+      if (zoom) map.setView(marker.getLatLng(), 14, { animate: true });
+      marker.openPopup();
+    }
+
+    sites
+      .slice()
+      .sort((a, b) => `${a.survey_location_name} ${a.site_id}`.localeCompare(`${b.survey_location_name} ${b.site_id}`, "en"))
+      .forEach(site => {
+        const option = document.createElement("option");
+        option.value = site.site_id;
+        option.textContent = `${site.site_id} — ${site.survey_location_name} — ${site.road_name}`;
+        siteSelect.appendChild(option);
+
+        const marker = L.circleMarker([site.latitude, site.longitude], {
+          radius: 6,
+          color: "#ffffff",
+          weight: 1.5,
+          fillColor: batchColors[String(site.survey_batch_id)],
+          fillOpacity: 0.86
+        }).addTo(map);
+        marker.bindTooltip(`${esc(site.site_id)} · ${esc(site.survey_location_name)} · ${esc(site.road_name)}`, { direction: "top" });
+        marker.bindPopup(popupHtml(site), { maxWidth: 360 });
+        marker.on("click", () => selectSite(site, false));
+        markerById.set(site.site_id, marker);
+      });
+
+    const legend = L.control({ position: "bottomright" });
+    legend.onAdd = function () {
+      this._div = L.DomUtil.create("div", "map-legend");
+      this.update();
+      return this._div;
+    };
+    legend.update = function () {
+      const mode = modeSelect.value;
+      if (mode === "batch") {
+        this._div.innerHTML = `<strong>Survey batch</strong>${batchIds.map(id =>
+          `<div class="legend-row"><span class="legend-dot" style="background:${batchColors[id]}"></span>${esc(id)}</div>`
+        ).join("")}`;
+      } else {
+        const label = mode === "cross" ? "Cross-road peak" : "Along-road peak";
+        const color = mode === "cross" ? "#2563eb" : "#f97316";
+        this._div.innerHTML = `<strong>${label}</strong><div class="legend-row"><span class="legend-dot" style="background:${color}"></span>Larger circle = more pedestrians/hour</div>`;
+      }
+    };
+    legend.addTo(map);
+
+    function updateMarkers() {
+      const mode = modeSelect.value;
+      sites.forEach(site => {
+        const marker = markerById.get(site.site_id);
+        const selected = site.site_id === selectedSiteId;
+        marker.setRadius(markerRadius(site, mode) + (selected ? 2 : 0));
+        marker.setStyle({
+          fillColor: markerColor(site, mode),
+          color: selected ? "#111827" : "#ffffff",
+          weight: selected ? 3 : 1.5,
+          fillOpacity: 0.86
+        });
+      });
+      legend.update();
+    }
+
+    modeSelect.addEventListener("change", updateMarkers);
+    siteSelect.addEventListener("change", () => {
+      const site = sites.find(d => d.site_id === siteSelect.value);
+      if (site) selectSite(site, true);
+      else resetView();
+    });
+
+    function resetView() {
+      selectedSiteId = "";
+      siteSelect.value = "";
+      updateDetail(null);
+      updateMarkers();
+      map.closePopup();
+      map.fitBounds(bounds, { padding: [24, 24] });
+    }
+
+    document.getElementById("reset-view").addEventListener("click", resetView);
+    map.fitBounds(bounds, { padding: [24, 24] });
+    updateMarkers();
+  </script>
+</body>
+</html>

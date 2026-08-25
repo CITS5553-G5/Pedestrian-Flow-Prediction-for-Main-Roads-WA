@@ -40,14 +40,16 @@ data/raw/R scripts for process and linkage/
 data/raw/SS_all_index PBI 2010-2024 Download.xlsx
 data/raw/ST_all_index PBI 2010-2025 Download.xlsx
 
-# Generated artefacts
+# Approved shared outputs are versioned under 06_outputs/.
+# Keep the old path ignored so outdated or personal notebooks cannot add files
+# outside the reviewed shared-output directory.
 outputs/
 models/
 reports/generated/
 tmp/
 
 # Personal local experiment copy; not a shared test suite
-06_test/
+07_test/
 
 # Personal guidance and working notes; not shared with the team
 /GIT_WORKFLOW_ZH.md
