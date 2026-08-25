@@ -3,9 +3,10 @@
 
 Run from the project directory:
 
-    python3 01_data_preparation/view_sample_map.py
+    python3 01_data_preparation/01_haoqi_view_sample_map.py
 
-The command regenerates 06_outputs/internal_sample_map.html, starts a local web
+The command regenerates
+06_outputs/01_data_preparation/internal_sample_map.html, starts a local web
 server, opens the default browser, and keeps the server running until Ctrl+C.
 Use --write-only to generate the HTML without opening a browser.
 """
@@ -33,7 +34,9 @@ except ModuleNotFoundError as exc:
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKBOOK = PROJECT_ROOT / "data" / "processed" / "model_dataset.xlsx"
-DEFAULT_OUTPUT = PROJECT_ROOT / "06_outputs" / "internal_sample_map.html"
+DEFAULT_OUTPUT = (
+    PROJECT_ROOT / "06_outputs" / "01_data_preparation" / "internal_sample_map.html"
+)
 REQUIRED_COLUMNS = {
     "site_id",
     "survey_batch_id",
@@ -104,10 +107,14 @@ def read_sites(workbook_path: Path) -> list[dict[str, Any]]:
 
         sheet = workbook["Model_Data"]
         rows = sheet.iter_rows(values_only=True)
-        headers = [str(value).strip() if value is not None else "" for value in next(rows)]
+        headers = [
+            str(value).strip() if value is not None else "" for value in next(rows)
+        ]
         missing = sorted(REQUIRED_COLUMNS.difference(headers))
         if missing:
-            raise ValueError(f"Model_Data is missing required columns: {', '.join(missing)}")
+            raise ValueError(
+                f"Model_Data is missing required columns: {', '.join(missing)}"
+            )
 
         sites: list[dict[str, Any]] = []
         for values in rows:
@@ -121,7 +128,9 @@ def read_sites(workbook_path: Path) -> list[dict[str, Any]]:
                 row["obs_peak_cross_ped_per_h"] = float(row["obs_peak_cross_ped_per_h"])
                 row["obs_peak_along_ped_per_h"] = float(row["obs_peak_along_ped_per_h"])
             except (TypeError, ValueError) as exc:
-                raise ValueError(f"Invalid numeric value for site {row['site_id']}: {exc}") from exc
+                raise ValueError(
+                    f"Invalid numeric value for site {row['site_id']}: {exc}"
+                ) from exc
             sites.append(row)
     finally:
         workbook.close()

@@ -68,7 +68,7 @@ The single `requirements.txt` contains the shared analysis, notebook, code-quali
 
 The `.devcontainer/` configuration is an optional OrbStack or Docker Desktop environment. Team members do not need it for ordinary notebook or Python work. It mounts the repository at `/workspace` inside the container, but project code must remain runnable outside the container.
 
-See `.devcontainer/CONTAINER_GUIDE.md` for the optional PostgreSQL, PostGIS and pgAdmin environment.
+See `.devcontainer/CONTAINER_GUIDE.md` for the optional Python and frontend development environment.
 
 ## Runtime API configuration
 
