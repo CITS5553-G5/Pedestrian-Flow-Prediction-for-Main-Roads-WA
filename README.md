@@ -5,7 +5,7 @@ This private repository is the CITS5553 Group 5 day-to-day development workspace
 ## Project stages
 
 1. `01_data_preparation` — prepare, reconcile and link the survey, AusRAP and road-network data.
-2. `02_feature_extraction` — obtain approved external sources and extract additional spatial or imagery features.
+2. `02_feature_extraction` — obtain approved external sources and extract additional spatial or imagery features. Shared source-specific notebooks are kept in `02_feature_extraction/context/`.
 3. `03_model_development` — train, compare and select models.
 4. `04_prediction_pipeline` — integrate validated preparation, feature and model code into one reproducible prediction workflow.
 5. `05_application` — provide the backend and frontend used to run the agreed prediction workflow and present its results.
@@ -15,13 +15,13 @@ Use `05_application/backend/` for the API and application-side validation, and `
 
 `docs/01_data_preparation/` contains table-format and verified-correction notes. `docs/02_feature_extraction/` contains a short summary of the features produced by the shared Stage 2 notebooks. Detailed personal working notes are excluded from Git. `data/` contains only authorised, intentionally shared inputs and approved project tables.
 
-Reviewed feature tables and other small results that the team needs directly belong under `06_outputs/`. Update a shared output in the same commit as the notebook or script that generated it. Temporary runs, exploratory results, fitted models and large generated files must remain outside Git.
+Reviewed feature tables and other small results that the team needs directly belong under `06_outputs/`. Update a shared output in the same commit as the notebook or script that generated it. Temporary runs, exploratory results, fitted models, large generated files and outputs restricted by source terms must remain outside Git.
 
 ## File naming
 
 Shared integration files use the stage number and purpose without a member name, for example `02_feature_extraction.py`.
 
-Personal notebooks use this format:
+Stage 2 source-specific notebooks normally use this format:
 
 ```text
 <stage>_<sequence>_<member>_<topic>.ipynb
@@ -34,7 +34,7 @@ For example:
 02_03_haoqi_pta_stops.ipynb
 ```
 
-Use lowercase letters, two-digit numbers and underscores. Do not use spaces. The sequence number must be unique within the stage and agreed before a new parallel notebook is added.
+Use lowercase letters, two-digit numbers and underscores. Do not use spaces. In Stage 2, the sequence identifies a data-source work item; it does not imply execution order. Other stages should add a sequence only when it helps distinguish parallel files. Agree on a number before adding another shared notebook in the same stage.
 
 ## Native setup for Windows and macOS
 
@@ -74,16 +74,17 @@ See `.devcontainer/CONTAINER_GUIDE.md` for the optional Python and frontend deve
 
 Copy `.env.example` to `.env` and add only the credentials needed by the active experiment. `.env` files are excluded from Git.
 
-The current imagery prototype uses Mapillary and tests Google Gemini:
+The current imagery prototype uses Mapillary and tests Google Gemini. The Google Places Aggregate experiment uses a separate Google Maps Platform key:
 
 ```dotenv
 VISION_PROVIDER=gemini
 VISION_MODEL=auto
 MAPILLARY_ACCESS_TOKEN=replace_with_local_token
 GEMINI_API_KEY=replace_with_local_key
+GOOGLE_MAPS_API_KEY=replace_with_local_key
 ```
 
-Local imagery API experiments are intentionally excluded from Git until the team selects an approach for integration. Alternative providers are candidates, not confirmed client requirements, and must not be described as adopted until the team validates them.
+The shared imagery notebook is still a prototype. Additional personal imagery API experiments remain excluded from Git until the team selects an integration approach. Alternative providers are candidates, not confirmed client requirements, and must not be described as adopted until the team validates them.
 
 ## Data rule
 
