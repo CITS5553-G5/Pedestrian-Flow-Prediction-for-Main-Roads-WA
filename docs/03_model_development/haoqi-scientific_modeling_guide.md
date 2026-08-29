@@ -4,6 +4,8 @@ Version: 0.1 (pre-modeling protocol)
 Date: 2026-08-24
 Scope: the current 49 approved survey sites and the five public contextual feature sources prepared by Haoqi
 
+This protocol freezes the five durable feature tables available when it was written. The later Google Places Aggregate experiment is not part of this frozen specification because its output is a temporary local API cache. Adding it to a model comparison requires an explicit protocol revision before results are inspected.
+
 ## 1. Executive conclusion
 
 The current data meet the minimum requirements for beginning modeling experiments, but they do not justify training a complex model and treating its score as evidence of generalization. The authoritative target table contains 49 independent sites. All five feature tables join one-to-one through `site_id`, with no missing sites or duplicate keys. The sample remains small and geographically uneven, some sites are very close to one another, and both targets are strongly right-skewed and influenced by a few high-flow sites. The primary design should therefore use separate models for the two targets, repeated grouped cross-validation constrained by roads and nearby sites, a regularized main model, and tightly controlled nonlinear challengers. Every preprocessing, tuning, and feature-selection step must occur within the training folds.
