@@ -56,9 +56,12 @@ tmp/
 /docs/personal_notes/
 
 # Local-only Stage 2 notebooks; intentionally not shared
-/02_feature_extraction/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
-/02_feature_extraction/02_060_haoqi_dplh_activity_centres.ipynb
-/02_feature_extraction/02_haoqi_imagery_llm_apis.ipynb
+/02_feature_extraction/**/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
+/02_feature_extraction/**/02_060_haoqi_dplh_activity_centres.ipynb
+/02_feature_extraction/**/02_haoqi_imagery_llm_apis.ipynb
+
+# Temporary Google Places Aggregate API POI counts
+/06_outputs/02_feature_extraction/02_08_haoqi_google_places_aggregate_poi_features.xlsx
 
 # External source caches downloaded automatically by notebooks
 data/external_raw/dplh_activity_centres/
