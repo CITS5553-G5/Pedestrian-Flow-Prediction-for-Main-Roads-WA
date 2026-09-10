@@ -69,6 +69,8 @@ tmp/
 # Personal guidance and working notes; not shared with the team
 /GIT_WORKFLOW_ZH.md
 /docs/personal_notes/
+/docs/03_model_development/haoqi-feature_selection_recommendations.md
+/docs/03_model_development/haoqi-scientific_modeling_guide.md
 
 # Local-only Stage 2 notebooks; intentionally not shared
 /02_feature_extraction/**/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
