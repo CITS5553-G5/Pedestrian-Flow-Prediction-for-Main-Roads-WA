@@ -1,0 +1,89 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "food-open",
+      "properties": {
+        "id": "food-open",
+        "basic_category": "restaurant",
+        "taxonomy": {"primary": "restaurant", "hierarchy": ["food_and_drink", "restaurant"]},
+        "operating_status": "open",
+        "confidence": 0.95
+      },
+      "geometry": {"type": "Point", "coordinates": [115.001, -32.0]}
+    },
+    {
+      "type": "Feature",
+      "id": "grocery-unknown",
+      "properties": {
+        "id": "grocery-unknown",
+        "basic_category": "food_and_beverage_store",
+        "taxonomy": {"primary": "grocery_store", "hierarchy": ["shopping", "food_and_beverage_store", "grocery_store"]},
+        "operating_status": null,
+        "confidence": 0.8
+      },
+      "geometry": {"type": "Point", "coordinates": [115.002, -32.0]}
+    },
+    {
+      "type": "Feature",
+      "id": "mall-open",
+      "properties": {
+        "id": "mall-open",
+        "basic_category": "shopping_mall",
+        "taxonomy": {"primary": "shopping_mall", "hierarchy": ["shopping", "shopping_mall"]},
+        "operating_status": "open",
+        "confidence": 0.9
+      },
+      "geometry": {"type": "Point", "coordinates": [115.003, -32.0]}
+    },
+    {
+      "type": "Feature",
+      "id": "other-shop-open",
+      "properties": {
+        "id": "other-shop-open",
+        "basic_category": "fashion_and_apparel_store",
+        "taxonomy": {"primary": "clothing_store", "hierarchy": ["shopping", "specialty_store", "fashion_and_apparel_store", "clothing_store"]},
+        "operating_status": "open",
+        "confidence": 0.7
+      },
+      "geometry": {"type": "Point", "coordinates": [115.004, -32.0]}
+    },
+    {
+      "type": "Feature",
+      "id": "food-temporarily-closed",
+      "properties": {
+        "id": "food-temporarily-closed",
+        "basic_category": "cafe",
+        "taxonomy": {"primary": "cafe", "hierarchy": ["food_and_drink", "cafe"]},
+        "operating_status": "temporarily_closed",
+        "confidence": 0.9
+      },
+      "geometry": {"type": "Point", "coordinates": [115.0005, -32.0]}
+    },
+    {
+      "type": "Feature",
+      "id": "far-food",
+      "properties": {
+        "id": "far-food",
+        "basic_category": "restaurant",
+        "taxonomy": {"primary": "restaurant", "hierarchy": ["food_and_drink", "restaurant"]},
+        "operating_status": "open",
+        "confidence": 0.9
+      },
+      "geometry": {"type": "Point", "coordinates": [115.006, -32.0]}
+    },
+    {
+      "type": "Feature",
+      "id": "service-only",
+      "properties": {
+        "id": "service-only",
+        "basic_category": "professional_service",
+        "taxonomy": {"primary": "accounting", "hierarchy": ["services_and_business", "professional_service", "accounting"]},
+        "operating_status": "open",
+        "confidence": 0.9
+      },
+      "geometry": {"type": "Point", "coordinates": [116.0005, -33.0]}
+    }
+  ]
+}

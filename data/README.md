@@ -6,8 +6,8 @@ Only intentionally selected files in this directory are versioned in the private
 
 - `raw/` contains the curated client/source inputs used for target checking, road matching and AusRAP feature linkage. Treat tracked source files as immutable.
 - `external_raw/` contains selected dated snapshots of external/public datasets used by the feature pipeline. Preserve the source date, provider, licence and retrieval path. Public availability does not automatically authorise redistribution through this repository.
-- `processed/` contains approved, reproducible project datasets. `model_dataset.xlsx` is the authoritative 49-site modelling foundation.
-- `templates/` contains the Excel-only batch-input and prediction-output workbooks used by the project workflow.
+- `processed/` contains approved, reproducible project datasets. `model_dataset.xlsx` is the authoritative 49-site modelling table with observed targets, reviewed context features and candidate imagery features.
+- `templates/` contains the archived original model workbook and the Excel-only batch-input and prediction-output templates. Template filenames carry the `_template` suffix so they cannot be mistaken for processed or generated outputs.
 - `cache/` and `tmp/` are local scratch areas and are excluded from Git.
 
 The 147 macro-enabled observation workbooks are not routine project inputs because their site-level results have already been consolidated. They remain in approved archival storage outside the current Git tree and are needed only if the target aggregation must be independently reconstructed. Candidate datasets that have not been selected for the model are also excluded until a documented pipeline uses them.
@@ -17,6 +17,12 @@ All retained files are stored in ordinary Git. Git LFS is not required for the c
 Do not place API keys, access tokens, downloaded street imagery, fitted models, archival survey workbooks or disposable experiment outputs in this directory. Schema or source replacements should be reviewed by the team, especially before adding any file near GitHub's regular-Git size limit.
 
 Before staging a new source snapshot, confirm its sharing permission, record its source and licence, identify the notebook or script that consumes it, and decide whether storing it in Git is preferable to reproducible download code. Do not use an unchecked `git add .` for data changes.
+
+The Overture Places workflow is the reproducible-download case: the official client
+creates one bounded GeoParquet cache per supplied site under
+`external_raw/overture_places/<release>/`. Those caches are local, ignored by Git
+and can be rebuilt by rerunning the Overture notebook; the reviewed feature table,
+not the source cache, is the team-facing result.
 
 ## Tracked data files
 
@@ -43,9 +49,10 @@ Before staging a new source snapshot, confirm its sharing permission, record its
 
 ### Model-development table
 
-- `processed/model_dataset.xlsx` — authoritative Excel workbook containing Metadata followed by the 49 reconciled observation locations and targets.
+- `processed/model_dataset.xlsx` — authoritative processed Excel workbook containing Metadata followed by 49 reconciled observation locations, targets, 24 context fields and 13 candidate imagery fields.
 
 ### Batch and output templates
 
-- `templates/batch_input.xlsx` — populated 100-location API test input, with 49 observed benchmarks and 51 reproducibly sampled new AusRAP-linked locations.
-- `templates/prediction_output.xlsx` — prefilled 100-location comparison and Dashboard table; source context is populated and model prediction fields remain blank.
+- `templates/model_dataset_template.xlsx` — byte-preserved archive of the original 49-site foundation workbook before context and imagery integration.
+- `templates/batch_input_template.xlsx` — populated 100-location API test input, with 49 observed benchmarks and 51 reproducibly sampled new AusRAP-linked locations.
+- `templates/prediction_output_template.xlsx` — prefilled 100-location comparison and Dashboard table; source context is populated and model prediction fields remain blank.

@@ -1,0 +1,153 @@
+---
+title: "EDA for the road features extracted from map image"
+author: "Makoto Hanyuda (24773603)"
+date: "2026-07-27"
+output: pdf_document
+---
+
+# Preparing the Analysis Dataset
+
+This section merges the pedestrian survey data with the road feature data collected from images. The response variables are `obs_peak_along` and `obs_peak_cross`, representing observed pedestrian counts along and across the road. The explanatory variables include road and land-use features such as footpath type, building counts, and pedestrian infrastructure.
+
+```{r}
+# Load data
+library(fst)
+df <- read_fst("data/Ped_iRAP_merged.fst")
+road_features <- read.csv("data/ausrap_with_gemini_features.csv", stringsAsFactors = FALSE)
+
+# Convert True/False character columns to logical
+bool_cols <- c(
+  "footpath_both_sides", "footpath_one_side", "fencing_barriers",
+  "railway_station", "bus_stops", "overpass_bridge",
+  "park_bushland_reserve", "shared_pedestrian_and_cycle_path"
+)
+for (col in bool_cols) {
+  road_features[[col]] <- road_features[[col]] == "True"
+}
+
+# Rename keys and merge
+names(road_features)[names(road_features) == "road_no"] <- "ROAD_NO"
+names(road_features)[names(road_features) == "slk_km"] <- "SLK"
+
+merged <- merge(df, road_features, by = c("ROAD_NO", "SLK"))
+
+# Create footpath category
+merged$footpath_cat <- factor(
+  ifelse(merged$footpath_both_sides & merged$footpath_one_side, "footpath_mixed",
+  ifelse(merged$footpath_both_sides, "footpath_both_sides",
+  ifelse(merged$footpath_one_side, "footpath_one_side", "footpath_none"))),
+  levels = c("footpath_none", "footpath_one_side", "footpath_mixed", "footpath_both_sides")
+)
+
+response_vars <- c("obs_peak_along", "obs_peak_cross")
+
+predictor_vars <- c(
+  "footpath_cat", "pedestrian_crossings", "commercial_buildings",
+  "residential_buildings", "industrial_buildings", "parking_areas",
+  "fencing_barriers", "railway_station", "bus_stops", "overpass_bridge",
+  "park_bushland_reserve", "shared_pedestrian_and_cycle_path"
+)
+
+analysis_df <- merged[, c(response_vars, predictor_vars)]
+str(analysis_df)
+```
+
+```{r}
+table(analysis_df$footpath_cat)
+```
+
+## Correlation Check: Numeric Variables
+
+Before fitting boxplots for the categorical variables, this section checks the numeric explanatory variables against both response variables. Rows with missing values are removed to keep the correlation calculation valid.
+
+```{r}
+numeric_vars <- c(
+  "pedestrian_crossings", "commercial_buildings",
+  "residential_buildings", "industrial_buildings", "parking_areas"
+)
+
+num_data <- analysis_df[, c("obs_peak_along", "obs_peak_cross", numeric_vars)]
+num_data <- num_data[complete.cases(num_data), ]
+summary(num_data)
+```
+
+```{r}
+library(PerformanceAnalytics)
+chart.Correlation(num_data, histogram = TRUE, pch = 19)
+```
+
+**Variables significant for obs_peak_along**
+
+- `commercial_buildings` (r = 0.77, ***)
+- `parking_areas` (r = 0.45, **)
+
+**Variables significant for obs_peak_cross**
+
+- `commercial_buildings` (r = 0.61, ***)
+- `parking_areas` (r = 0.37, *)
+
+Both target variables show significant correlation with the same two predictors: `commercial_buildings` and `parking_areas`. The correlation is stronger for `obs_peak_along` than for `obs_peak_cross`.
+
+## Count of TRUE/FALSE for Categorical Variables
+
+This section checks the number of TRUE and FALSE observations for each binary explanatory variable (excluding `footpath_cat`), to identify variables with insufficient sample size in either group.
+
+```{r}
+cat_vars_check <- c(
+  "fencing_barriers", "railway_station", "bus_stops",
+  "overpass_bridge", "park_bushland_reserve", "shared_pedestrian_and_cycle_path"
+)
+
+count_table <- data.frame(
+  variable = cat_vars_check,
+  FALSE_n  = sapply(cat_vars_check, function(v) sum(analysis_df[[v]] == FALSE, na.rm = TRUE)),
+  TRUE_n   = sapply(cat_vars_check, function(v) sum(analysis_df[[v]] == TRUE, na.rm = TRUE))
+)
+
+knitr::kable(count_table, caption = "TRUE/FALSE counts by categorical variable")
+```
+
+## Note on Variable Selection
+
+Based on the TRUE/FALSE counts above, `bus_stops` and `overpass_bridge` have 2 or fewer TRUE cases, and `fencing_barriers` has only 3 FALSE cases. These imbalances make the comparisons unreliable, so these three variables are excluded from further analysis. The following boxplots therefore focus on `park_bushland_reserve` and `shared_pedestrian_and_cycle_path`, which have a more balanced group size.
+
+```{r}
+par(mfrow = c(1, 2))
+boxplot(merged$obs_peak_along ~ merged$park_bushland_reserve,
+        xlab = "park_bushland_reserve", ylab = "obs_peak_along",
+        main = "along by park_bushland_reserve")
+boxplot(merged$obs_peak_along ~ merged$shared_pedestrian_and_cycle_path,
+        xlab = "shared_pedestrian_and_cycle_path", ylab = "obs_peak_along",
+        main = "along by shared_ped_cycle")
+par(mfrow = c(1, 1))
+```
+
+```{r}
+par(mfrow = c(1, 2))
+boxplot(merged$obs_peak_cross ~ merged$park_bushland_reserve,
+        xlab = "park_bushland_reserve", ylab = "obs_peak_cross",
+        main = "cross by park_bushland_reserve")
+boxplot(merged$obs_peak_cross ~ merged$shared_pedestrian_and_cycle_path,
+        xlab = "shared_pedestrian_and_cycle_path", ylab = "obs_peak_cross",
+        main = "cross by shared_ped_cycle")
+par(mfrow = c(1, 1))
+```
+
+## Summary of Boxplot Findings
+
+**park_bushland_reserve**
+- For both `obs_peak_along` and `obs_peak_cross`, the TRUE group shows a higher median and wider spread than the FALSE group, including several high outliers.
+- The FALSE group has only 7 observations, so this comparison should be interpreted with caution.
+
+**shared_pedestrian_and_cycle_path**
+- For both targets, the FALSE group shows a slightly higher median than the TRUE group, but the boxes overlap considerably.
+- The difference between the two groups is not clearly distinguishable from this plot alone.
+
+**Overall**
+- `park_bushland_reserve` shows a more visible difference between groups than `shared_pedestrian_and_cycle_path` for both target variables.
+
+## Conclusion
+
+`commercial_buildings` and `parking_areas` had the strongest correlation with both target variables. `footpath_cat` was also significant, but it may just reflect the effect of `commercial_buildings`. Four binary variables had too few cases in one group to be reliable, so they were removed. Of the remaining two, `park_bushland_reserve` showed a clear difference between groups, but `shared_pedestrian_and_cycle_path` did not.
+
+For the next stage, `commercial_buildings` and `parking_areas` are the strongest candidates. `footpath_cat` and `park_bushland_reserve` need a multicollinearity check before they can be used.

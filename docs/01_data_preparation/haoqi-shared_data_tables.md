@@ -7,8 +7,9 @@ This document defines the three shared Excel table formats used by the pedestria
 | Logical table | Excel workbook | Git treatment |
 |---|---|---|
 | Model dataset | `data/processed/model_dataset.xlsx` | Authoritative 49-site workbook is tracked |
-| Batch input | `data/templates/batch_input.xlsx` | Populated 100-location API test input is tracked |
-| Prediction output | `data/templates/prediction_output.xlsx` | Prefilled 100-location comparison/output workbook is tracked |
+| Original model archive | `data/templates/model_dataset_template.xlsx` | Byte-preserved pre-feature foundation workbook is tracked |
+| Batch input | `data/templates/batch_input_template.xlsx` | Populated 100-location API test input is tracked |
+| Prediction output | `data/templates/prediction_output_template.xlsx` | Prefilled 100-location comparison/output workbook is tracked |
 
 The private repository is the authorised team workspace for the curated source inputs and the 49-row model dataset. Only sources directly required by the current target-checking, feature or spatial-linkage workflow are tracked; the 147 original survey workbooks and unselected candidate datasets remain outside the current Git tree. All retained files are stored in ordinary Git, so Git LFS is not required. Repository access must remain limited to approved project collaborators, and secrets, disposable intermediates, generated experiment outputs and fitted models remain excluded.
 
@@ -16,7 +17,7 @@ The model dataset, the two controlled test workbooks and this contract are inten
 
 ## 1. Model dataset
 
-`model_dataset.xlsx` is the one-row-per-observation-site foundation workbook. The `Model_Data` worksheet currently contains stable location fields and the two observed targets. Confirmed model feature columns will be joined programmatically after the feature pipeline is finalised; placeholder feature columns are intentionally excluded.
+`model_dataset.xlsx` is the one-row-per-observation-site processed modelling workbook. The `Model_Data` worksheet contains stable location fields, the two observed targets, 24 context fields and 13 candidate imagery fields. Context and imagery were joined by exact `site_id`; all 49 retained imagery rows were also required to match the foundation latitude, longitude, road number, SLK and road name. The 51 `TEST-AUSRAP-*` imagery rows were excluded. The four food-and-shopping context fields come from Overture Maps Places release `2026-08-19.0` and replace the excluded Google Places Aggregate experiment. The source QA field `overture_places_data_status` remains in the source-specific workbook and is not included as a model predictor. The original pre-feature workbook remains unchanged at `data/templates/model_dataset_template.xlsx`.
 
 | Column | Type | Required | Definition |
 |---|---|---:|---|
@@ -36,9 +37,8 @@ The model dataset, the two controlled test workbooks and this contract are inten
 | `n_survey_days` | integer | Yes | Number of raw survey days contributing to the site target; currently three |
 | `obs_peak_cross_ped_per_h` | number | Yes | Observed peak-hour across-road pedestrian target, pedestrians/hour |
 | `obs_peak_along_ped_per_h` | number | Yes | Observed peak-hour along-road pedestrian target, pedestrians/hour |
-| `target_source` | string | Yes | File or reconstruction path supplying the target values |
-| `qa_status` | enum | Yes | `ready` or `review_required` |
-| `qa_note` | string | No | Reconciliation or audit note; a ready row may retain a documented correction |
+
+The processed workbook deliberately omits the former `target_source`, `qa_status` and `qa_note` columns. Their original values and row-level reconciliation notes remain in `model_dataset_template.xlsx`. The processed workbook's `Metadata` sheet is the authoritative dictionary for the 24 context and 13 candidate imagery fields, including source links, derivations, completeness, and known imagery-provenance limitations.
 
 The target aggregation follows the client R logic: calculate hourly values, average the three survey days at each time of day, then take the maximum of that mean hourly profile separately for across-road and along-road movement. The resulting site-level values are already stored in this table; the raw macro-enabled workbooks are archival audit inputs rather than routine training inputs.
 
@@ -53,7 +53,7 @@ Primary model development may use all 49 rows. Because two target values were co
 
 ## 2. Batch input
 
-`batch_input.xlsx` is the workbook uploaded by a user or dashboard process. One row in `Batch_Input` represents one requested location. The tracked file is a ready-to-run 100-location test batch: all 49 observed benchmark sites plus 51 new AusRAP-linked sites selected reproducibly with random seed `5553`, using one segment per previously unused road number.
+`batch_input_template.xlsx` is the workbook uploaded by a user or dashboard process. One row in `Batch_Input` represents one requested location. The tracked file is a ready-to-run 100-location test batch: all 49 observed benchmark sites plus 51 new AusRAP-linked sites selected reproducibly with random seed `5553`, using one segment per previously unused road number.
 
 | Column | Type | Required | Definition |
 |---|---|---:|---|
@@ -69,7 +69,7 @@ Primary model development may use all 49 rows. Because two target values were co
 
 ## 3. Prediction output
 
-`prediction_output.xlsx` contains one prefilled row for each of the same 100 batch-input locations. It is the comparison/result workbook and the tabular source for the dashboard. Identifiers, coordinates, road context, matched AusRAP fields and benchmark observations are prepared before model inference; prediction and run-result columns remain blank or `PENDING` until the backend updates them by `site_id`.
+`prediction_output_template.xlsx` contains one prefilled row for each of the same 100 batch-input locations. It is the comparison/result template and the tabular source for the dashboard. Identifiers, coordinates, road context, matched AusRAP fields and benchmark observations are prepared before model inference; prediction and run-result columns remain blank or `PENDING` until the backend updates them by `site_id`.
 
 | Column | Type | Required | Definition |
 |---|---|---:|---|
@@ -125,7 +125,7 @@ The retained AusRAP source provides pedestrian-flow categories such as `1 pedest
 
 Excel is the upload/download contract, not the live database used by the browser. A production request should follow one result object through the backend so the downloadable workbook and the map cannot disagree:
 
-1. The browser uploads `batch_input.xlsx` to a batch-prediction API endpoint.
+1. The browser uploads a copy of `batch_input_template.xlsx` to a batch-prediction API endpoint.
 2. The backend reads `Batch_Input`, validates the schema, unique `site_id` values and coordinate ranges, and rejects invalid rows with explicit messages.
 3. The feature pipeline retrieves the deployed features and matched road context for each valid `site_id`.
 4. The deployed model returns the two predictions keyed by `site_id`; the backend merges them into the prepared output rows by `site_id`, never by row number.
@@ -136,7 +136,7 @@ The browser therefore does not need to reopen and parse the generated Excel file
 
 ## Model development and cross-validation
 
-Do not create permanent train, validation and test copies or worksheets. Model code reads the `Model_Data` worksheet from `model_dataset.xlsx`, filters approved rows, and creates splits from `site_id` so that one observation location cannot appear in more than one role in the same fold.
+Do not create permanent train, validation and test copies or worksheets. All 49 rows in the current processed workbook came from the approved foundation recorded in `model_dataset_template.xlsx`. Model code reads `Model_Data` from `model_dataset.xlsx` and creates splits from `site_id` so that one observation location cannot appear in more than one role in the same fold.
 
 With the current small sample, the planned primary evaluation is grouped/spatial five-fold cross-validation. Working split assignments, out-of-fold predictions and metrics are experiment artefacts and remain outside Git until the team deliberately promotes a reviewed result into `06_outputs/`. Feature preprocessing, imputation, scaling and feature selection must be fitted inside each training fold rather than on all sites before splitting.
 
@@ -152,4 +152,4 @@ After model selection and honest out-of-fold evaluation, the selected deployment
 
 ## Excel conventions
 
-The first worksheet is `Metadata` and explains purpose, use, sharing status and every field. The second worksheet contains the flat table with the documented headers and column order. The Excel files do not introduce permanent training splits, hidden feature columns or dashboard-only formatting. `model_dataset.xlsx`, `batch_input.xlsx` and `prediction_output.xlsx` are the authoritative shared workbooks. Changes to the prediction schema must increment `feature_schema_version` where applicable.
+The first worksheet is `Metadata` and explains purpose, use, sharing status and every field. The second worksheet contains the flat table with the documented headers and column order. The Excel files do not introduce permanent training splits, hidden feature columns or dashboard-only formatting. `model_dataset.xlsx`, `batch_input_template.xlsx` and `prediction_output_template.xlsx` are the authoritative shared workbooks. Changes to the prediction schema must increment `feature_schema_version` where applicable.

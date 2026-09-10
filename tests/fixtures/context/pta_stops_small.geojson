@@ -1,0 +1,71 @@
+{
+  "type": "FeatureCollection",
+  "name": "Synthetic PTA fixture",
+  "crs": {"type": "name", "properties": {"name": "EPSG:4326"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gid": 1,
+        "stopid": 1001,
+        "stopnumber": "1001",
+        "status": "Active",
+        "stopname": "Fixture Central",
+        "location": "Fixture Road",
+        "stoptype": "Standard",
+        "suburb": "Perth",
+        "accessible": "Yes",
+        "shelter": "Yes"
+      },
+      "geometry": {"type": "Point", "coordinates": [115.86, -31.95]}
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "gid": 2,
+        "stopid": 1002,
+        "stopnumber": "1002",
+        "status": "Active",
+        "stopname": "Fixture East",
+        "location": "Fixture Avenue",
+        "stoptype": "School",
+        "suburb": "Perth",
+        "accessible": "No",
+        "shelter": "No"
+      },
+      "geometry": {"type": "Point", "coordinates": [115.87, -31.95]}
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "gid": 3,
+        "stopid": 1003,
+        "stopnumber": "1003",
+        "status": "Planned",
+        "stopname": "Fixture Planned",
+        "location": "Fixture Lane",
+        "stoptype": "Standard",
+        "suburb": "Perth",
+        "accessible": "Yes",
+        "shelter": "No"
+      },
+      "geometry": {"type": "Point", "coordinates": [115.8601, -31.95]}
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "gid": 1,
+        "stopid": 1001,
+        "stopnumber": "1001",
+        "status": "Active",
+        "stopname": "Fixture Central",
+        "location": "Fixture Road",
+        "stoptype": "Standard",
+        "suburb": "Perth",
+        "accessible": "Yes",
+        "shelter": "Yes"
+      },
+      "geometry": {"type": "Point", "coordinates": [115.86, -31.95]}
+    }
+  ]
+}

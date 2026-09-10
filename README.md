@@ -11,7 +11,11 @@ This private repository is the CITS5553 Group 5 day-to-day development workspace
 5. `05_application` — provide the backend and frontend used to run the agreed prediction workflow and present its results.
 6. `06_outputs` — store reviewed outputs that teammates may use without rerunning every upstream notebook.
 
-Use `05_application/backend/` for the API and application-side validation, and `05_application/frontend/` for the user interface. Keep prediction logic in `04_prediction_pipeline/`; the backend should call it rather than duplicate it.
+Use `03_model_development/` for explanatory model-development notebooks,
+`05_application/backend/` for a future API and `05_application/frontend/` for the
+user interface. Reusable preparation, feature and prediction code belongs under
+`src/pedflow/`. A selected notebook model should be exported with its fitted
+preprocessing so prediction code can load it without repeating training logic.
 
 `docs/01_data_preparation/` contains table-format and verified-correction notes. `docs/02_feature_extraction/` contains a short summary of the features produced by the shared Stage 2 notebooks. Detailed personal working notes are excluded from Git. `data/` contains only authorised, intentionally shared inputs and approved project tables.
 
@@ -19,7 +23,11 @@ Reviewed feature tables and other small results that the team needs directly bel
 
 ## File naming
 
-Shared integration files use the stage number and purpose without a member name, for example `02_feature_extraction.py`.
+Formal reusable Python workflow code belongs under `src/pedflow/`. Use descriptive
+lowercase module names that state one responsibility, such as `workflow.py`,
+`validation.py` and `sources/pta_stops.py`. Executable package entry points use
+Python's standard `__main__.py` mechanism and are registered as readable project
+commands in `pyproject.toml`.
 
 Stage 2 source-specific notebooks normally use this format:
 
@@ -62,7 +70,7 @@ Open the repository root in VS Code and select the `.venv` Python interpreter. T
 
 The `.venv` folder remains on the computer. Do not recreate it or reinstall all packages every time. In a new terminal, activate it only when the prompt does not already show `(.venv)`: use `.venv\Scripts\Activate.ps1` on Windows or `source .venv/bin/activate` on macOS. VS Code may activate the selected interpreter automatically.
 
-The single `requirements.txt` contains the shared analysis, notebook, code-quality and optional database packages so every member uses the same straightforward installation command.
+The single `requirements.txt` contains the shared analysis, notebook and code-quality packages so every member uses the same straightforward installation command. Application and database packages should be added only after the team selects that technical path.
 
 ## Optional container environment
 
@@ -74,14 +82,13 @@ See `.devcontainer/CONTAINER_GUIDE.md` for the optional Python and frontend deve
 
 Copy `.env.example` to `.env` and add only the credentials needed by the active experiment. `.env` files are excluded from Git.
 
-The current imagery prototype uses Mapillary and tests Google Gemini. The Google Places Aggregate experiment uses a separate Google Maps Platform key:
+The current imagery prototype uses Mapillary and tests Google Gemini. Google Places Aggregate POI features are excluded from the modelling workflow by the recorded UWA project decision, so no Google Maps Platform key is required. The replacement Overture Places workflow uses the public Overture dataset through the official Python client and also requires no API key:
 
 ```dotenv
 VISION_PROVIDER=gemini
 VISION_MODEL=auto
 MAPILLARY_ACCESS_TOKEN=replace_with_local_token
 GEMINI_API_KEY=replace_with_local_key
-GOOGLE_MAPS_API_KEY=replace_with_local_key
 ```
 
 The shared imagery notebook is still a prototype. Additional personal imagery API experiments remain excluded from Git until the team selects an integration approach. Alternative providers are candidates, not confirmed client requirements, and must not be described as adopted until the team validates them.

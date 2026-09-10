@@ -3,6 +3,7 @@ pandas
 numpy
 openpyxl
 pyarrow
+overturemaps==1.0.1
 
 # Visualisation and spatial analysis
 matplotlib
@@ -29,8 +30,3 @@ jupyterlab
 ipykernel
 ruff
 pytest
-
-# PostgreSQL and PostGIS
-psycopg[binary]
-SQLAlchemy
-GeoAlchemy2

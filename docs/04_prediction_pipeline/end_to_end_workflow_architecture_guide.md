@@ -19,13 +19,13 @@ The repository currently uses the following project stages:
 1. `01_data_preparation/` prepares and reconciles modelling data.
 2. `02_feature_extraction/context/` contains shared source-specific feature notebooks.
 3. `03_model_development/` is reserved for model training, comparison and selection.
-4. `04_prediction_pipeline/` is reserved for the integrated prediction entry point.
+4. `04_prediction_pipeline/` records prediction-stage documentation and reviewed interface material; formal prediction code belongs under `src/pedflow/`.
 5. `05_application/` contains a reserved backend area and a React/Vite frontend demo.
 6. `06_outputs/` contains reviewed, intentionally shared outputs.
 
 Stage 1 and Stage 2 contain working notebooks and feature outputs. The Stage 3 and Stage 4 Python files are currently placeholders. The frontend is a visual demo with hard-coded values and browser-side rules; it is not connected to a trained model or backend.
 
-The Google Places Aggregate notebook is shared, but its generated POI workbook is a temporary local API cache and is excluded from Git. It must not be treated as a durable Stage 2 output.
+Google Places Aggregate POI features are excluded from the prediction system by the recorded UWA project decision. The pre-exclusion experiment is retained only under `07_Archive/20260908_google_places_aggregate_poi_experiment/`; neither its workbook nor its fields may enter a released model or client batch workflow.
 
 ## Recommended dependency rule
 
@@ -52,14 +52,11 @@ The following additions are recommended only when the team begins converting val
 │   │   ├── 02_03_haoqi_pta_stops.ipynb
 │   │   ├── 02_04_haoqi_wa_health_establishments.ipynb
 │   │   ├── 02_05_haoqi_wa_education_schools.ipynb
-│   │   ├── 02_07_haoqi_microsoft_building_footprints.ipynb
-│   │   └── 02_08_haoqi_google_places_aggregate_poi.ipynb
+│   │   └── 02_07_haoqi_microsoft_building_footprints.ipynb
 │   └── README.md
 ├── 03_model_development/
-│   ├── run_training.py
-│   └── README.md
+│   └── model-development notebooks
 ├── 04_prediction_pipeline/
-│   ├── run_batch.py
 │   ├── README.md
 │   └── sample/
 ├── 05_application/
@@ -67,10 +64,8 @@ The following additions are recommended only when the team begins converting val
 │   └── frontend/
 ├── src/
 │   └── pedflow/
-│       ├── preparation/
 │       ├── features/
-│       ├── training/
-│       └── inference/
+│       └── prediction.py
 ├── configs/
 └── tests/
 ```
@@ -83,8 +78,8 @@ This is a target layout, not a request to create empty folders now. Add each com
 | --- | --- |
 | Stage notebooks | Source explanation, exploration, visual checks and interpretation |
 | Shared Python modules | Reusable and tested preparation, feature, training and inference logic |
-| Stage 3 runner | Read training configuration and call the shared training logic |
-| Stage 4 runner | Validate a batch request and call the shared inference logic |
+| Model-development notebooks | Compare models and export the selected fitted pipeline |
+| Inference package entry | Validate a batch request and call the shared inference workflow |
 | Backend | Handle application requests and call the same inference logic |
 | Frontend | Collect inputs and display backend responses without prediction formulas |
 
@@ -127,7 +122,7 @@ The prediction workflow should:
 5. Produce separate cross-road and along-road predictions.
 6. Write predictions, statuses, warnings and model/source versions.
 
-The Stage 4 batch runner and the backend should call the same inference implementation so that command-line and web results cannot diverge. Prediction must not retrain a model or depend on executing notebooks manually.
+The installed inference command and the backend should call the same `src/pedflow` inference implementation so that command-line and web results cannot diverge. Prediction must not retrain a model or depend on executing notebooks manually.
 
 ## External sources and outputs
 
@@ -150,7 +145,7 @@ The optional development container is a development convenience, not an assumed 
 
 ## Minimum testing
 
-Unit tests should cover stable calculations and schema rules. Integration tests should cover joins, feature assembly and model loading. An end-to-end test should begin with a small input file and verify the complete output schema, statuses and model version. A fixed regression example should detect accidental changes to feature order or preprocessing.
+Unit tests should cover stable calculations and schema rules. One small integration test should cover batch input, feature assembly and output writing. Once a model has been selected, extend that test through model loading and the final prediction schema. The reviewed combined context table provides the project-level feature contract; separate full-data regression tests for every source are not required.
 
 Tests must also cover controlled failures such as missing fields, duplicate identifiers, invalid coordinates, unavailable sources, incompatible model releases and unwritable outputs. Production success must not depend on running every notebook.
 
@@ -160,7 +155,7 @@ Tests must also cover controlled failures such as missing fields, duplicate iden
 2. Implement Stage 3 data assembly and leakage checks using the existing reviewed outputs.
 3. Build and validate the first reproducible training workflow.
 4. Promote stable feature logic into shared modules one source at a time, with tests.
-5. Implement a one-command Stage 4 batch prediction path.
+5. Implement a one-command prediction entry inside the installed `pedflow` package.
 6. Connect the backend to the same prediction service.
 7. Replace the frontend demo logic and rehearse setup in a clean environment.
 

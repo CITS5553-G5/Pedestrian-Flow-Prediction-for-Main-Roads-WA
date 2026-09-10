@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "estab_id": 100,
+        "establishm": "Fixture Central Hospital",
+        "is_open": "Y",
+        "category": "Acute Hospital",
+        "est": "Public",
+        "no_of_beds": 120,
+        "longitude": 115.86,
+        "latitude": -31.95
+      },
+      "geometry": {"type": "Point", "coordinates": [115.86, -31.95]}
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "estab_id": 200,
+        "establishm": "Fixture Southern Nursing Post",
+        "is_open": "Y",
+        "category": "Nursing Post",
+        "est": "Public",
+        "no_of_beds": 0,
+        "longitude": 115.76,
+        "latitude": -32.05
+      },
+      "geometry": {"type": "Point", "coordinates": [115.76, -32.05]}
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "estab_id": 300,
+        "establishm": "Fixture Closed Hospital",
+        "is_open": "N",
+        "category": "Acute Hospital",
+        "est": "Private",
+        "no_of_beds": 20,
+        "longitude": 115.8601,
+        "latitude": -31.9501
+      },
+      "geometry": {"type": "Point", "coordinates": [115.8601, -31.9501]}
+    }
+  ]
+}

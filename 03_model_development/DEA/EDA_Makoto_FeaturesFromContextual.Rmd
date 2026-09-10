@@ -1,0 +1,222 @@
+---
+title: "EDA for the road features extracted from contextual database"
+author: "Makoto Hanyuda (24773603)"
+date: "2026-09-09"
+output: pdf_document
+---
+
+# EDA Report: Dataset (model_dataset.csv)
+
+## Introduction
+
+This report presents an exploratory data analysis (EDA) of `model_dataset.csv`, a dataset of 49 road segments in Western Australia. The contextual variables (e.g. population statistics, distance to public transport, health, and education facilities, building and retail counts) were extracted from a contextual ecosocial database, while the image-derived variables (e.g. footpath type, land use, and the presence of nearby amenities) were obtained from earlier feature extraction work. The goal is to identify variables that are associated with observed pedestrian counts, in preparation for building a predictive regression model.
+
+## Dataset and Variables
+
+The dataset contains two response variables, measuring pedestrian counts per hour in two directions:
+
+- `obs_peak_along_ped_per_h`
+- `obs_peak_cross_ped_per_h`
+
+The remaining variables fall into two groups: 21 numeric variables (e.g. building counts, population density, distance to public transport, health, and education facilities) and 16 categorical variables (e.g. footpath type, land use, and the presence of nearby amenities).
+
+```{r}
+road_features <- read.csv("data/model_dataset.csv", stringsAsFactors = FALSE)
+
+comma_numeric_cols <- c(
+  "abs_mb_dwellings_per_sqkm_2021", "abs_mb_persons_per_sqkm_2021",
+  "pta_nearest_active_stop_distance_m", "health_nearest_establishment_distance_m",
+  "education_nearest_active_school_distance_m", "ms_building_footprint_area_m2_500m"
+)
+for (col in comma_numeric_cols) {
+  road_features[[col]] <- as.numeric(gsub(",", "", road_features[[col]]))
+}
+
+response_vars <- c("obs_peak_cross_ped_per_h", "obs_peak_along_ped_per_h")
+
+numeric_vars <- c(
+  "abs_mb_area_sqkm_2021", "abs_mb_dwellings_2021", "abs_mb_persons_usual_resident_2021",
+  "abs_mb_dwellings_per_sqkm_2021", "abs_mb_persons_per_sqkm_2021",
+  "pta_nearest_active_stop_distance_m", "pta_active_stops_within_500m",
+  "health_nearest_establishment_distance_m",
+  "education_nearest_active_school_distance_m",
+  "ms_building_count_500m", "ms_building_count_per_sqkm_500m",
+  "ms_building_footprint_area_m2_500m", "ms_building_coverage_ratio_500m",
+  "google_food_drink_count_500m", "google_grocery_convenience_market_count_500m",
+  "google_other_retail_count_500m",
+  "pedestrian_crossings", "commercial_buildings", "residential_buildings",
+  "industrial_buildings", "parking_areas"
+)
+
+categorical_vars <- c(
+  "abs_mb_category_2021", "pta_nearest_active_stop_type",
+  "health_nearest_establishment_category", "health_nearest_establishment_type",
+  "education_nearest_school_sector", "education_nearest_school_low_year",
+  "education_nearest_school_high_year",
+  "google_major_shopping_present_500m",
+  "footpath_both_sides", "footpath_one_side",
+  "fencing_barriers", "railway_station", "bus_stops", "overpass_bridge",
+  "park_bushland_reserve", "shared_pedestrian_and_cycle_path"
+)
+
+analysis_df <- road_features[, c(response_vars, numeric_vars, categorical_vars)]
+```
+
+No missing values were found in any of the variables used in this analysis.
+
+## Numeric Variables
+
+Correlation coefficients were calculated between each numeric variable and both response variables.
+
+```{r}
+cor_matrix <- sapply(response_vars, function(t) {
+  sapply(numeric_vars, function(v) cor(analysis_df[[v]], analysis_df[[t]]))
+})
+round(cor_matrix, 2)
+```
+
+**Findings:**
+
+Five variables show a clear correlation (|r| >= 0.4) with both response variables: `commercial_buildings`, `google_other_retail_count_500m`, `google_grocery_convenience_market_count_500m`, `parking_areas`, and `google_food_drink_count_500m`. All five are statistically significant (p < 0.01), with correlation coefficients ranging from 0.40 to 0.77. These variables all relate to commercial and retail activity near the site.
+
+Two variables, `pedestrian_crossings` and `residential_buildings`, show weak correlations (|r| between 0.14 and 0.23) that are not statistically significant.
+
+The remaining variables, including ABS population statistics, distance to public transport, health, and education facilities, and Microsoft building footprint measures, show little to no correlation (|r| < 0.2) with either target.
+
+```{r}
+selected_vars <- c(
+  "commercial_buildings", "google_other_retail_count_500m",
+  "google_grocery_convenience_market_count_500m", "parking_areas",
+  "google_food_drink_count_500m", "pedestrian_crossings", "residential_buildings"
+)
+
+library(PerformanceAnalytics)
+chart.Correlation(analysis_df[, c("obs_peak_along_ped_per_h", selected_vars)], histogram = TRUE, pch = 19)
+chart.Correlation(analysis_df[, c("obs_peak_cross_ped_per_h", selected_vars)], histogram = TRUE, pch = 19)
+```
+
+The five significant predictors are also highly correlated with each other (r = 0.56 to 0.87). This indicates strong multicollinearity, which will need to be addressed before these variables can be used together in a regression model.
+
+## Logical Categorical Variables
+
+The number of TRUE and FALSE cases was checked for each logical variable, to identify variables with insufficient sample size in either group.
+
+```{r}
+logical_cat_vars <- categorical_vars[sapply(analysis_df[categorical_vars], is.logical)]
+
+count_table <- data.frame(
+  variable = logical_cat_vars,
+  FALSE_n  = sapply(logical_cat_vars, function(v) sum(analysis_df[[v]] == FALSE, na.rm = TRUE)),
+  TRUE_n   = sapply(logical_cat_vars, function(v) sum(analysis_df[[v]] == TRUE, na.rm = TRUE))
+)
+knitr::kable(count_table, caption = "TRUE/FALSE counts for logical variables (n=49)")
+```
+
+Four variables have fewer than 5 cases in one group — `fencing_barriers`, `railway_station`, `bus_stops`, and `overpass_bridge` — and are excluded from further analysis, as the small group size makes comparisons unreliable.
+
+The remaining variables are examined with boxplots. `footpath_both_sides` and `footpath_one_side` are combined into a single four-level variable, `footpath_cat` (`footpath_none`, `footpath_one_side`, `footpath_mixed`, `footpath_both_sides`), since a segment can have footpaths on one side, both sides, or a mix of the two.
+
+```{r}
+analysis_df$footpath_cat <- factor(
+  ifelse(analysis_df$footpath_both_sides & analysis_df$footpath_one_side, "footpath_mixed",
+  ifelse(analysis_df$footpath_both_sides, "footpath_both_sides",
+  ifelse(analysis_df$footpath_one_side, "footpath_one_side", "footpath_none"))),
+  levels = c("footpath_none", "footpath_one_side", "footpath_mixed", "footpath_both_sides")
+)
+
+par(mfrow = c(1, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$footpath_cat,
+        xlab = "footpath_cat", ylab = "obs_peak_along_ped_per_h", main = "along by footpath_cat")
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$footpath_cat,
+        xlab = "footpath_cat", ylab = "obs_peak_cross_ped_per_h", main = "cross by footpath_cat")
+par(mfrow = c(1, 1))
+```
+
+```{r}
+kept_logical_vars <- c("google_major_shopping_present_500m", "park_bushland_reserve", "shared_pedestrian_and_cycle_path")
+
+par(mfrow = c(2, 3))
+for (v in kept_logical_vars) {
+  boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df[[v]],
+          xlab = v, ylab = "obs_peak_along_ped_per_h", main = paste("along by", v))
+}
+for (v in kept_logical_vars) {
+  boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df[[v]],
+          xlab = v, ylab = "obs_peak_cross_ped_per_h", main = paste("cross by", v))
+}
+par(mfrow = c(1, 1))
+```
+
+**Findings:**
+
+For `footpath_cat`, pedestrian counts increase steadily across the four categories for both response variables. `footpath_none` and `footpath_one_side` show low medians and narrow spread, while `footpath_mixed` and `footpath_both_sides` show noticeably higher medians and wider spread, including several high outliers. This suggests that more extensive footpath coverage is associated with higher pedestrian counts.
+
+`google_major_shopping_present_500m` and `park_bushland_reserve` show a similar pattern: locations where these are TRUE have a higher median and wider spread than locations where they are FALSE, for both target variables.
+
+`shared_pedestrian_and_cycle_path` shows little difference between the two groups, with overlapping boxes and similar medians.
+
+## Character-Type Categorical Variables
+
+The level distribution of each character-type categorical variable was checked.
+
+```{r}
+char_cat_vars <- categorical_vars[sapply(analysis_df[categorical_vars], is.character)]
+
+level_table <- do.call(rbind, lapply(char_cat_vars, function(v) {
+  tab <- table(analysis_df[[v]])
+  data.frame(variable = v, level = names(tab), n = as.integer(tab),
+             pct = round(100 * as.integer(tab) / sum(tab), 1))
+}))
+rownames(level_table) <- NULL
+knitr::kable(level_table, caption = "Level counts and percentages for character categorical variables")
+```
+
+**Findings:**
+
+Two variables have a reasonable balance across all levels: `pta_nearest_active_stop_type` (School=10, Standard=11, Transwa=28) and `education_nearest_school_sector` (GOVERNMENT=31, NON-GOVERNMENT=18).
+
+`abs_mb_category_2021` is dominated by Residential (53.1%) and Commercial (20.4%), with the remaining five levels each below 10% of the sample.
+
+The other four variables have at least one level with fewer than 5 observations — `health_nearest_establishment_category`, `health_nearest_establishment_type`, `education_nearest_school_low_year`, and `education_nearest_school_high_year` — and are excluded from further analysis for the same reason as above.
+
+```{r}
+par(mfrow = c(2, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$pta_nearest_active_stop_type,
+        xlab = "pta_nearest_active_stop_type", ylab = "obs_peak_along_ped_per_h", main = "along by pta_stop_type")
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$education_nearest_school_sector,
+        xlab = "education_nearest_school_sector", ylab = "obs_peak_along_ped_per_h", main = "along by school_sector")
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$pta_nearest_active_stop_type,
+        xlab = "pta_nearest_active_stop_type", ylab = "obs_peak_cross_ped_per_h", main = "cross by pta_stop_type")
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$education_nearest_school_sector,
+        xlab = "education_nearest_school_sector", ylab = "obs_peak_cross_ped_per_h", main = "cross by school_sector")
+par(mfrow = c(1, 1))
+```
+
+Neither `pta_nearest_active_stop_type` nor `education_nearest_school_sector` shows a meaningful difference in pedestrian counts across groups, based on these plots.
+
+`abs_mb_category_2021` is simplified into three levels — `Residential`, `Commercial`, and `Other` (combining Education, Industrial, Parkland, Primary Production, and Transport) — since the smaller levels each account for less than 10% of the sample.
+
+```{r}
+analysis_df$abs_mb_category_simple <- factor(
+  ifelse(analysis_df$abs_mb_category_2021 %in% c("Residential", "Commercial"),
+         analysis_df$abs_mb_category_2021, "Other"),
+  levels = c("Residential", "Commercial", "Other")
+)
+
+par(mfrow = c(1, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$abs_mb_category_simple,
+        xlab = "abs_mb_category_simple", ylab = "obs_peak_along_ped_per_h", main = "along by abs_mb_category")
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$abs_mb_category_simple,
+        xlab = "abs_mb_category_simple", ylab = "obs_peak_cross_ped_per_h", main = "cross by abs_mb_category")
+par(mfrow = c(1, 1))
+```
+
+The Commercial group shows the highest median and widest spread, followed by Other, with Residential showing the lowest and narrowest distribution, for both target variables. This is consistent with the earlier finding that `commercial_buildings` was the strongest numeric predictor.
+
+## Conclusion
+
+`commercial_buildings` and related retail/commercial density measures (`google_other_retail_count_500m`, `google_grocery_convenience_market_count_500m`, `parking_areas`, `google_food_drink_count_500m`) are the strongest and most consistent numeric predictors of pedestrian counts, but they are highly correlated with each other and require a multicollinearity check before joint use in a model.
+
+Among categorical variables, `footpath_cat`, `google_major_shopping_present_500m`, `park_bushland_reserve`, and land-use category (`abs_mb_category_simple`) show a clear relationship with pedestrian counts, all pointing toward higher counts in commercially developed, well-footpathed areas. `shared_pedestrian_and_cycle_path`, `pta_nearest_active_stop_type`, and `education_nearest_school_sector` show no meaningful relationship and are unlikely to add value to the model.
+
+**Recommended next step:** examine multicollinearity among the commercial/retail density variables (e.g. via VIF or correlation-based selection) before fitting a regression model, and confirm whether `footpath_cat` and `abs_mb_category_simple` add explanatory power independent of `commercial_buildings`.
