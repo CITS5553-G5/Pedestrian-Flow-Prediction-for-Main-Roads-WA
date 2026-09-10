@@ -69,7 +69,6 @@ tmp/
 # Personal guidance and working notes; not shared with the team
 /GIT_WORKFLOW_ZH.md
 /docs/personal_notes/
-/Clone and Set Up the Team GitHub Project.md
 
 # Local-only Stage 2 notebooks; intentionally not shared
 /02_feature_extraction/**/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
@@ -78,7 +77,3 @@ tmp/
 
 # Excluded Google Places Aggregate output
 /06_outputs/02_feature_extraction/02_08_haoqi_google_places_aggregate_poi_features.xlsx
-
-# Unreviewed browser-download copy; replace it with a deliberately named and
-# documented team output if the imagery result is approved for sharing.
-/06_outputs/02_feature_extraction/ausrap_with_gemini_features (3).csv
