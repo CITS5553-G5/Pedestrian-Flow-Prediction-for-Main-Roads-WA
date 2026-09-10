@@ -103,4 +103,4 @@ Tracked files under `data/raw/` are immutable inputs: analysis code may read the
 
 `main` is the shared stable branch. Normal Stage 2 work should use one personal stage branch per member, such as `haoqi/02-extract-features`, followed by a Pull Request into `main`. A branch becomes visible to the team only after it is pushed to GitHub. Team members can review its Pull Request without downloading that branch. Do not force-push or delete `main`.
 
-Before committing, check that notebook outputs contain no credentials or personal absolute paths, and stage files deliberately rather than using an unchecked `git add .`. See `GIT_WORKFLOW.md` for direct team instructions and `CONTRIBUTING.md` for repository rules. The local Chinese guide is intentionally excluded from Git.
+Before committing, check that notebook outputs contain no credentials or personal absolute paths, and stage files deliberately rather than using an unchecked `git add .`. See `GIT_WORKFLOW.md` for direct team instructions and repository rules. The local Chinese guide is intentionally excluded from Git.
