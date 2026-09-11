@@ -3,7 +3,7 @@
 
 Run from the project directory:
 
-    python3 01_data_preparation/01_haoqi_view_sample_map.py
+    python3 01_data_preparation/01_view_sample_map.py
 
 The command regenerates
 06_outputs/01_data_preparation/internal_sample_map.html, starts a local web
@@ -49,7 +49,6 @@ REQUIRED_COLUMNS = {
     "longitude",
     "obs_peak_cross_ped_per_h",
     "obs_peak_along_ped_per_h",
-    "qa_status",
 }
 
 
@@ -121,6 +120,10 @@ def read_sites(workbook_path: Path) -> list[dict[str, Any]]:
             row = {header: clean_value(value) for header, value in zip(headers, values)}
             if not row["site_id"]:
                 continue
+            # qa_status belonged to the earlier foundation workbook but is not
+            # part of the current integrated Model_Data schema.  Keep the map
+            # compatible with both versions without weakening its core checks.
+            row.setdefault("qa_status", "Not provided")
             try:
                 row["latitude"] = float(row["latitude"])
                 row["longitude"] = float(row["longitude"])
