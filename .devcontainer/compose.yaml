@@ -9,8 +9,6 @@ services:
       - frontend_node_modules:/workspace/05_application/frontend/node_modules
     working_dir: /workspace
     command: sleep infinity
-    environment:
-      JUPYTER_TOKEN: ${JUPYTER_TOKEN:-}
 
 volumes:
   frontend_node_modules:
