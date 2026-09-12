@@ -81,3 +81,6 @@ tmp/
 
 # Excluded Google Places Aggregate output
 /06_outputs/02_feature_extraction/02_08_haoqi_google_places_aggregate_poi_features.xlsx
+
+# Local backup copies of superseded work
+/archive/
