@@ -53,7 +53,14 @@ categorical_vars <- c(
 )
 
 analysis_df <- road_features[, c(response_vars, numeric_vars, categorical_vars)]
-str(analysis_df)
+
+var_summary <- data.frame(
+  variable = names(analysis_df),
+  type = sapply(analysis_df, class),
+  n_unique = sapply(analysis_df, function(x) length(unique(x)))
+)
+rownames(var_summary) <- NULL
+knitr::kable(var_summary, caption = "Dataset: variable types and unique value counts")
 ```
 
 ## Numeric Variables
@@ -64,7 +71,7 @@ Correlation coefficients were calculated between each numeric variable and both 
 cor_matrix <- sapply(response_vars, function(t) {
   sapply(numeric_vars, function(v) cor(analysis_df[[v]], analysis_df[[t]]))
 })
-round(cor_matrix, 2)
+knitr::kable(round(cor_matrix, 2), caption = "Correlation coefficients between numeric variables and response variables")
 ```
 
 **Findings:**
@@ -77,27 +84,30 @@ Two further retail-related variables, `overture_grocery_convenience_pharmacy_cou
 
 The remaining variables, including ABS population statistics, distance to public transport, health, and education facilities, and Microsoft building footprint measures, show little to no correlation (|r| < 0.2) with either target.
 
+### Five Significant Predictors
+
+The five numeric variables identified as significant predictors of pedestrian counts — `commercial_buildings`, `overture_other_shopping_count_500m`, `overture_grocery_convenience_pharmacy_count_500m`, `parking_areas`, and `overture_food_drink_count_500m` — are examined together using scatterplot matrices, to check both their relationship with each response variable and their correlation with one another.
+
 ```{r include=FALSE}
 selected_vars <- c(
   "commercial_buildings", "overture_other_shopping_count_500m",
   "overture_grocery_convenience_pharmacy_count_500m", "parking_areas",
-  "overture_food_drink_count_500m", "pedestrian_crossings", "residential_buildings"
+  "overture_food_drink_count_500m"
 )
 
 library(PerformanceAnalytics)
 ```
 
-
 ```{r echo=FALSE}
 chart.Correlation(analysis_df[, c("obs_peak_along_ped_per_h", selected_vars)], histogram = TRUE, pch = 19)
 ```
-
 
 ```{r echo=FALSE}
 chart.Correlation(analysis_df[, c("obs_peak_cross_ped_per_h", selected_vars)], histogram = TRUE, pch = 19)
 ```
 
 The five significant predictors are also highly correlated with each other (r = 0.56 to 0.87). This indicates strong multicollinearity, which will need to be addressed before these variables can be used together in a regression model.
+
 
 ## Logical Categorical Variables
 
@@ -111,35 +121,49 @@ count_table <- data.frame(
   FALSE_n  = sapply(logical_cat_vars, function(v) sum(analysis_df[[v]] == FALSE, na.rm = TRUE)),
   TRUE_n   = sapply(logical_cat_vars, function(v) sum(analysis_df[[v]] == TRUE, na.rm = TRUE))
 )
+rownames(count_table) <- NULL
 knitr::kable(count_table, caption = "TRUE/FALSE counts for logical variables (n=49)")
 ```
 
-Four variables have fewer than 5 cases in one group — `fencing_barriers`, `railway_station`, `bus_stops`, and `overpass_bridge` — and are excluded from further analysis, as the small group size makes comparisons unreliable.
+The table shows a wide range of balance across variables. `fencing_barriers`, `railway_station`, `bus_stops`, and `overpass_bridge` each have fewer than 5 cases in one group, indicating a strong imbalance that limits the reliability of any comparison. The remaining variables — `overture_shopping_mall_present_500m`, `footpath_both_sides`, `footpath_one_side`, `park_bushland_reserve`, and `shared_pedestrian_and_cycle_path` — have at least 5 cases in both groups, though the degree of balance still varies considerably between them.
 
-The remaining variables are examined with boxplots.
+### Footpath Category
 
 ```{r echo=FALSE}
-kept_logical_vars <- c("footpath_both_sides", "footpath_one_side", "overture_shopping_mall_present_500m", "park_bushland_reserve", "shared_pedestrian_and_cycle_path")
+footpath_vars <- c("footpath_both_sides", "footpath_one_side")
 
-par(mfrow = c(1, 5), mar = c(4, 4, 3, 1))
-for (v in kept_logical_vars) {
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+for (v in footpath_vars) {
   boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df[[v]],
           xlab = v, ylab = "obs_peak_along_ped_per_h", main = paste("along by", v), cex.main = 0.9)
 }
-
-par(mfrow = c(1, 5), mar = c(4, 4, 3, 1))
-for (v in kept_logical_vars) {
+for (v in footpath_vars) {
   boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df[[v]],
           xlab = v, ylab = "obs_peak_cross_ped_per_h", main = paste("cross by", v), cex.main = 0.9)
 }
 par(mfrow = c(1, 1))
 ```
 
-**Findings:**
-
 `footpath_both_sides` shows a clear pattern: segments with footpaths on both sides (`TRUE`) have a higher median and wider spread for both response variables, compared to segments without (`FALSE`).
 
 `footpath_one_side` does not show a clear increase in pedestrian counts when `TRUE`; medians and spread are similar between the two groups for both response variables.
+
+### Amenity and Land Use Category
+
+```{r echo=FALSE}
+kept_logical_vars <- c("overture_shopping_mall_present_500m", "park_bushland_reserve", "shared_pedestrian_and_cycle_path")
+
+par(mfrow = c(2, 3), mar = c(4, 4, 3, 1))
+for (v in kept_logical_vars) {
+  boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df[[v]],
+          xlab = v, ylab = "obs_peak_along_ped_per_h", main = paste("along by", v), cex.main = 0.9)
+}
+for (v in kept_logical_vars) {
+  boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df[[v]],
+          xlab = v, ylab = "obs_peak_cross_ped_per_h", main = paste("cross by", v), cex.main = 0.9)
+}
+par(mfrow = c(1, 1))
+```
 
 `overture_shopping_mall_present_500m` shows only a modest difference between groups: locations where a shopping mall is present within 500m (`TRUE`) have a slightly higher median than locations where it is absent, but the spread is broadly similar for both target variables.
 
@@ -147,26 +171,25 @@ par(mfrow = c(1, 1))
 
 `shared_pedestrian_and_cycle_path` shows little difference between the two groups, with overlapping boxes and similar medians for both response variables.
 
----
+### Excluded Small-Sample Category
 
 As a reference, boxplots for the four excluded variables are shown below. Although the small group size (fewer than 5 cases in one group) makes formal comparisons unreliable, the plots are included to check for any obvious trend before ruling these variables out entirely.
 
 ```{r echo=FALSE}
 excluded_logical_vars <- c("fencing_barriers", "railway_station", "bus_stops", "overpass_bridge")
 
-par(mfrow = c(1, 4), mar = c(4, 4, 3, 1))
+par(mfrow = c(2, 4))
 for (v in excluded_logical_vars) {
   boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df[[v]],
           xlab = v, ylab = "obs_peak_along_ped_per_h", main = paste("along by", v), cex.main = 0.9)
 }
-
-par(mfrow = c(1, 4), mar = c(4, 4, 3, 1))
 for (v in excluded_logical_vars) {
   boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df[[v]],
           xlab = v, ylab = "obs_peak_cross_ped_per_h", main = paste("cross by", v), cex.main = 0.9)
 }
 par(mfrow = c(1, 1))
 ```
+
 **Findings:**
 
 `fencing_barriers` and `railway_station` show a trend toward higher pedestrian counts when `TRUE`, for both response variables. However, the `FALSE` group for `fencing_barriers` (n = 3) and the `TRUE` group for `railway_station` (n = 2) are extremely small, so these apparent trends should be treated with caution rather than as reliable evidence of an effect.
@@ -191,28 +214,11 @@ rownames(level_table) <- NULL
 knitr::kable(level_table, caption = "Level counts and percentages for character categorical variables")
 ```
 
-**Findings:**
+The table shows considerable variation in balance across variables. `pta_nearest_active_stop_type` and `education_nearest_school_sector` are relatively well balanced across their levels. `abs_mb_category_2021` and `education_nearest_school_low_year` are each dominated by one or two levels, with several smaller levels falling below 10% of the sample. `health_nearest_establishment_category`, `health_nearest_establishment_type`, and `education_nearest_school_high_year` each include at least one level with fewer than 5 observations, limiting the reliability of comparisons involving that level. Each variable is examined in more detail in the sub-sections below.
 
-Two variables have a reasonable balance across all levels: `pta_nearest_active_stop_type` (School=10, Standard=11, Transwa=28) and `education_nearest_school_sector` (GOVERNMENT=31, NON-GOVERNMENT=18).
+### Land Use Category
 
 `abs_mb_category_2021` is dominated by Residential (53.1%) and Commercial (20.4%), with the remaining five levels each below 10% of the sample.
-
-The other four variables have at least one level with fewer than 5 observations — `health_nearest_establishment_category`, `health_nearest_establishment_type`, `education_nearest_school_low_year`, and `education_nearest_school_high_year` — and are excluded from further analysis for the same reason as above.
-
-```{r echo=FALSE}
-par(mfrow = c(2, 2))
-boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$pta_nearest_active_stop_type,
-        xlab = "pta_nearest_active_stop_type", ylab = "obs_peak_along_ped_per_h", main = "along by pta_stop_type")
-boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$education_nearest_school_sector,
-        xlab = "education_nearest_school_sector", ylab = "obs_peak_along_ped_per_h", main = "along by school_sector")
-boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$pta_nearest_active_stop_type,
-        xlab = "pta_nearest_active_stop_type", ylab = "obs_peak_cross_ped_per_h", main = "cross by pta_stop_type")
-boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$education_nearest_school_sector,
-        xlab = "education_nearest_school_sector", ylab = "obs_peak_cross_ped_per_h", main = "cross by school_sector")
-par(mfrow = c(1, 1))
-```
-
-Neither `pta_nearest_active_stop_type` nor `education_nearest_school_sector` shows a meaningful difference in pedestrian counts across groups, based on these plots.
 
 `abs_mb_category_2021` is simplified into three levels — `Residential`, `Commercial`, and `Other` (combining Education, Industrial, Parkland, Primary Production, and Transport) — since the smaller levels each account for less than 10% of the sample.
 
@@ -235,10 +241,124 @@ par(mfrow = c(1, 1))
 
 The Commercial group shows the highest median and widest spread, followed by Other, with Residential showing the lowest and narrowest distribution, for both target variables. This is consistent with the earlier finding that `commercial_buildings` was the strongest numeric predictor.
 
+### Education Category
+
+`education_nearest_school_low_year` is dominated by `KIN` (71.4%) and `PKG` (16.3%), with the remaining three levels — `Y07`, `Y10`, `Y11` — each below 10% of the sample and fewer than 5 observations.
+
+`education_nearest_school_low_year` is simplified into three levels — `PKG`, `KIN`, and `Y_plus` (combining Y07, Y10, and Y11) — since the Y07, Y10, and Y11 levels each have fewer than 5 observations.
+
+```{r echo=FALSE}
+analysis_df$education_low_year_3cat <- factor(
+  ifelse(analysis_df$education_nearest_school_low_year == "PKG", "PKG",
+  ifelse(analysis_df$education_nearest_school_low_year == "KIN", "KIN", "Y_plus")),
+  levels = c("PKG", "KIN", "Y_plus")
+)
+
+par(mfrow = c(1, 2), mar = c(5, 4, 3, 1))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$education_low_year_3cat,
+        xlab = "education_low_year_3cat", ylab = "obs_peak_along_ped_per_h", main = "along by education_low_year_3cat",
+        cex.axis = 0.7)
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$education_low_year_3cat,
+        xlab = "education_low_year_3cat", ylab = "obs_peak_cross_ped_per_h", main = "cross by education_low_year_3cat",
+        cex.axis = 0.7)
+par(mfrow = c(1, 1))
+```
+
+The `Y_plus` group shows the highest median and widest spread, followed by `PKG`, with `KIN` showing the lowest and narrowest distribution, for both target variables.
+
+---
+
+`education_nearest_school_high_year` is dominated by `Y06` (65.3%) and `Y12` (26.5%), with `Y10` accounting for 8.2% of the sample (n = 4).
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$education_nearest_school_high_year,
+        xlab = "education_nearest_school_high_year", ylab = "obs_peak_along_ped_per_h", main = "along by school_high_year",
+        cex.axis = 0.7)
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$education_nearest_school_high_year,
+        xlab = "education_nearest_school_high_year", ylab = "obs_peak_cross_ped_per_h", main = "cross by school_high_year",
+        cex.axis = 0.7)
+par(mfrow = c(1, 1))
+```
+
+`education_nearest_school_high_year` shows no meaningful difference in pedestrian counts across the three groups, for both target variables.
+
+---
+
+`education_nearest_school_sector` is relatively balanced between its two levels (GOVERNMENT = 63.3%, NON-GOVERNMENT = 36.7%).
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$education_nearest_school_sector,
+        xlab = "education_nearest_school_sector", ylab = "obs_peak_along_ped_per_h", main = "along by school_sector",
+        cex.axis = 0.7)
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$education_nearest_school_sector,
+        xlab = "education_nearest_school_sector", ylab = "obs_peak_cross_ped_per_h", main = "cross by school_sector",
+        cex.axis = 0.7)
+par(mfrow = c(1, 1))
+```
+
+`education_nearest_school_sector` shows no meaningful difference in pedestrian counts across groups, based on these plots.
+
+### Public Transport Category
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$pta_nearest_active_stop_type,
+        xlab = "pta_nearest_active_stop_type", ylab = "obs_peak_along_ped_per_h", main = "along by pta_stop_type",
+        cex.axis = 0.7)
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$pta_nearest_active_stop_type,
+        xlab = "pta_nearest_active_stop_type", ylab = "obs_peak_cross_ped_per_h", main = "cross by pta_stop_type",
+        cex.axis = 0.7)
+par(mfrow = c(1, 1))
+```
+
+`pta_nearest_active_stop_type` shows no meaningful difference in pedestrian counts across groups, based on these plots.
+
+### Healthcare Category
+
+As a reference, boxplots for the two health-related variables are shown below. Although the group sizes are heavily skewed (`Nursing Post` n = 5, `Private` n = 4), the plots are included to check for any obvious trend before excluding these variables from further analysis.
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$health_nearest_establishment_category,
+        xlab = "health_nearest_establishment_category", ylab = "obs_peak_along_ped_per_h", main = "along by health_category",
+        cex.axis = 0.7)
+
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$health_nearest_establishment_category,
+        xlab = "health_nearest_establishment_category", ylab = "obs_peak_cross_ped_per_h", main = "cross by health_category",
+        cex.axis = 0.7)
+
+par(mfrow = c(1, 1))
+```
+
+`health_nearest_establishment_category` shows a possible trend: sites near a `Nursing Post` have lower pedestrian counts than sites near an `Acute Hospital`, for both target variables. However, the `Nursing Post` group is very small (n = 5), so this difference is not reliable.
+
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+
+boxplot(analysis_df$obs_peak_along_ped_per_h ~ analysis_df$health_nearest_establishment_type,
+        xlab = "health_nearest_establishment_type", ylab = "obs_peak_along_ped_per_h", main = "along by health_type",
+        cex.axis = 0.7)
+
+boxplot(analysis_df$obs_peak_cross_ped_per_h ~ analysis_df$health_nearest_establishment_type,
+        xlab = "health_nearest_establishment_type", ylab = "obs_peak_cross_ped_per_h", main = "cross by health_type",
+        cex.axis = 0.7)
+par(mfrow = c(1, 1))
+```
+
+
+`health_nearest_establishment_type` shows almost no difference between `Private` and `Public` groups, for both target variables. The `Private` group is also very small (n = 4), which limits how much can be concluded.
+
+Given the small group sizes, neither variable is considered suitable for further statistical analysis at this stage.
+
 ## Conclusion
 
 `commercial_buildings` and related retail/commercial density measures (`overture_other_shopping_count_500m`, `overture_grocery_convenience_pharmacy_count_500m`, `parking_areas`, `overture_food_drink_count_500m`) are the strongest and most consistent numeric predictors of pedestrian counts, but they are highly correlated with each other and require a multicollinearity check before joint use in a model.
 
-Among categorical variables, `footpath_both_sides`, `overture_shopping_mall_present_500m`, `park_bushland_reserve`, and land-use category (`abs_mb_category_simple`) show a clear relationship with pedestrian counts, all pointing toward higher counts in commercially developed, well-footpathed areas. `footpath_one_side`, `shared_pedestrian_and_cycle_path`, `pta_nearest_active_stop_type`, and `education_nearest_school_sector` show no meaningful relationship and are unlikely to add value to the model.
+Among categorical variables, `footpath_both_sides`, `overture_shopping_mall_present_500m`, `park_bushland_reserve`, land-use category (`abs_mb_category_simple`), and school entry level (`education_low_year_3cat`) show a clear relationship with pedestrian counts, all pointing toward higher counts in commercially developed, well-footpathed areas served by schools with a later entry year. `footpath_one_side`, `shared_pedestrian_and_cycle_path`, `pta_nearest_active_stop_type`, school exit level (`education_nearest_school_high_year`), and school sector (`education_nearest_school_sector`) show no meaningful relationship and are unlikely to add value to the model.
 
-**Recommended next step:** examine multicollinearity among the commercial/retail density variables (e.g. via VIF or correlation-based selection) before fitting a regression model, and confirm whether `footpath_both_sides` and `abs_mb_category_simple` add explanatory power independent of `commercial_buildings`.
+`health_nearest_establishment_category` and `health_nearest_establishment_type` were examined only as a reference, due to extremely small group sizes (n = 4–5) in one level of each variable, and are excluded from further consideration.
+
+**Recommended next step:** examine multicollinearity among the commercial/retail density variables (e.g. via VIF or correlation-based selection) before fitting a regression model, and confirm whether `footpath_both_sides`, `abs_mb_category_simple`, and `education_low_year_3cat` add explanatory power independent of `commercial_buildings`.
