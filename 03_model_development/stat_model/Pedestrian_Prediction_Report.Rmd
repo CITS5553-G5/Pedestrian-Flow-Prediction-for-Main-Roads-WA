@@ -1,0 +1,387 @@
+---
+title: "Pedestrian Prediction"
+author: "Makoto Hanyuda (24773603)"
+date: "2026-09-09"
+output: pdf_document
+---
+
+# Pedestrian Prediction
+
+## Data Load
+
+This section prepares the final modelling dataset based on the EDA results: numeric formatting issues are corrected, and the categorical variables `abs_mb_category_simple` and `education_low_year_3cat` are created. The table below shows the structure of the resulting dataset, including each variable's name, class, and example values.
+
+```{r echo=FALSE}
+library(readxl)
+library(knitr)
+
+road_features <- read_excel("data/model_dataset 1.xlsx", sheet = 2)
+
+# Convert comma-formatted numeric strings to numeric
+comma_numeric_cols <- c(
+  "abs_mb_dwellings_per_sqkm_2021", "abs_mb_persons_per_sqkm_2021",
+  "pta_nearest_active_stop_distance_m", "health_nearest_establishment_distance_m",
+  "education_nearest_active_school_distance_m", "ms_building_footprint_area_m2_500m"
+)
+for (col in comma_numeric_cols) {
+  road_features[[col]] <- as.numeric(gsub(",", "", road_features[[col]]))
+}
+
+# Derive EDA final categorical variables
+road_features$abs_mb_category_simple <- factor(
+  ifelse(road_features$abs_mb_category_2021 %in% c("Residential", "Commercial"),
+         road_features$abs_mb_category_2021, "Other"),
+  levels = c("Residential", "Commercial", "Other")
+)
+
+road_features$education_low_year_3cat <- factor(
+  ifelse(road_features$education_nearest_school_low_year == "PKG", "PKG",
+  ifelse(road_features$education_nearest_school_low_year == "KIN", "KIN", "Y_plus")),
+  levels = c("PKG", "KIN", "Y_plus")
+)
+
+# Response variables
+response_vars <- c("obs_peak_cross_ped_per_h", "obs_peak_along_ped_per_h")
+
+# Numeric predictor candidates (EDA: commercial/retail density, r = 0.42-0.77)
+numeric_vars <- c(
+  "commercial_buildings", "parking_areas",
+  "overture_food_drink_count_500m",
+  "overture_grocery_convenience_pharmacy_count_500m",
+  "overture_other_shopping_count_500m"
+)
+
+# Categorical predictor candidates (EDA: clear relationship with response)
+categorical_vars <- c(
+  "footpath_both_sides",
+  "overture_shopping_mall_present_500m",
+  "park_bushland_reserve",
+  "abs_mb_category_simple",
+  "education_low_year_3cat"
+)
+
+# Build model dataset
+model_df <- road_features[, c(response_vars, numeric_vars, categorical_vars)]
+
+# Convert remaining categorical variables to factors
+# (abs_mb_category_simple and education_low_year_3cat are already factors)
+model_df$footpath_both_sides <- as.factor(model_df$footpath_both_sides)
+model_df$overture_shopping_mall_present_500m <- as.factor(model_df$overture_shopping_mall_present_500m)
+model_df$park_bushland_reserve <- as.factor(model_df$park_bushland_reserve)
+
+# Structure summary as a table
+str_summary <- data.frame(
+  Variable = names(model_df),
+  Class = sapply(model_df, function(x) class(x)[1]),
+  Example = sapply(model_df, function(x) paste(head(x, 3), collapse = ", ")),
+  row.names = NULL
+)
+
+kable(str_summary, caption = "Structure of model_df")
+```
+
+## Linear Model
+
+### Variable Selection using Step Function
+
+This step applies stepwise selection (both directions) to `obs_peak_along_ped_per_h`, starting from two models: an empty model and a model with all EDA-selected predictors. Comparing the results from both starting points helps identify a stable and consistent set of predictors for the linear model.
+
+```{r include=FALSE}
+# Null and full models for obs_peak_along_ped_per_h
+linear_null <- lm(obs_peak_along_ped_per_h ~ 1, data = model_df)
+linear_full <- lm(obs_peak_along_ped_per_h ~ commercial_buildings + parking_areas +
+                     overture_food_drink_count_500m +
+                     overture_grocery_convenience_pharmacy_count_500m +
+                     overture_other_shopping_count_500m +
+                     footpath_both_sides + overture_shopping_mall_present_500m +
+                     park_bushland_reserve + abs_mb_category_simple +
+                     education_low_year_3cat,
+                   data = model_df)
+linear_step_both_null <- step(linear_null,
+                          scope = list(lower = linear_null, upper = linear_full),
+                          direction = "both", trace = 0)
+linear_step_both_full <- step(linear_full, direction = "both", trace = 0)
+```
+
+#### Model from Null Start
+
+```{r}
+summary(linear_step_both_null)
+```
+
+`commercial_buildings`, `parking_areas`, and `education_low_year_3cat` were selected. `commercial_buildings` has a strong, significant positive effect, consistent with the EDA finding that commercial density is the strongest predictor of pedestrian activity. `parking_areas` is significant, but its negative coefficient contradicts the positive relationship found in the EDA, suggesting possible confounding. Neither level of `education_low_year_3cat` is significant. The model explains about 64% of the variance (adjusted R² = 0.638).
+
+#### Model from Full Start
+
+```{r}
+summary(linear_step_both_full)
+```
+
+Four more predictors were retained: `overture_food_drink_count_500m`, `overture_shopping_mall_present_500m`, and `abs_mb_category_simple`, alongside `education_low_year_3cat`. `commercial_buildings` and `parking_areas` remain significant with the same effect directions. `overture_food_drink_count_500m` is significant and positive, consistent with the EDA. The remaining added predictors are only marginally significant (p between 0.05 and 0.09). This model explains slightly more variance (adjusted R² = 0.671), but the improvement is modest relative to the added complexity.
+
+#### Comparison of Stepwise Models
+
+```{r}
+anova(linear_step_both_null, linear_step_both_full)
+AIC(linear_step_both_null, linear_step_both_full)
+```
+
+A partial F-test shows no significant improvement from the additional predictors (F = 2.12, p = 0.096), and the AIC values are nearly identical (513.1 vs. 511.7). The simpler model (`commercial_buildings`, `parking_areas`, `education_low_year_3cat`) is therefore preferred, as it achieves a comparable fit with fewer predictors.
+
+
+### Linear Final Model
+
+Based on the stepwise comparison, `education_low_year_3cat` was excluded, as neither level reached significance. The final linear model retains only `commercial_buildings` and `parking_areas`.
+
+```{r}
+### Linear final model
+
+linear_final_model <- lm(obs_peak_along_ped_per_h ~ commercial_buildings + parking_areas,
+                          data = model_df)
+summary(linear_final_model)
+```
+
+`commercial_buildings` remains strongly significant with a positive effect, consistent with the EDA. `parking_areas` is marginally significant (p = 0.082), and its negative coefficient still contradicts the positive relationship observed in the EDA, indicating likely confounding. The model explains about 60% of the variance (adjusted R² = 0.603), slightly lower than the earlier three-predictor model, but with a simpler and more interpretable structure.
+
+```{r echo=FALSE}
+par(mfrow = c(2, 2))
+plot(linear_final_model)
+par(mfrow = c(1, 1))
+```
+
+The diagnostic plots show clear problems with this model. The Residuals vs Fitted and Scale-Location plots both show increasing spread at higher fitted values, indicating heteroscedasticity. The Q-Q plot shows departure from normality in the upper tail, with points 10, 11, and 30 as notable outliers. Point 11 also shows relatively high leverage in the Residuals vs Leverage plot, suggesting it has a disproportionate influence on the model.
+
+```{r echo=FALSE}
+fitted_vals <- fitted(linear_final_model)
+actual_vals <- model_df$obs_peak_along_ped_per_h
+
+plot(actual_vals, fitted_vals,
+     xlab = "Actual obs_peak_along_ped_per_h",
+     ylab = "Fitted",
+     main = "Actual vs Fitted: Linear final model")
+abline(0, 1, col = "red", lty = 2)
+```
+
+The Actual vs Fitted plot confirms these issues: fitted values are negative for several low-count observations, which is not realistic for pedestrian counts, and the model underpredicts the highest observed values. These findings replicate the pattern seen in the First Trial modelling and motivate the use of a log-transformed response in the next section.
+
+
+## Log Model (along)
+
+### Variable Selection using Step Function
+
+This step repeats the stepwise selection process on the log-transformed response, `log(obs_peak_along_ped_per_h)`, using the EDA-selected predictors. As with the linear model, both a null start and a full start are used to check whether the two approaches converge on a consistent set of predictors.
+
+```{r include=FALSE}
+# Null and full models for log(obs_peak_along_ped_per_h)
+log_null <- lm(log(obs_peak_along_ped_per_h) ~ 1, data = model_df)
+log_full <- lm(log(obs_peak_along_ped_per_h) ~ commercial_buildings + parking_areas +
+                 overture_food_drink_count_500m +
+                 overture_grocery_convenience_pharmacy_count_500m +
+                 overture_other_shopping_count_500m +
+                 footpath_both_sides + overture_shopping_mall_present_500m +
+                 park_bushland_reserve + abs_mb_category_simple +
+                 education_low_year_3cat,
+               data = model_df)
+log_step_both_null <- step(log_null,
+                            scope = list(lower = log_null, upper = log_full),
+                            direction = "both", trace = 0)
+log_step_both_full <- step(log_full, direction = "both", trace = 0)
+```
+
+#### Model from Null Start
+
+```{r}
+summary(log_step_both_null)
+```
+
+`commercial_buildings`, `footpath_both_sides`, and `education_low_year_3cat` were selected. `commercial_buildings` has a strong, significant positive effect, consistent with the EDA. `footpath_both_sides` is marginally significant (p = 0.096), with a positive coefficient matching the EDA finding that pedestrian counts tend to be higher where footpaths exist on both sides. `education_low_year_3cat` shows a mixed pattern: the KIN level is not significant, while the Y_plus level is marginally significant (p = 0.090). The model explains about 64% of the variance (adjusted R² = 0.641).
+
+#### Model from Full Start
+
+```{r}
+summary(log_step_both_full)
+```
+
+The full-start model selected exactly the same predictors as the null-start model: `commercial_buildings`, `footpath_both_sides`, and `education_low_year_3cat`.
+
+#### Comparison of Stepwise Models
+
+As both starting points converged on the same model, this consistency supports the stability of the selected predictor set, and no further comparison is required before finalising the model.
+
+### Log Final Model
+
+The final log model retains `commercial_buildings`, `footpath_both_sides`, and `education_low_year_3cat`, the same predictors selected by stepwise selection from both starting points.
+
+```{r}
+### Log final model
+log_final_model <- lm(log(obs_peak_along_ped_per_h) ~ commercial_buildings +
+                         footpath_both_sides + education_low_year_3cat,
+                       data = model_df)
+summary(log_final_model)
+```
+
+`commercial_buildings` has a strong, significant positive effect, consistent with the EDA. `footpath_both_sides` is marginally significant (p = 0.096) with a positive coefficient, matching the EDA finding that pedestrian counts tend to be higher where footpaths exist on both sides. `education_low_year_3cat` shows a mixed pattern: the KIN level is not significant, while the Y_plus level is marginally significant (p = 0.090). The model explains about 64% of the variance (adjusted R² = 0.641).
+
+```{r echo=FALSE}
+par(mfrow = c(2, 2))
+plot(log_final_model)
+par(mfrow = c(1, 1))
+```
+
+The diagnostic plots show a clear improvement over the linear model. The Residuals vs Fitted plot shows no clear pattern, and the Scale-Location plot indicates roughly constant variance, suggesting that the heteroscedasticity seen in the linear model has been resolved. The Q-Q plot shows most points close to the line, with only point 30 as a mild outlier, compared to multiple outliers in the linear model. In the Residuals vs Leverage plot, point 30 has slightly elevated leverage but remains within Cook's distance, so it is not considered highly influential.
+
+```{r echo=FALSE}
+fitted_vals <- fitted(log_final_model)
+actual_vals <- log(model_df$obs_peak_along_ped_per_h)
+
+plot(actual_vals, fitted_vals,
+     xlab = "Actual log(obs_peak_along_ped_per_h)",
+     ylab = "Fitted",
+     main = "Actual vs Fitted: Log final model")
+abline(0, 1, col = "red", lty = 2)
+```
+
+The Actual vs Fitted plot shows points distributed evenly along the diagonal, without the negative predictions or systematic underprediction seen in the linear model. These results are consistent with the First Trial findings, confirming that the log-transformed model provides a better fit than the linear model for `obs_peak_along_ped_per_h`.
+
+
+## Log Model (cross)
+
+### Variable Selection using Step Function
+
+
+This step applies stepwise selection (both directions) to `log(obs_peak_cross_ped_per_h + 1)`, using the same EDA-selected predictors as for `along_ped`. A `+1` offset is applied because one observation has a value of zero, which would otherwise be undefined under a log transform. Both a null start and a full start are used to check whether the two approaches converge on a consistent set of predictors.
+
+```{r include=FALSE}
+# Null and full models for log(obs_peak_cross_ped_per_h + 1)
+log_cross_null <- lm(log(obs_peak_cross_ped_per_h + 1) ~ 1, data = model_df)
+log_cross_full <- lm(log(obs_peak_cross_ped_per_h + 1) ~ commercial_buildings + parking_areas +
+                        overture_food_drink_count_500m +
+                        overture_grocery_convenience_pharmacy_count_500m +
+                        overture_other_shopping_count_500m +
+                        footpath_both_sides + overture_shopping_mall_present_500m +
+                        park_bushland_reserve + abs_mb_category_simple +
+                        education_low_year_3cat,
+                      data = model_df)
+log_cross_step_both_null <- step(log_cross_null,
+                                  scope = list(lower = log_cross_null, upper = log_cross_full),
+                                  direction = "both", trace = 0)
+log_cross_step_both_full <- step(log_cross_full, direction = "both", trace = 0)
+```
+
+#### Model from Null Start
+
+```{r}
+summary(log_cross_step_both_null)
+```
+
+#### Model from Full Start
+
+```{r}
+summary(log_cross_step_both_full)
+```
+
+#### Comparison of Stepwise Models
+
+Stepwise selection converged on the same model regardless of the starting point (null or full), selecting `commercial_buildings`, `overture_grocery_convenience_pharmacy_count_500m`, `overture_other_shopping_count_500m`, `footpath_both_sides`, `park_bushland_reserve`, and `education_low_year_3cat`. This consistency supports the stability of the selected predictor set.
+
+
+### Log (Cross) Final Model
+
+Based on the AIC and partial F-test comparisons, the additional predictors dropped during model comparison did not significantly improve model fit. The final log model for `cross_ped` retains three predictors: `commercial_buildings`, `overture_grocery_convenience_pharmacy_count_500m`, and `park_bushland_reserve`.
+
+```{r}
+log_cross_final_model <- lm(log(obs_peak_cross_ped_per_h + 1) ~ commercial_buildings +
+                               overture_grocery_convenience_pharmacy_count_500m +
+                               park_bushland_reserve, data = model_df)
+summary(log_cross_final_model)
+```
+
+`commercial_buildings` has a strong, significant positive effect, consistent with the EDA. `park_bushland_reserve` is significant (p = 0.028) with a positive coefficient, also matching the EDA finding. `overture_grocery_convenience_pharmacy_count_500m` is marginally significant (p = 0.071), with a positive coefficient in the expected direction. The model explains about 50% of the variance (adjusted R² = 0.499), somewhat lower than the along_ped model, reflecting the weaker overall relationships found for cross_ped in the EDA.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(log_cross_final_model)
+par(mfrow = c(1, 1))
+```
+
+The diagnostic plots show broadly acceptable behaviour, though with more residual spread than the along_ped model. The Residuals vs Fitted plot shows no strong pattern, though points 6, 21, and 30 stand out with larger residuals. The Scale-Location plot indicates roughly constant variance across the fitted range. The Q-Q plot shows most points close to the line, with some deviation at the upper tail (points 6, 21, and 30). In the Residuals vs Leverage plot, points 4 and 34 show relatively high leverage, but none exceed Cook's distance, so no observation appears to be highly influential.
+
+```{r}
+fitted_vals <- fitted(log_cross_final_model)
+actual_vals <- log(model_df$obs_peak_cross_ped_per_h + 1)
+
+plot(actual_vals, fitted_vals,
+     xlab = "Actual log(obs_peak_cross_ped_per_h + 1)",
+     ylab = "Fitted",
+     main = "Actual vs Fitted: Log final model (cross_ped)")
+abline(0, 1, col = "red", lty = 2)
+```
+
+The Actual vs Fitted plot shows a reasonable linear relationship along the diagonal, though with more scatter than the along_ped model, particularly at higher observed values. This is consistent with the lower adjusted R² and reflects the comparatively weaker predictive relationships identified for `cross_ped` during the EDA.
+
+
+
+
+
+# Appendix 
+### Log (along) Final Model Analysis
+
+```{r}
+# Four candidate models
+log_m1 <- lm(log(obs_peak_along_ped_per_h) ~ commercial_buildings +
+               footpath_both_sides + education_low_year_3cat, data = model_df)
+log_m2 <- lm(log(obs_peak_along_ped_per_h) ~ commercial_buildings +
+               footpath_both_sides, data = model_df)
+log_m3 <- lm(log(obs_peak_along_ped_per_h) ~ commercial_buildings +
+               education_low_year_3cat, data = model_df)
+log_m4 <- lm(log(obs_peak_along_ped_per_h) ~ commercial_buildings, data = model_df)
+```
+```{r}
+# AIC comparison across all four
+AIC(log_m1, log_m2, log_m3, log_m4)
+```
+```{r}
+# Partial F-tests for nested comparisons
+anova(log_m4, log_m2)  # does footpath_both_sides add value over commercial_buildings alone?
+anova(log_m4, log_m3)  # does education_low_year_3cat add value over commercial_buildings alone?
+anova(log_m2, log_m1)  # does education_low_year_3cat add value once footpath is included?
+anova(log_m3, log_m1)  # does footpath_both_sides add value once education is included?
+```
+
+### Log (cross) Final Model Analysis
+
+```{r}
+# Full stepwise model (6 predictors)
+log_cross_m1 <- lm(log(obs_peak_cross_ped_per_h + 1) ~ commercial_buildings +
+                      overture_grocery_convenience_pharmacy_count_500m +
+                      overture_other_shopping_count_500m +
+                      footpath_both_sides + park_bushland_reserve +
+                      education_low_year_3cat, data = model_df)
+
+# Drop overture_other_shopping_count_500m (weakest, p = 0.166)
+log_cross_m2 <- lm(log(obs_peak_cross_ped_per_h + 1) ~ commercial_buildings +
+                      overture_grocery_convenience_pharmacy_count_500m +
+                      footpath_both_sides + park_bushland_reserve +
+                      education_low_year_3cat, data = model_df)
+
+# Also drop footpath_both_sides
+log_cross_m3 <- lm(log(obs_peak_cross_ped_per_h + 1) ~ commercial_buildings +
+                      overture_grocery_convenience_pharmacy_count_500m +
+                      park_bushland_reserve + education_low_year_3cat, data = model_df)
+
+# Also drop education_low_year_3cat
+log_cross_m4 <- lm(log(obs_peak_cross_ped_per_h + 1) ~ commercial_buildings +
+                      overture_grocery_convenience_pharmacy_count_500m +
+                      park_bushland_reserve, data = model_df)
+```
+```{r}
+# AIC comparison across all four candidates
+AIC(log_cross_m1, log_cross_m2, log_cross_m3, log_cross_m4)
+```
+```{r}
+# Partial F-tests for nested comparisons
+anova(log_cross_m2, log_cross_m1)  # does overture_other_shopping_count_500m add value?
+anova(log_cross_m3, log_cross_m2)  # does footpath_both_sides add value?
+anova(log_cross_m4, log_cross_m3)  # does education_low_year_3cat add value?
+```
+
