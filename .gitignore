@@ -15,6 +15,10 @@ __pycache__/
 .coverage
 htmlcov/
 
+# JavaScript dependencies and generated builds
+node_modules/
+dist/
+
 # Secrets and local configuration
 .env
 .env.*
@@ -34,6 +38,13 @@ htmlcov/
 # evidence and unselected candidate datasets remain in approved archival storage.
 data/cache/
 data/tmp/
+data/external_raw/overture_places/
+data/external_raw/microsoft_building_footprints/*/australia_tiles/*.csv.gz
+data/external_raw/microsoft_building_footprints/*/dataset-links.csv
+data/external_raw/pta_stops/
+data/external_raw/wa_health_establishments/
+data/external_raw/dplh_activity_centres/
+data/external_raw/dplh_region_scheme_boundaries/
 data/raw/Obs Count Data/
 data/raw/Ped_iRAP_merged.fst
 data/raw/R scripts for process and linkage/
@@ -48,22 +59,28 @@ models/
 reports/generated/
 tmp/
 
+# The team installs from requirements.txt. Remove this rule only if the team
+# formally adopts uv as its shared package manager.
+/uv.lock
+
 # Personal local experiment copy; not a shared test suite
 07_test/
 
 # Personal guidance and working notes; not shared with the team
 /GIT_WORKFLOW_ZH.md
 /docs/personal_notes/
+/docs/03_model_development/haoqi-feature_selection_recommendations.md
+/docs/03_model_development/haoqi-scientific_modeling_guide.md
+/01_data_preparation/README.md
+/02_feature_extraction/README.md
 
 # Local-only Stage 2 notebooks; intentionally not shared
-/02_feature_extraction/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
-/02_feature_extraction/02_060_haoqi_dplh_activity_centres.ipynb
-/02_feature_extraction/02_haoqi_imagery_llm_apis.ipynb
+/02_feature_extraction/**/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
+/02_feature_extraction/**/02_060_haoqi_dplh_activity_centres.ipynb
+/02_feature_extraction/**/02_haoqi_imagery_llm_apis.ipynb
 
-# External source caches downloaded automatically by notebooks
-data/external_raw/dplh_activity_centres/
-data/external_raw/dplh_region_scheme_boundaries/
-data/external_raw/pta_stops/
-data/external_raw/wa_education/
-data/external_raw/wa_health_establishments/
-data/external_raw/microsoft_building_footprints/*/australia_tiles/*.csv.gz
+# Excluded Google Places Aggregate output
+/06_outputs/02_feature_extraction/02_08_haoqi_google_places_aggregate_poi_features.xlsx
+
+# Local backup copies of superseded work
+/archive/

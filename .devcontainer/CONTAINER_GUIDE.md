@@ -4,9 +4,7 @@ This environment is optional. The shared code and notebooks must also run in a P
 
 ## Current environment
 
-The development environment currently starts one service named `app`, using the `pedestrian-exposure-wa-app` container. It provides Python 3.11 and Node.js 22 development and mounts the repository at `/workspace`.
-
-PostgreSQL, PostGIS and pgAdmin are not started by the current Compose configuration. Their setup files remain under `.devcontainer/postgres/` so database support can be restored later if the project needs it. Previously created Docker database volumes are not deleted by this configuration change.
+The development environment starts one service named `app`, using the `pedestrian-exposure-wa-app` container. It provides Python 3.11 and Node.js 22 development and mounts the repository at `/workspace`.
 
 The frontend dependency directory is mounted as the Docker named volume `pedestrian-exposure-wa-frontend-node-modules`. Packages installed at `/workspace/05_application/frontend/node_modules` therefore remain inside Docker storage rather than being written into the host project directory.
 
@@ -25,6 +23,12 @@ The frontend dependency directory is mounted as the Docker named volume `pedestr
 5. Wait while the container starts and the Python packages in `requirements.txt` are installed.
 
 Visual Studio Code should reopen in the `app` service with `/workspace` as the project directory.
+
+## Runtime environment
+
+The project uses one local environment file at the repository root. Copy `.env.example` to `.env` and add only the credentials required by the active experiment. The same file is available inside the container as `/workspace/.env`; Python code and notebooks that require runtime configuration load it explicitly with `python-dotenv`.
+
+The development container does not require a separate `.devcontainer/.env` file. Changing a runtime API key or provider setting does not require rebuilding the container; restart the Python command or notebook kernel instead.
 
 ## Verify Python
 
@@ -80,4 +84,4 @@ docker compose -f compose.yaml logs app
 
 Stopping, rebuilding or running `docker compose down` does not normally remove named volumes. Do not add `--volumes` unless the stored frontend dependencies can be discarded.
 
-Removing `pedestrian-exposure-wa-frontend-node-modules` only deletes installed frontend packages; they can be restored with `npm ci`. Previously created PostgreSQL or pgAdmin volumes are independent and remain untouched unless someone explicitly removes them.
+Removing `pedestrian-exposure-wa-frontend-node-modules` only deletes installed frontend packages; they can be restored with `npm ci`.

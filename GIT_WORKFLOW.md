@@ -88,4 +88,4 @@ If more Stage 2 work is needed, you may create a new `haoqi/02-extract-features`
 
 ## 7. Before every commit
 
-Run `git status`. Do not commit `.env`, secrets, passwords, personal absolute paths, automatically downloaded external caches, the legacy `outputs/` directory, `tmp/` or the personal experiment directory `07_test/`. Files under `06_outputs/` may be committed only when they are reviewed team results and the generating notebook or script is included in the same change. Shared code must use repository-relative paths and work from different clone locations on both Windows and macOS.
+Run `git status`. Do not commit `.env`, secrets, passwords, personal absolute paths, automatically downloaded external caches, the legacy `outputs/` directory, `tmp/` directory. Files under `06_outputs/` may be committed only when they are reviewed team results and the generating notebook or script is included in the same change. Shared code must use repository-relative paths and work from different clone locations on both Windows and macOS.
