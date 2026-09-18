@@ -4,7 +4,7 @@ This environment is optional. The shared code and notebooks must also run in a P
 
 ## Current environment
 
-The development environment starts one service named `app`, using the `pedestrian-exposure-wa-app` container. It provides Python 3.11 and Node.js 22 development and mounts the repository at `/workspace`.
+The development environment starts one service named `app`, using the `pedestrian-exposure-wa-app` container. It provides Python 3.11, Node.js 22, R, R Markdown, Pandoc and LaTeX development tools, and mounts the repository at `/workspace`.
 
 The frontend dependency directory is mounted as the Docker named volume `pedestrian-exposure-wa-frontend-node-modules`. Packages installed at `/workspace/05_application/frontend/node_modules` therefore remain inside Docker storage rather than being written into the host project directory.
 
@@ -41,6 +41,25 @@ python -c "import pandas, geopandas, sklearn, statsmodels, xgboost; print('Pytho
 
 The Python version should be 3.11 and the import test should print `Python environment: OK`.
 
+## Verify R Markdown
+
+Run the following commands inside the container:
+
+```bash
+R --version
+Rscript -e "library(rmarkdown); library(glmnet); library(ranger); library(gbm); library(readxl); library(PerformanceAnalytics); library(fst); cat('R environment: OK\n')"
+pandoc --version
+pdflatex --version
+```
+
+To render an R Markdown document from the repository root, run:
+
+```bash
+Rscript -e "rmarkdown::render('03_model_development/03_Yashika_Predict_Pedestrians_Final_Model_Comparison.Rmd')"
+```
+
+The document chooses its output format from the YAML header. Pass `output_format = 'html_document'` or `output_format = 'pdf_document'` to `rmarkdown::render()` when only one format is required.
+
 ## Install and run the frontend
 
 Run these commands inside the container:
@@ -72,7 +91,7 @@ docker compose -f compose.yaml stop
 docker compose -f compose.yaml down
 ```
 
-Use `Dev Containers: Rebuild Container` after changing `compose.yaml`, `devcontainer.json` or the base image. A normal rebuild recreates the app container but retains repository files and the named frontend dependency volume.
+Use `Dev Containers: Rebuild Container` after changing `Dockerfile`, `compose.yaml`, `devcontainer.json` or the base image. A normal rebuild recreates the app container but retains repository files and the named frontend dependency volume.
 
 To inspect the app service logs, run:
 

@@ -6,13 +6,39 @@
     "app"
   ],
   "workspaceFolder": "/workspace",
+  "remoteUser": "rstudio",
+  "remoteEnv": {
+    "PATH": "/opt/pedflow-venv/bin:${containerEnv:PATH}",
+    "VIRTUAL_ENV": "/opt/pedflow-venv"
+  },
+  "waitFor": "postCreateCommand",
   "shutdownAction": "stopCompose",
   "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11.16",
+      "installTools": false
+    },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "22"
+      "version": "22.23.2",
+      "installYarnUsingApt": false
+    },
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+      "packages": "build-essential,gfortran,pkg-config,pandoc,texlive-latex-base,texlive-latex-recommended,texlive-latex-extra,texlive-fonts-recommended,lmodern"
+    },
+    "ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
+      "packages": "rmarkdown@2.32,renv@1.2.4,dplyr@1.2.1,tidyr@1.3.2,purrr@1.2.2,tibble@3.3.1,ggplot2@4.0.3,knitr@1.52,glmnet@5.0,ranger@0.18.0,gbm@2.3.1,readxl@1.5.0.1,PerformanceAnalytics@2.1.0,fst@0.9.8,AsioHeaders@1.30.2-1,cpp11@0.5.5,progress@1.2.3,RcppEigen@0.3.4.0.2",
+      "installSystemRequirements": true
     }
   },
-  "forwardPorts": [5173],
+  "overrideFeatureInstallOrder": [
+    "ghcr.io/devcontainers/features/python",
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages",
+    "ghcr.io/rocker-org/devcontainer-features/r-packages",
+    "ghcr.io/devcontainers/features/node"
+  ],
+  "forwardPorts": [
+    5173
+  ],
   "portsAttributes": {
     "5173": {
       "label": "Pedestrian Flow Frontend",
@@ -22,7 +48,7 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.defaultInterpreterPath": "/opt/pedflow-venv/bin/python",
         "editor.formatOnSave": true,
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
@@ -35,9 +61,10 @@
         "ms-toolsai.jupyter",
         "ms-toolsai.jupyter-renderers",
         "ms-toolsai.datawrangler",
-        "mechatroner.rainbow-csv"
+        "mechatroner.rainbow-csv",
+        "REditorSupport.r"
       ]
     }
   },
-  "postCreateCommand": "sudo chown -R vscode:vscode /workspace/05_application/frontend/node_modules && python -m pip install --user -r requirements.txt"
+  "postCreateCommand": "bash .devcontainer/setup.sh"
 }

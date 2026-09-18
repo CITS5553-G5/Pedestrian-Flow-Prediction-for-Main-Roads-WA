@@ -1,0 +1,33 @@
+# Core data processing
+pandas
+numpy
+openpyxl
+pyarrow
+overturemaps==1.0.1
+
+# Visualisation and spatial analysis
+matplotlib
+seaborn
+geopandas
+shapely
+pyproj
+
+# Statistical modelling and machine learning
+statsmodels
+scipy
+scikit-learn
+xgboost
+joblib
+
+# External sources and the active imagery prototype
+requests
+urllib3
+google-genai
+pydantic
+python-dotenv
+
+# Notebook, test and code-quality tools
+jupyterlab
+ipykernel
+ruff
+pytest

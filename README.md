@@ -60,6 +60,6 @@ The repository uses one local environment file for runtime API configuration. Co
 
 ## Optional container environment
 
-The `.devcontainer/` configuration is an optional OrbStack or Docker Desktop environment. Team members do not need it for ordinary notebook or Python work. It mounts the repository at `/workspace` inside the container, but project code must remain runnable outside the container.
+The `.devcontainer/` configuration is an optional OrbStack or Docker Desktop environment. It provides the shared Python, Node.js and R Markdown toolchains, including Pandoc and LaTeX for HTML and PDF rendering. Team members do not need it for ordinary notebook or Python work. It mounts the repository at `/workspace` inside the container, but project code must remain runnable outside the container.
 
 See `.devcontainer/CONTAINER_GUIDE.md` for the optional Python and frontend development environment.

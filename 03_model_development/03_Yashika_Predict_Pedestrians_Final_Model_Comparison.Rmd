@@ -1,0 +1,1544 @@
+---
+title: "Pedestrian Flow Prediction for Main Roads WA — Final Model Comparison"
+author: "Yashika Yashika (24301477)"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    df_print: paged
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+# Executive summary
+
+This notebook is the final model-development and validation workflow for the **Pedestrian Flow Prediction for Main Roads WA** capstone project.
+
+Six approaches are compared under the same validation design:
+
+1. Median baseline
+2. Parsimonious linear regression
+3. Ridge regression
+4. LASSO regression
+5. Random Forest
+6. Gradient Boosting
+
+Both observed pedestrian-flow targets are evaluated:
+
+- `obs_peak_cross_ped_per_h` — peak pedestrian flow crossing the road;
+- `obs_peak_along_ped_per_h` — peak pedestrian flow travelling along the road.
+
+Because the survey dataset is small, model choice is based on **out-of-fold generalisation**, not training fit. Five-fold cross-validation is grouped by `road_no`, keeping observations from the same road in the same fold. Performance is reported using out-of-sample R-squared, RMSE and MAE. A road-level bootstrap then quantifies uncertainty in performance.
+
+The notebook also provides data-quality checks, response distributions, multicollinearity screening, leakage-safe preprocessing, actual-versus-predicted plots, residual diagnostics, largest-error tables, feature interpretation, dashboard-ready predictions and saved final models.
+
+# 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+set.seed(5553)
+
+required_packages <- c(
+  "dplyr", "tidyr", "purrr", "tibble",
+  "ggplot2", "knitr", "glmnet", "ranger", "gbm", "readxl"
+)
+
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+
+if (length(missing_packages) > 0) {
+  stop(
+    paste0(
+      "Install the following packages before knitting: ",
+      paste(missing_packages, collapse = ", ")
+    )
+  )
+}
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(tibble)
+library(ggplot2)
+library(knitr)
+library(glmnet)
+library(ranger)
+library(gbm)
+library(readxl)
+
+theme_set(theme_minimal(base_size = 12))
+options(dplyr.summarise.inform = FALSE)
+```
+
+# 2. Load the updated modelling dataset
+
+The analysis uses the updated feature naming convention, including the `overture_*` variables.
+
+```{r load-data}
+data_path <- "../data/processed/model_dataset.xlsx"
+
+dat <- read_excel(
+  data_path,
+  sheet = "Model_Data"
+)
+
+if (!"road_no" %in% names(dat)) {
+  stop("The dataset must contain road_no for grouped cross-validation.")
+}
+
+required_targets <- c(
+  "obs_peak_cross_ped_per_h",
+  "obs_peak_along_ped_per_h"
+)
+
+missing_targets <- setdiff(required_targets, names(dat))
+
+if (length(missing_targets) > 0) {
+  stop(
+    paste(
+      "Missing response column(s):",
+      paste(missing_targets, collapse = ", ")
+    )
+  )
+}
+
+if (!"site_id" %in% names(dat)) {
+  dat$site_id <- seq_len(nrow(dat))
+}
+
+if (!"road_name" %in% names(dat)) {
+  dat$road_name <- as.character(dat$road_no)
+}
+
+data_summary <- tibble(
+  Item = c("Input file", "Observations", "Variables", "Unique roads"),
+  Value = c(
+    data_path,
+    nrow(dat),
+    ncol(dat),
+    n_distinct(dat$road_no)
+  )
+)
+
+kable(data_summary, caption = "Dataset summary")
+```
+
+# 3. Target and feature definition
+
+The preceding EDA indicated that commercial and retail-density variables were the strongest and most consistent predictors. Education variables are not retained because the EDA did not show a useful relationship with pedestrian counts.
+
+Identifiers, coordinates, survey metadata and the response variables are not used as predictors.
+
+```{r feature-definition}
+if ("abs_mb_category_2021" %in% names(dat)) {
+  dat <- dat %>%
+    mutate(
+      abs_mb_category_simple = ifelse(
+        abs_mb_category_2021 %in% c("Residential", "Commercial"),
+        abs_mb_category_2021,
+        "Other"
+      )
+    )
+}
+
+numeric_candidates <- c(
+  "commercial_buildings",
+  "parking_areas",
+  "pedestrian_crossings",
+  "overture_food_drink_count_500m",
+  "overture_grocery_convenience_pharmacy_count_500m",
+  "overture_other_shopping_count_500m",
+  "pta_active_stops_within_500m",
+  "bus_stops",
+  "ms_building_count_500m",
+  "abs_mb_persons_per_sqkm_2021"
+)
+
+binary_candidates <- c(
+  "footpath_both_sides",
+  "overture_shopping_mall_present_500m",
+  "shared_pedestrian_and_cycle_path"
+)
+
+categorical_candidates <- c(
+  "abs_mb_category_simple"
+)
+
+numeric_features <- intersect(numeric_candidates, names(dat))
+binary_features <- intersect(binary_candidates, names(dat))
+categorical_features <- intersect(categorical_candidates, names(dat))
+
+features <- c(
+  numeric_features,
+  binary_features,
+  categorical_features
+)
+
+if (length(features) < 2) {
+  stop("Too few approved predictor columns were found in the dataset.")
+}
+
+for (v in numeric_features) {
+  dat[[v]] <- suppressWarnings(
+    as.numeric(gsub(",", "", dat[[v]]))
+  )
+}
+
+for (v in c(binary_features, categorical_features)) {
+  dat[[v]] <- as.factor(dat[[v]])
+}
+
+targets <- c(
+  "Cross-road" = "obs_peak_cross_ped_per_h",
+  "Along-road" = "obs_peak_along_ped_per_h"
+)
+
+feature_table <- tibble(
+  Feature = features,
+  Type = c(
+    rep("Numeric", length(numeric_features)),
+    rep("Binary", length(binary_features)),
+    rep("Categorical", length(categorical_features))
+  ),
+  Missing = vapply(dat[features], function(x) sum(is.na(x)), numeric(1))
+)
+
+kable(feature_table, caption = "Predictors used in the final model comparison")
+```
+
+# 4. Data-quality checks
+
+```{r data-quality}
+target_summary <- bind_rows(
+  lapply(names(targets), function(lbl) {
+    y <- dat[[targets[[lbl]]]]
+
+    tibble(
+      Target = lbl,
+      N = sum(!is.na(y)),
+      Missing = sum(is.na(y)),
+      Minimum = min(y, na.rm = TRUE),
+      Median = median(y, na.rm = TRUE),
+      Mean = mean(y, na.rm = TRUE),
+      Maximum = max(y, na.rm = TRUE)
+    )
+  })
+)
+
+kable(
+  target_summary,
+  digits = 2,
+  caption = "Response-variable summary"
+)
+```
+
+```{r missingness}
+missing_table <- tibble(
+  Variable = c(unname(targets), features),
+  Missing = vapply(
+    dat[c(unname(targets), features)],
+    function(x) sum(is.na(x)),
+    numeric(1)
+  )
+) %>%
+  arrange(desc(Missing))
+
+kable(missing_table, caption = "Missing values in modelling variables")
+```
+
+# 5. Response distributions
+
+```{r response-distributions, fig.width=9, fig.height=4.5}
+response_long <- dat %>%
+  transmute(
+    `Cross-road` = obs_peak_cross_ped_per_h,
+    `Along-road` = obs_peak_along_ped_per_h
+  ) %>%
+  pivot_longer(
+    everything(),
+    names_to = "Target",
+    values_to = "Pedestrian_flow"
+  )
+
+ggplot(response_long, aes(x = Pedestrian_flow)) +
+  geom_histogram(bins = 15, boundary = 0) +
+  facet_wrap(~ Target, scales = "free") +
+  labs(
+    title = "Distribution of observed pedestrian flow",
+    x = "Pedestrians per hour",
+    y = "Number of observations"
+  )
+```
+
+The responses are right-skewed. Linear and regularised regression therefore use `log1p()` of the response internally, while every model is evaluated on the original pedestrians-per-hour scale.
+
+# 6. Multicollinearity screening
+
+Commercial and retail-density variables can be strongly correlated. The table below identifies highly correlated numeric predictor pairs. This is a diagnostic rather than an automatic deletion rule: Ridge and LASSO are included specifically because regularisation can handle correlated predictors better than unregularised regression.
+
+```{r correlation-screening}
+if (length(numeric_features) >= 2) {
+
+  cor_mat <- cor(
+    dat[, numeric_features, drop = FALSE],
+    use = "pairwise.complete.obs"
+  )
+
+  cor_pairs <- as.data.frame(as.table(cor_mat)) %>%
+    as_tibble() %>%
+    rename(
+      Feature_1 = Var1,
+      Feature_2 = Var2,
+      Correlation = Freq
+    ) %>%
+    mutate(
+      Feature_1 = as.character(Feature_1),
+      Feature_2 = as.character(Feature_2)
+    ) %>%
+    filter(
+      Feature_1 < Feature_2,
+      abs(Correlation) >= 0.70
+    ) %>%
+    arrange(desc(abs(Correlation)))
+
+  if (nrow(cor_pairs) == 0) {
+    cat("No numeric predictor pairs have |correlation| >= 0.70.\n")
+  } else {
+    kable(
+      cor_pairs,
+      digits = 3,
+      caption = "Highly correlated numeric predictor pairs"
+    )
+  }
+}
+```
+
+# 7. Grouped five-fold cross-validation
+
+All observations from the same `road_no` are assigned to the same fold. This reduces leakage across segments from the same road and provides a more realistic test of prediction on unseen roads.
+
+```{r grouped-folds}
+make_group_folds <- function(groups, k = 5, seed = 5553) {
+
+  groups <- as.character(groups)
+  group_sizes <- table(groups)
+  unique_groups <- names(group_sizes)
+
+  if (length(unique_groups) < 2) {
+    stop("At least two unique roads are required.")
+  }
+
+  k <- min(k, length(unique_groups))
+
+  set.seed(seed)
+
+  group_names <- names(sort(group_sizes, decreasing = TRUE))
+  tie_break <- runif(length(group_names))
+  group_names <- group_names[
+    order(-as.numeric(group_sizes[group_names]), tie_break)
+  ]
+
+  fold_load <- rep(0, k)
+  assignment <- setNames(integer(length(group_names)), group_names)
+
+  for (g in group_names) {
+    available <- which(fold_load == min(fold_load))
+    chosen <- sample(available, 1)
+
+    assignment[g] <- chosen
+    fold_load[chosen] <- fold_load[chosen] + group_sizes[g]
+  }
+
+  as.integer(assignment[groups])
+}
+
+fold_id <- make_group_folds(
+  dat$road_no,
+  k = 5,
+  seed = 5553
+)
+
+fold_summary <- dat %>%
+  mutate(Fold = fold_id) %>%
+  group_by(Fold) %>%
+  summarise(
+    Observations = n(),
+    Roads = n_distinct(road_no),
+    Road_numbers = paste(sort(unique(road_no)), collapse = ", ")
+  )
+
+kable(
+  fold_summary,
+  caption = "Grouped five-fold cross-validation structure"
+)
+```
+
+# 8. Leakage-safe preprocessing
+
+Missing-value imputation is learned from the training fold only. Numeric variables use the training median. Binary and categorical variables use the training mode. New categorical levels in a validation fold are mapped to the training-mode level.
+
+```{r preprocessing}
+mode_value <- function(x) {
+  x <- as.character(x)
+  x <- x[!is.na(x) & x != ""]
+
+  if (length(x) == 0) {
+    return(NA_character_)
+  }
+
+  names(sort(table(x), decreasing = TRUE))[1]
+}
+
+fit_preprocessor <- function(train) {
+
+  medians <- if (length(numeric_features) > 0) {
+    vapply(
+      train[numeric_features],
+      function(x) median(x, na.rm = TRUE),
+      numeric(1)
+    )
+  } else {
+    numeric(0)
+  }
+
+  factor_vars <- c(binary_features, categorical_features)
+
+  modes <- if (length(factor_vars) > 0) {
+    vapply(train[factor_vars], mode_value, character(1))
+  } else {
+    character(0)
+  }
+
+  levels_list <- if (length(factor_vars) > 0) {
+    lapply(
+      train[factor_vars],
+      function(x) {
+        vals <- as.character(x)
+        vals <- vals[!is.na(vals) & vals != ""]
+        unique(vals)
+      }
+    )
+  } else {
+    list()
+  }
+
+  list(
+    medians = medians,
+    modes = modes,
+    levels = levels_list
+  )
+}
+
+apply_preprocessor <- function(df, prep) {
+
+  out <- df
+
+  for (v in numeric_features) {
+    replacement <- prep$medians[[v]]
+
+    if (is.na(replacement)) {
+      replacement <- 0
+    }
+
+    out[[v]][is.na(out[[v]])] <- replacement
+  }
+
+  for (v in c(binary_features, categorical_features)) {
+
+    x <- as.character(out[[v]])
+    replacement <- prep$modes[[v]]
+    known <- prep$levels[[v]]
+
+    if (length(known) == 0 || is.na(replacement)) {
+      known <- "Missing"
+      replacement <- "Missing"
+    }
+
+    x[is.na(x) | x == ""] <- replacement
+    x[!x %in% known] <- replacement
+
+    out[[v]] <- factor(x, levels = known)
+  }
+
+  out
+}
+```
+
+# 9. Evaluation metrics
+
+R-squared is an out-of-sample goodness-of-fit measure, not percentage accuracy. RMSE penalises large errors more strongly, while MAE gives an interpretable average absolute error in pedestrians per hour.
+
+```{r metrics}
+metrics <- function(actual, predicted) {
+
+  keep <- is.finite(actual) & is.finite(predicted)
+  actual <- actual[keep]
+  predicted <- pmax(predicted[keep], 0)
+
+  sse <- sum((actual - predicted)^2)
+  sst <- sum((actual - mean(actual))^2)
+
+  tibble(
+    R2 = ifelse(sst > 0, 1 - sse / sst, NA_real_),
+    RMSE = sqrt(mean((actual - predicted)^2)),
+    MAE = mean(abs(actual - predicted)),
+    Median_AE = median(abs(actual - predicted))
+  )
+}
+```
+
+# 10. Models compared
+
+The same grouped outer folds are used for all six approaches.
+
+- **Median baseline:** minimum practical benchmark.
+- **Linear regression:** parsimonious, interpretable EDA-informed model.
+- **Ridge:** regularised regression that is useful when predictors are correlated.
+- **LASSO:** regularised regression that can shrink weak predictors to zero.
+- **Random Forest:** non-linear model that captures interactions and threshold effects.
+- **Gradient Boosting:** second non-linear tree-based benchmark.
+
+```{r linear-features}
+linear_features <- intersect(
+  c(
+    "commercial_buildings",
+    "footpath_both_sides",
+    "abs_mb_category_simple"
+  ),
+  features
+)
+
+if (length(linear_features) == 0) {
+  linear_features <- features[1]
+}
+
+linear_features
+```
+
+# 11. Model helper functions
+
+```{r design-matrix}
+make_design_matrix <- function(df) {
+  model.matrix(
+    ~ . - 1,
+    data = df[, features, drop = FALSE]
+  )
+}
+```
+
+```{r linear-functions}
+fit_linear <- function(train, target) {
+
+  prep <- fit_preprocessor(train)
+  train_p <- apply_preprocessor(train, prep)
+
+  usable_features <- linear_features[
+    vapply(
+      train_p[linear_features],
+      function(x) length(unique(x[!is.na(x)])) > 1,
+      logical(1)
+    )
+  ]
+
+  if (length(usable_features) == 0) {
+    stop("No varying predictors are available for the linear model in this fold.")
+  }
+
+  formula <- as.formula(
+    paste0(
+      "log1p(", target, ") ~ ",
+      paste(usable_features, collapse = " + ")
+    )
+  )
+
+  list(
+    model = lm(formula, data = train_p),
+    prep = prep,
+    features = usable_features
+  )
+}
+
+predict_linear <- function(fit, newdata) {
+
+  x <- apply_preprocessor(newdata, fit$prep)
+
+  pmax(
+    expm1(as.numeric(predict(fit$model, newdata = x))),
+    0
+  )
+}
+```
+
+```{r regularised-functions}
+fit_regularised <- function(train, target, alpha_value, seed = 5553) {
+
+  prep <- fit_preprocessor(train)
+  train_p <- apply_preprocessor(train, prep)
+
+  x <- make_design_matrix(train_p)
+  y <- log1p(train_p[[target]])
+
+  inner_fold_id <- make_group_folds(
+    train_p$road_no,
+    k = min(5, n_distinct(train_p$road_no)),
+    seed = seed
+  )
+
+  cv_fit <- cv.glmnet(
+    x = x,
+    y = y,
+    alpha = alpha_value,
+    foldid = inner_fold_id,
+    standardize = TRUE,
+    family = "gaussian"
+  )
+
+  list(
+    model = cv_fit,
+    prep = prep,
+    matrix_columns = colnames(x)
+  )
+}
+
+predict_regularised <- function(fit, newdata) {
+
+  xdata <- apply_preprocessor(newdata, fit$prep)
+  x <- make_design_matrix(xdata)
+
+  missing_cols <- setdiff(fit$matrix_columns, colnames(x))
+
+  if (length(missing_cols) > 0) {
+    zero_mat <- matrix(
+      0,
+      nrow = nrow(x),
+      ncol = length(missing_cols),
+      dimnames = list(NULL, missing_cols)
+    )
+    x <- cbind(x, zero_mat)
+  }
+
+  extra_cols <- setdiff(colnames(x), fit$matrix_columns)
+
+  if (length(extra_cols) > 0) {
+    x <- x[, setdiff(colnames(x), extra_cols), drop = FALSE]
+  }
+
+  x <- x[, fit$matrix_columns, drop = FALSE]
+
+  pmax(
+    expm1(
+      as.numeric(
+        predict(
+          fit$model,
+          newx = x,
+          s = "lambda.1se"
+        )
+      )
+    ),
+    0
+  )
+}
+```
+
+```{r rf-functions}
+fit_rf <- function(train, target, seed = 5553) {
+
+  prep <- fit_preprocessor(train)
+  train_p <- apply_preprocessor(train, prep)
+
+  formula <- as.formula(
+    paste(target, "~", paste(features, collapse = " + "))
+  )
+
+  model <- ranger(
+    formula,
+    data = train_p[, c(target, features), drop = FALSE],
+    num.trees = 1000,
+    mtry = max(1, floor(sqrt(length(features)))),
+    min.node.size = 4,
+    importance = "permutation",
+    seed = seed
+  )
+
+  list(model = model, prep = prep)
+}
+
+predict_rf <- function(fit, newdata) {
+
+  x <- apply_preprocessor(newdata, fit$prep)
+
+  pmax(
+    predict(
+      fit$model,
+      data = x[, features, drop = FALSE]
+    )$predictions,
+    0
+  )
+}
+```
+
+```{r gb-functions}
+fit_gb <- function(train, target, seed = 5553) {
+
+  set.seed(seed)
+
+  prep <- fit_preprocessor(train)
+  train_p <- apply_preprocessor(train, prep)
+
+  formula <- as.formula(
+    paste(target, "~", paste(features, collapse = " + "))
+  )
+
+  model <- gbm(
+    formula = formula,
+    data = train_p[, c(target, features), drop = FALSE],
+    distribution = "gaussian",
+    n.trees = 1000,
+    interaction.depth = 2,
+    shrinkage = 0.02,
+    n.minobsinnode = 5,
+    bag.fraction = 0.8,
+    train.fraction = 1.0,
+    verbose = FALSE
+  )
+
+  list(model = model, prep = prep)
+}
+
+predict_gb <- function(fit, newdata) {
+
+  x <- apply_preprocessor(newdata, fit$prep)
+
+  pmax(
+    as.numeric(
+      predict(
+        fit$model,
+        newdata = x[, features, drop = FALSE],
+        n.trees = 1000
+      )
+    ),
+    0
+  )
+}
+```
+
+# 12. Grouped five-fold model comparison
+
+Every prediction below is out of fold: the model producing it was not trained on that observation's road.
+
+```{r grouped-cv, cache=TRUE}
+compare_models_cv <- function(target, target_label) {
+
+  n <- nrow(dat)
+
+  prediction_store <- list(
+    "Median baseline" = rep(NA_real_, n),
+    "Linear regression" = rep(NA_real_, n),
+    "Ridge" = rep(NA_real_, n),
+    "LASSO" = rep(NA_real_, n),
+    "Random Forest" = rep(NA_real_, n),
+    "Gradient Boosting" = rep(NA_real_, n)
+  )
+
+  for (fold in sort(unique(fold_id))) {
+
+    train_idx <- fold_id != fold
+    test_idx <- fold_id == fold
+
+    train <- dat[train_idx, , drop = FALSE]
+    test <- dat[test_idx, , drop = FALSE]
+
+    train <- train[!is.na(train[[target]]), , drop = FALSE]
+    valid_test <- !is.na(test[[target]])
+
+    if (nrow(train) < 5 || sum(valid_test) == 0) {
+      next
+    }
+
+    test_valid <- test[valid_test, , drop = FALSE]
+    original_indices <- which(test_idx)[valid_test]
+
+    prediction_store[["Median baseline"]][original_indices] <-
+      median(train[[target]], na.rm = TRUE)
+
+    lm_fit <- fit_linear(train, target)
+    prediction_store[["Linear regression"]][original_indices] <-
+      predict_linear(lm_fit, test_valid)
+
+    ridge_fit <- fit_regularised(
+      train,
+      target,
+      alpha_value = 0,
+      seed = 5553 + fold
+    )
+    prediction_store[["Ridge"]][original_indices] <-
+      predict_regularised(ridge_fit, test_valid)
+
+    lasso_fit <- fit_regularised(
+      train,
+      target,
+      alpha_value = 1,
+      seed = 6553 + fold
+    )
+    prediction_store[["LASSO"]][original_indices] <-
+      predict_regularised(lasso_fit, test_valid)
+
+    rf_fit <- fit_rf(
+      train,
+      target,
+      seed = 7553 + fold
+    )
+    prediction_store[["Random Forest"]][original_indices] <-
+      predict_rf(rf_fit, test_valid)
+
+    gb_fit <- fit_gb(
+      train,
+      target,
+      seed = 8553 + fold
+    )
+    prediction_store[["Gradient Boosting"]][original_indices] <-
+      predict_gb(gb_fit, test_valid)
+  }
+
+  prediction_table <- map_dfr(
+    names(prediction_store),
+    function(model_name) {
+      tibble(
+        site_id = dat$site_id,
+        road_no = dat$road_no,
+        road_name = dat$road_name,
+        actual = dat[[target]],
+        predicted = prediction_store[[model_name]],
+        Model = model_name,
+        Target = target_label
+      )
+    }
+  ) %>%
+    filter(is.finite(actual), is.finite(predicted)) %>%
+    mutate(
+      residual = actual - predicted,
+      absolute_error = abs(residual)
+    )
+
+  performance <- prediction_table %>%
+    group_by(Target, Model) %>%
+    group_modify(~ metrics(.x$actual, .x$predicted)) %>%
+    ungroup()
+
+  list(
+    predictions = prediction_table,
+    performance = performance
+  )
+}
+
+cross_results <- compare_models_cv(
+  targets[["Cross-road"]],
+  "Cross-road"
+)
+
+along_results <- compare_models_cv(
+  targets[["Along-road"]],
+  "Along-road"
+)
+
+all_predictions <- bind_rows(
+  cross_results$predictions,
+  along_results$predictions
+)
+
+cv_performance <- bind_rows(
+  cross_results$performance,
+  along_results$performance
+)
+
+kable(
+  cv_performance %>% arrange(Target, desc(R2)),
+  digits = 3,
+  caption = "Grouped five-fold cross-validated model performance"
+)
+```
+
+# 13. Overall model ranking
+
+The final model is not selected from one metric alone. Each model is ranked within each target on R-squared, RMSE and MAE, then averaged across both targets.
+
+```{r model-ranking}
+ranking_table <- cv_performance %>%
+  group_by(Target) %>%
+  mutate(
+    Rank_R2 = rank(-R2, ties.method = "average"),
+    Rank_RMSE = rank(RMSE, ties.method = "average"),
+    Rank_MAE = rank(MAE, ties.method = "average"),
+    Target_average_rank = rowMeans(
+      cbind(Rank_R2, Rank_RMSE, Rank_MAE)
+    )
+  ) %>%
+  ungroup()
+
+overall_ranking <- ranking_table %>%
+  group_by(Model) %>%
+  summarise(
+    Average_rank = mean(Target_average_rank, na.rm = TRUE),
+    Mean_R2 = mean(R2, na.rm = TRUE),
+    Mean_RMSE = mean(RMSE, na.rm = TRUE),
+    Mean_MAE = mean(MAE, na.rm = TRUE)
+  ) %>%
+  arrange(Average_rank, desc(Mean_R2), Mean_RMSE)
+
+kable(
+  overall_ranking,
+  digits = 3,
+  caption = "Overall out-of-sample model ranking"
+)
+
+selected_model <- overall_ranking$Model[1]
+runner_up_model <- overall_ranking$Model[2]
+
+cat("Selected model from grouped-CV ranking:", selected_model, "\n")
+cat("Runner-up:", runner_up_model, "\n")
+```
+
+# 14. Improvement over the baseline
+
+```{r baseline-improvement}
+baseline_metrics <- cv_performance %>%
+  filter(Model == "Median baseline") %>%
+  select(
+    Target,
+    Baseline_RMSE = RMSE,
+    Baseline_MAE = MAE
+  )
+
+improvement_table <- cv_performance %>%
+  filter(Model != "Median baseline") %>%
+  left_join(baseline_metrics, by = "Target") %>%
+  mutate(
+    RMSE_improvement_pct =
+      100 * (Baseline_RMSE - RMSE) / Baseline_RMSE,
+    MAE_improvement_pct =
+      100 * (Baseline_MAE - MAE) / Baseline_MAE
+  ) %>%
+  select(
+    Target, Model, R2, RMSE, MAE,
+    RMSE_improvement_pct,
+    MAE_improvement_pct
+  )
+
+kable(
+  improvement_table,
+  digits = 2,
+  caption = "Improvement relative to the median baseline"
+)
+```
+
+# 15. Actual versus predicted
+
+```{r actual-vs-predicted, fig.width=11, fig.height=9}
+ggplot(
+  all_predictions %>% filter(Model != "Median baseline"),
+  aes(x = actual, y = predicted)
+) +
+  geom_point(alpha = 0.70, size = 2) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+  facet_grid(Target ~ Model, scales = "free") +
+  labs(
+    title = "Grouped cross-validated actual versus predicted pedestrian flow",
+    subtitle = "Dashed line represents perfect prediction",
+    x = "Observed pedestrians per hour",
+    y = "Predicted pedestrians per hour"
+  )
+```
+
+# 16. Residual diagnostics
+
+```{r residual-diagnostics, fig.width=11, fig.height=9}
+ggplot(
+  all_predictions %>% filter(Model != "Median baseline"),
+  aes(x = predicted, y = residual)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(alpha = 0.70, size = 2) +
+  facet_grid(Target ~ Model, scales = "free") +
+  labs(
+    title = "Out-of-fold residual diagnostics",
+    x = "Predicted pedestrians per hour",
+    y = "Observed - predicted"
+  )
+```
+
+# 17. Largest prediction errors
+
+Large errors matter because a small number of high-flow sites can strongly affect RMSE.
+
+```{r largest-errors}
+largest_errors <- all_predictions %>%
+  filter(Model != "Median baseline") %>%
+  group_by(Target, Model) %>%
+  arrange(desc(absolute_error), .by_group = TRUE) %>%
+  slice_head(n = 5) %>%
+  ungroup() %>%
+  select(
+    Target, Model,
+    site_id, road_no, road_name,
+    actual, predicted,
+    residual, absolute_error
+  )
+
+kable(
+  largest_errors,
+  digits = 2,
+  caption = "Five largest out-of-fold errors for each model and target"
+)
+```
+
+# 18. Road-level bootstrap uncertainty
+
+Cross-validation provides the primary performance estimates. The bootstrap below resamples complete roads from the already out-of-fold predictions to quantify uncertainty; it does not replace cross-validation.
+
+```{r road-bootstrap, cache=TRUE}
+bootstrap_models <- function(prediction_data, B = 1000, seed = 5553) {
+
+  set.seed(seed)
+
+  roads <- unique(prediction_data$road_no)
+  models <- unique(prediction_data$Model)
+
+  map_dfr(seq_len(B), function(b) {
+
+    sampled_roads <- sample(
+      roads,
+      size = length(roads),
+      replace = TRUE
+    )
+
+    sampled <- map_dfr(
+      seq_along(sampled_roads),
+      function(i) {
+        prediction_data %>%
+          filter(road_no == sampled_roads[i]) %>%
+          mutate(Bootstrap_cluster = i)
+      }
+    )
+
+    map_dfr(models, function(m) {
+      x <- sampled %>% filter(Model == m)
+
+      metrics(x$actual, x$predicted) %>%
+        mutate(
+          Bootstrap = b,
+          Model = m,
+          .before = 1
+        )
+    })
+  })
+}
+
+cross_boot <- bootstrap_models(
+  all_predictions %>% filter(Target == "Cross-road"),
+  B = 1000,
+  seed = 5553
+) %>%
+  mutate(Target = "Cross-road")
+
+along_boot <- bootstrap_models(
+  all_predictions %>% filter(Target == "Along-road"),
+  B = 1000,
+  seed = 5554
+) %>%
+  mutate(Target = "Along-road")
+
+bootstrap_results <- bind_rows(cross_boot, along_boot)
+
+bootstrap_ci <- bootstrap_results %>%
+  group_by(Target, Model) %>%
+  summarise(
+    R2_median = median(R2, na.rm = TRUE),
+    R2_low = quantile(R2, 0.025, na.rm = TRUE),
+    R2_high = quantile(R2, 0.975, na.rm = TRUE),
+    RMSE_median = median(RMSE, na.rm = TRUE),
+    RMSE_low = quantile(RMSE, 0.025, na.rm = TRUE),
+    RMSE_high = quantile(RMSE, 0.975, na.rm = TRUE),
+    MAE_median = median(MAE, na.rm = TRUE),
+    MAE_low = quantile(MAE, 0.025, na.rm = TRUE),
+    MAE_high = quantile(MAE, 0.975, na.rm = TRUE)
+  )
+
+kable(
+  bootstrap_ci,
+  digits = 3,
+  caption = "Road-level bootstrap 95% intervals"
+)
+```
+
+# 19. Selected model versus runner-up
+
+For RMSE and MAE, a negative `Selected - Runner-up` difference favours the selected model. For R-squared, a positive difference favours the selected model.
+
+```{r selected-v-runner-up}
+top_two_boot <- bootstrap_results %>%
+  filter(Model %in% c(selected_model, runner_up_model)) %>%
+  mutate(Model_key = make.names(Model)) %>%
+  select(
+    Target, Bootstrap, Model_key,
+    R2, RMSE, MAE
+  ) %>%
+  pivot_wider(
+    names_from = Model_key,
+    values_from = c(R2, RMSE, MAE)
+  )
+
+selected_key <- make.names(selected_model)
+runner_key <- make.names(runner_up_model)
+
+selected_runner_diff <- top_two_boot %>%
+  mutate(
+    R2_difference =
+      .data[[paste0("R2_", selected_key)]] -
+      .data[[paste0("R2_", runner_key)]],
+    RMSE_difference =
+      .data[[paste0("RMSE_", selected_key)]] -
+      .data[[paste0("RMSE_", runner_key)]],
+    MAE_difference =
+      .data[[paste0("MAE_", selected_key)]] -
+      .data[[paste0("MAE_", runner_key)]]
+  ) %>%
+  group_by(Target) %>%
+  summarise(
+    R2_diff_median = median(R2_difference, na.rm = TRUE),
+    R2_diff_low = quantile(R2_difference, 0.025, na.rm = TRUE),
+    R2_diff_high = quantile(R2_difference, 0.975, na.rm = TRUE),
+    RMSE_diff_median = median(RMSE_difference, na.rm = TRUE),
+    RMSE_diff_low = quantile(RMSE_difference, 0.025, na.rm = TRUE),
+    RMSE_diff_high = quantile(RMSE_difference, 0.975, na.rm = TRUE),
+    MAE_diff_median = median(MAE_difference, na.rm = TRUE),
+    MAE_diff_low = quantile(MAE_difference, 0.025, na.rm = TRUE),
+    MAE_diff_high = quantile(MAE_difference, 0.975, na.rm = TRUE)
+  )
+
+kable(
+  selected_runner_diff,
+  digits = 3,
+  caption = paste(
+    "Bootstrap differences:",
+    selected_model,
+    "minus",
+    runner_up_model
+  )
+)
+```
+
+# 20. Bootstrap distributions for the two leading models
+
+```{r bootstrap-distributions, fig.width=10, fig.height=7}
+bootstrap_plot_data <- bootstrap_results %>%
+  filter(Model %in% c(selected_model, runner_up_model)) %>%
+  select(Target, Model, Bootstrap, R2, RMSE, MAE) %>%
+  pivot_longer(
+    c(R2, RMSE, MAE),
+    names_to = "Metric",
+    values_to = "Value"
+  )
+
+ggplot(
+  bootstrap_plot_data,
+  aes(x = Value, fill = Model)
+) +
+  geom_density(alpha = 0.35) +
+  facet_grid(Target ~ Metric, scales = "free") +
+  labs(
+    title = "Road-level bootstrap distributions for the two leading models",
+    subtitle = "1,000 resamples of complete roads",
+    x = "Metric value",
+    y = "Density",
+    fill = "Model"
+  )
+```
+
+# 21. Fit final models to all observations
+
+Cross-validation is used for evaluation. After evaluation, each model is refitted to all approved observations for interpretation and later network-wide prediction.
+
+```{r final-models}
+fit_final_model_set <- function(target, seed_base = 5553) {
+
+  train <- dat[!is.na(dat[[target]]), , drop = FALSE]
+
+  list(
+    linear = fit_linear(train, target),
+    ridge = fit_regularised(
+      train, target,
+      alpha_value = 0,
+      seed = seed_base
+    ),
+    lasso = fit_regularised(
+      train, target,
+      alpha_value = 1,
+      seed = seed_base + 100
+    ),
+    random_forest = fit_rf(
+      train, target,
+      seed = seed_base + 200
+    ),
+    gradient_boosting = fit_gb(
+      train, target,
+      seed = seed_base + 300
+    )
+  )
+}
+
+final_cross <- fit_final_model_set(
+  targets[["Cross-road"]],
+  seed_base = 5553
+)
+
+final_along <- fit_final_model_set(
+  targets[["Along-road"]],
+  seed_base = 6553
+)
+```
+
+# 22. Interpretable linear-model coefficients
+
+```{r linear-coefficients}
+linear_coefficient_table <- function(fit, target_label) {
+
+  coef_df <- as.data.frame(summary(fit$model)$coefficients)
+  coef_df$Term <- rownames(coef_df)
+  rownames(coef_df) <- NULL
+
+  as_tibble(coef_df) %>%
+    transmute(
+      Target = target_label,
+      Term = Term,
+      Estimate = Estimate,
+      Multiplicative_effect = exp(Estimate),
+      Std_Error = `Std. Error`,
+      P_value = `Pr(>|t|)`
+    )
+}
+
+linear_coefficients <- bind_rows(
+  linear_coefficient_table(final_cross$linear, "Cross-road"),
+  linear_coefficient_table(final_along$linear, "Along-road")
+)
+
+kable(
+  linear_coefficients,
+  digits = 4,
+  caption = "Parsimonious linear-model coefficients"
+)
+```
+
+The coefficient table is included for interpretation only. Predictive model selection is based on grouped cross-validation rather than p-values or in-sample fit.
+
+# 23. LASSO selected coefficients
+
+```{r lasso-coefficients}
+extract_lasso <- function(fit, target_label) {
+
+  b <- as.matrix(
+    coef(fit$model, s = "lambda.1se")
+  )
+
+  tibble(
+    Target = target_label,
+    Feature = rownames(b),
+    Coefficient = as.numeric(b[, 1])
+  ) %>%
+    filter(
+      Feature != "(Intercept)",
+      Coefficient != 0
+    ) %>%
+    arrange(desc(abs(Coefficient)))
+}
+
+lasso_coefficients <- bind_rows(
+  extract_lasso(final_cross$lasso, "Cross-road"),
+  extract_lasso(final_along$lasso, "Along-road")
+)
+
+kable(
+  lasso_coefficients,
+  digits = 4,
+  caption = "Non-zero LASSO coefficients at lambda.1se"
+)
+```
+
+# 24. Random Forest feature importance
+
+Permutation importance measures predictive contribution, not causality.
+
+```{r rf-importance}
+rf_importance <- function(fit, target_label) {
+
+  x <- fit$model$variable.importance
+
+  tibble(
+    Target = target_label,
+    Feature = names(x),
+    Importance = as.numeric(x)
+  ) %>%
+    arrange(desc(Importance))
+}
+
+rf_imp <- bind_rows(
+  rf_importance(final_cross$random_forest, "Cross-road"),
+  rf_importance(final_along$random_forest, "Along-road")
+)
+
+rf_top <- rf_imp %>%
+  group_by(Target) %>%
+  slice_max(Importance, n = 10, with_ties = FALSE) %>%
+  ungroup()
+
+kable(
+  rf_top,
+  digits = 3,
+  caption = "Top Random Forest permutation importances"
+)
+```
+
+```{r rf-importance-plot, fig.width=10, fig.height=7}
+ggplot(
+  rf_top,
+  aes(x = reorder(Feature, Importance), y = Importance)
+) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~ Target, scales = "free_y") +
+  labs(
+    title = "Random Forest feature importance",
+    subtitle = "Predictive association, not causality",
+    x = NULL,
+    y = "Permutation importance"
+  )
+```
+
+# 25. Gradient Boosting feature importance
+
+```{r gb-importance}
+gb_importance <- function(fit, target_label) {
+
+  imp <- summary(fit$model, plotit = FALSE)
+
+  tibble(
+    Target = target_label,
+    Feature = imp$var,
+    Importance = imp$rel.inf
+  ) %>%
+    arrange(desc(Importance))
+}
+
+gb_imp <- bind_rows(
+  gb_importance(final_cross$gradient_boosting, "Cross-road"),
+  gb_importance(final_along$gradient_boosting, "Along-road")
+)
+
+gb_top <- gb_imp %>%
+  group_by(Target) %>%
+  slice_max(Importance, n = 10, with_ties = FALSE) %>%
+  ungroup()
+
+kable(
+  gb_top,
+  digits = 3,
+  caption = "Top Gradient Boosting relative influences"
+)
+```
+
+```{r gb-importance-plot, fig.width=10, fig.height=7}
+ggplot(
+  gb_top,
+  aes(x = reorder(Feature, Importance), y = Importance)
+) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~ Target, scales = "free_y") +
+  labs(
+    title = "Gradient Boosting feature importance",
+    subtitle = "Predictive association, not causality",
+    x = NULL,
+    y = "Relative influence"
+  )
+```
+
+# 26. Dashboard-ready out-of-fold predictions
+
+These predictions are appropriate for evaluation visualisations because every value is out of fold.
+
+```{r dashboard-output}
+dashboard_output <- all_predictions %>%
+  select(
+    Target, Model,
+    site_id, road_no, road_name,
+    actual, predicted,
+    residual, absolute_error
+  )
+
+dir.create(
+  "../06_outputs/03_model_development/03_yashika_model_comparison",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+
+write.csv(
+  dashboard_output,
+  "../06_outputs/03_model_development/03_yashika_model_comparison/03_model_comparison_oof_predictions.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  cv_performance,
+  "../06_outputs/03_model_development/03_yashika_model_comparison/03_model_comparison_cv_metrics.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  overall_ranking,
+  "../06_outputs/03_model_development/03_yashika_model_comparison/03_model_comparison_overall_ranking.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  bootstrap_ci,
+  "../06_outputs/03_model_development/03_yashika_model_comparison/03_model_comparison_bootstrap_ci.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  largest_errors,
+  "../06_outputs/03_model_development/03_yashika_model_comparison/03_model_comparison_largest_errors.csv",
+  row.names = FALSE
+)
+
+kable(
+  head(
+    dashboard_output %>% filter(Model == selected_model),
+    12
+  ),
+  digits = 2,
+  caption = paste(
+    "Example out-of-fold predictions from",
+    selected_model
+  )
+)
+```
+
+# 27. Save the final model bundle
+
+```{r save-model-bundle}
+model_bundle <- list(
+  input_file = data_path,
+  features = features,
+  numeric_features = numeric_features,
+  binary_features = binary_features,
+  categorical_features = categorical_features,
+  linear_features = linear_features,
+  targets = targets,
+  grouped_cv_performance = cv_performance,
+  overall_ranking = overall_ranking,
+  selected_model = selected_model,
+  runner_up_model = runner_up_model,
+  bootstrap_intervals = bootstrap_ci,
+  bootstrap_selected_vs_runner_up = selected_runner_diff,
+  final_models = list(
+    Cross = final_cross,
+    Along = final_along
+  ),
+  seed = 5553
+)
+
+saveRDS(
+  model_bundle,
+  "../06_outputs/03_model_development/03_yashika_model_comparison/03_pedestrian_flow_final_model_bundle.rds"
+)
+```
+
+# 28. Final conclusion
+
+```{r final-conclusion, results='asis'}
+best_results <- cv_performance %>%
+  filter(Model == selected_model) %>%
+  arrange(Target)
+
+cat(
+  "The final model comparison used road-grouped five-fold cross-validation, ",
+  "so each reported prediction was generated for a road excluded from model training. ",
+  "This design is more appropriate than relying on training fit for the small survey dataset.\n\n",
+  sep = ""
+)
+
+cat(
+  "**", selected_model, "** achieved the strongest aggregate out-of-sample ranking ",
+  "across the two pedestrian-flow targets when R-squared, RMSE and MAE were considered together.\n\n",
+  sep = ""
+)
+
+for (i in seq_len(nrow(best_results))) {
+  x <- best_results[i, ]
+
+  cat(
+    "- **", x$Target, "**: R-squared = ", sprintf("%.3f", x$R2),
+    ", RMSE = ", sprintf("%.2f", x$RMSE),
+    ", MAE = ", sprintf("%.2f", x$MAE),
+    " pedestrians per hour.\n",
+    sep = ""
+  )
+}
+
+cat(
+  "\nRoad-level bootstrapping with 1,000 resamples was used to quantify uncertainty ",
+  "in the observed performance. Feature-importance results should be interpreted as ",
+  "predictive associations rather than causal effects.\n\n",
+  sep = ""
+)
+
+cat(
+  "Because the current survey dataset is small, this should be treated as a baseline ",
+  "deployment model rather than a final universal model. The highest-priority next step ",
+  "is to expand survey coverage, especially for high-flow sites and roads not represented ",
+  "in the present sample, and then repeat the grouped validation on the expanded dataset.\n",
+  sep = ""
+)
+```
+
+# 29. Key limitations
+
+1. **Small sample size.** Model estimates can change materially when only a few new survey sites are added.
+2. **Limited road coverage.** Grouped validation reduces leakage, but external validation on genuinely new roads would be stronger.
+3. **High-flow observations.** A small number of very busy sites can dominate RMSE.
+4. **Correlated commercial features.** Retail and commercial-density variables partly measure the same underlying activity.
+5. **Feature importance is not causal.** Important predictors identify useful predictive signals, not necessarily causes of pedestrian movement.
+6. **Temporal coverage is limited.** Available surveys may not fully capture seasonal or time-of-day variation.
+7. **Deployment shift is possible.** Full-network prediction may encounter road environments not represented in the survey sample.
+
+# 30. Recommended next steps
+
+1. Add more pedestrian survey sites, prioritising new roads and high-flow environments.
+2. Re-run the same grouped validation after each major data update.
+3. Preserve Overture feature definitions and ETL logic so model inputs remain reproducible.
+4. Compare predicted flow with existing iRAP exposure values and survey counts in the dashboard.
+5. Flag road segments whose predictor values fall outside the range represented by the training data.
+6. Treat network-wide predictions as estimates with uncertainty, not direct measurements.
+
+# 31. What to show in the next team/client meeting
+
+Show these outputs in this order:
+
+1. **Dataset and grouped-fold summary** — demonstrates leakage-safe validation.
+2. **Cross-validated performance table** — compares all six approaches fairly.
+3. **Overall model ranking** — gives a transparent reason for the selected model.
+4. **Actual-versus-predicted plots** — shows where each model succeeds and fails.
+5. **Improvement over the median baseline** — demonstrates practical predictive value.
+6. **Road-level bootstrap intervals** — communicates uncertainty.
+7. **Selected-model versus runner-up bootstrap comparison** — tests whether the apparent advantage is stable.
+8. **Feature-importance / coefficient outputs** — explains the predictive signals.
+9. **Largest prediction errors** — demonstrates critical evaluation rather than only favourable results.
+10. **Dashboard-ready output** — connects modelling directly to the system deliverable.
+
+The central message is:
+
+> **The final model is selected using out-of-sample evidence on unseen roads, not training fit. Multiple statistical and machine-learning approaches are evaluated under the same grouped cross-validation design, and road-level bootstrapping is used to quantify the stability of the observed performance.**
