@@ -28,6 +28,19 @@ reusable workflow.
 Stable calculations belong in `src/pedflow/`; notebooks, batch interfaces and any
 future backend should call that implementation rather than duplicate it.
 
+The selected three-feature linear models are available through
+`from pedflow.modeling import load_model`. The packaged release provides Python
+inference verified against the saved R models; client feature orchestration and
+dashboard integration remain pending. See the
+[model integration guide](docs/03_model_development/selected_model_integration.md)
+for inputs, outputs, usage and release reproduction.
+
+The formal Context workflow now runs ABS only, using
+`configs/context_features_v1.json` (`context_abs_v1`). Its default registry excludes
+all other sources. Historical candidate-feature code and results are retained for
+research, with the previous settings under `configs/research/`; they are not run
+as part of prediction. ABS feature definitions and calculations are unchanged.
+
 ## Native setup for Windows and macOS
 
 The pinned packages support binary installation on Windows x64 and Apple Silicon macOS 14 or newer. Use the container for a consistent Linux environment; other native platforms require separate compatibility checks.

@@ -61,13 +61,13 @@ class ContextConfigTests(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             select_sources(config, ["not_registered_in_config"])
 
-    def test_shared_config_keeps_google_experiment_disabled(self) -> None:
+    def test_research_config_keeps_google_experiment_disabled(self) -> None:
         project_root = Path(__file__).resolve().parents[2]
-        config = load_context_config(project_root / "configs" / "context_features_v1.json")
+        config = load_context_config(
+            project_root / "configs" / "research" / "context_features_v1.json"
+        )
         google = next(
-            source
-            for source in config.sources
-            if source.name == "google_places_aggregate_poi"
+            source for source in config.sources if source.name == "google_places_aggregate_poi"
         )
 
         self.assertFalse(google.enabled)
@@ -80,16 +80,16 @@ class ContextConfigTests(unittest.TestCase):
             {"governance_status", "decision_archive"},
         )
 
-    def test_shared_config_enables_the_validated_overture_source(self) -> None:
+    def test_formal_config_contains_only_abs(self) -> None:
         project_root = Path(__file__).resolve().parents[2]
         config = load_context_config(project_root / "configs" / "context_features_v1.json")
-        overture = next(
-            source for source in config.sources if source.name == "overture_places"
-        )
-
-        self.assertTrue(overture.enabled)
-        self.assertEqual(overture.options["release"], "2026-08-19.0")
-        self.assertEqual(overture.options["buffer_radius_m"], 500)
+        self.assertEqual(config.feature_set_version, "context_abs_v1")
+        self.assertEqual(tuple(source.name for source in config.sources), ("abs_meshblock_sa1",))
+        self.assertEqual(config.enabled_sources(), config.sources)
+        self.assertEqual(config.output_stem, "batch_abs_context_features")
+        for source in ("pta_stops", "overture_places", "google_places_aggregate_poi"):
+            with self.subTest(source=source), self.assertRaises(ConfigurationError):
+                select_sources(config, [source])
 
 
 class ContextRegistryTests(unittest.TestCase):
@@ -98,17 +98,9 @@ class ContextRegistryTests(unittest.TestCase):
 
         self.assertEqual(
             tuple(registry),
-            (
-                "abs_meshblock_sa1",
-                "pta_stops",
-                "wa_health_establishments",
-                "wa_education_schools",
-                "microsoft_building_footprints",
-                "overture_places",
-                "google_places_aggregate_poi",
-            ),
+            ("abs_meshblock_sa1",),
         )
-        self.assertEqual(registry["pta_stops"].column_prefixes, ("pta_",))
+        self.assertEqual(registry["abs_meshblock_sa1"].column_prefixes, ("abs_",))
 
 
 if __name__ == "__main__":

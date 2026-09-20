@@ -19,11 +19,7 @@ REVIEWED_OUTPUT = (
     / "02_09_haoqi_overture_places_features.xlsx"
 )
 CACHE_DIRECTORY = (
-    PROJECT_ROOT
-    / "data"
-    / "external_raw"
-    / "overture_places"
-    / overture_places.DEFAULT_RELEASE
+    PROJECT_ROOT / "data" / "external_raw" / "overture_places" / overture_places.DEFAULT_RELEASE
 )
 
 
@@ -125,7 +121,10 @@ def test_overture_source_runs_through_the_integrated_context_workflow() -> None:
             ),
         ),
     )
-    result = build_context_features(sites, config, PROJECT_ROOT)
+    # Historical source reproduction is explicit and separate from the ABS default.
+    result = build_context_features(
+        sites, config, PROJECT_ROOT, registry={"overture_places": overture_places.DEFINITION}
+    )
 
     assert len(result.source_results) == 1
     pd.testing.assert_frame_equal(

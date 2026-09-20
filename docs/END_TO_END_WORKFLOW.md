@@ -1,7 +1,7 @@
 # End-to-End Workflow
 
 Status: authoritative architecture and incremental delivery plan  
-Last reviewed: 17 September 2026
+Last reviewed: 20 September 2026
 
 ## Purpose
 
@@ -46,16 +46,23 @@ release; it must not retrain a model.
 
 Context and imagery feature extraction have both been completed for the current
 project dataset. Context extraction has already been promoted into the formal
-`src/pedflow/context/` workflow. It validates a common site table, runs six approved
-sources, validates every source result and combines the tables one-to-one.
+`src/pedflow/context/` workflow. Its formal configuration and default registry now
+run ABS only (`context_abs_v1`), validate a common site table and retain ABS match
+status and provenance. Historical candidate sources remain available for research
+with explicit source registration and the preserved `configs/research/` settings.
+The ABS calculation itself is unchanged; its category is simplified by the model
+input mapping when assembling the three selected features.
 
 Imagery extraction was completed and is currently preserved in the shared imagery notebook. Its scientific work is complete; its remaining engineering task is to move the stable calculation into `src/pedflow/imagery/` so that the future prediction service can call it without executing the notebook.
 
-EDA has also been completed, and the team is now testing candidate models. This is
-model-development work, not yet an approved production model release. Formal model
-training, released-model inference and the backend connection have not yet been
-implemented under `src/pedflow/`. The application frontend therefore remains a user
-interface demonstration rather than evidence of live model predictions.
+EDA and model comparison are complete. The team selected Yashika's parsimonious
+log1p linear regressions with three features. The saved R models are now exported
+as the versioned `pedestrian-linear-v1` release, with Python inference under
+`src/pedflow/modeling/` and independent R/Python parity checks. Training remains in
+the R research workflow. Feature orchestration and the backend connection have
+not yet been implemented. The application frontend therefore remains a user
+interface demonstration rather than evidence of live model predictions. See the
+[selected-model integration guide](03_model_development/selected_model_integration.md).
 
 The package should grow incrementally in this form:
 
@@ -63,7 +70,7 @@ The package should grow incrementally in this form:
 src/pedflow/
 ├── context/       # implemented context feature workflow
 ├── imagery/       # next integration: implement notebook logic
-├── modeling/      # in progress: candidate testing; release code still required
+├── modeling/      # implemented: selected model release and Python inference
 ├── prediction/    # planned: the single client prediction workflow
 └── api/           # planned only when the dashboard backend is connected
 ```
@@ -94,7 +101,7 @@ The project has three related workflows, but only one of them is run by the clie
 | Workflow | Current status | Main result | Operator |
 | --- | --- | --- | --- |
 | Feature development | Context and imagery extraction completed | Tested feature components and versioned feature definitions | Project team |
-| Model development | EDA completed; candidate model testing in progress | A tested, versioned model release | Project team |
+| Model development | Selected R models exported; Python inference verified | Versioned model release; training remains in R | Project team |
 | Client prediction | Not yet implemented | Predictions, row statuses and provenance | Client or application |
 
 Feature and model development prepare the reusable components. They are not stages
@@ -151,8 +158,8 @@ workflow entry point, not a sequence the client must run manually.
 ## Delivery order
 
 1. Promote the completed imagery extraction into an Imagery package and verify that Context and Imagery follow the same site-level contract.
-2. Continue the current candidate-model testing using the completed EDA and approved feature set.
-3. Promote the selected training process and publish a complete model release.
+2. Retain the completed candidate comparison and selected three-feature model as the scientific baseline.
+3. Use the published model release and verified Python inference; promote reusable training code when extending the training workflow.
 4. Build the Prediction package to combine the Context and Imagery features required by that release.
 5. Expose the Prediction service through one batch command and then through the dashboard backend.
 

@@ -1,12 +1,12 @@
 {
-  "feature_set_version": "context_v1_draft",
+  "feature_set_version": "context_abs_v1",
   "input": {
     "path": "data/templates/batch_input_template.xlsx",
     "sheet": "Batch_Input"
   },
   "output": {
     "directory": "outputs/context_features",
-    "stem": "batch_context_features",
+    "stem": "batch_abs_context_features",
     "formats": [
       "xlsx",
       "parquet"
@@ -17,124 +17,6 @@
       "enabled": true,
       "options": {
         "counts_path": "data/external_raw/Mesh Block Counts, 2021.xlsx"
-      }
-    },
-    "pta_stops": {
-      "enabled": true,
-      "options": {
-        "buffer_radius_m": 500,
-        "snapshot_date": "2026-08-25",
-        "cache_directory": "data/external_raw/pta_stops",
-        "allow_download": true,
-        "timeout_seconds": 120,
-        "retry_count": 4
-      }
-    },
-    "wa_health_establishments": {
-      "enabled": true,
-      "options": {
-        "snapshot_date": "2026-08-24",
-        "snapshot_path": "data/external_raw/wa_health_establishments/2026-08-24/health_hospitals_health_001.geojson",
-        "catalogue_url": "https://catalogue.data.wa.gov.au/dataset/health-establishments",
-        "layer_url": "https://public-services.slip.wa.gov.au/public/rest/services/SLIP_Public_Services/Health_WFS/MapServer/1",
-        "timeout_seconds": 120,
-        "allow_download": true,
-        "allowed_open_statuses": ["Y", "N"],
-        "open_status_value": "Y",
-        "eligible_categories": ["Acute Hospital", "Nursing Post"],
-        "allowed_establishment_types": ["Public", "Private"],
-        "max_coordinate_difference_deg": 0.001,
-        "wa_min_latitude": -36,
-        "wa_max_latitude": -13,
-        "wa_min_longitude": 112,
-        "wa_max_longitude": 130,
-        "geodesic_ellipsoid": "WGS84",
-        "distance_round_decimals": 1
-      }
-    },
-    "wa_education_schools": {
-      "enabled": true,
-      "options": {
-        "source_version": "DET-024-2026-S1",
-        "snapshot_label": "2026 Semester 1",
-        "source_path": "data/external_raw/wa_education/2026_S1/currentactiveschools20261.xlsx",
-        "source_sheet": "ActiveSchools",
-        "source_sha256": "ac4257d76e333dcbf2042c7e89b6337fd66b4a990667bc936ed2b1172dd2ffbd",
-        "source_url": "https://catalogue.data.wa.gov.au/dataset/90b5a308-edd6-4814-89f7-1af4df14687b/resource/d1bec5f9-e284-4484-af4d-cc7a69a55c5a/download/currentactiveschools20261.xlsx",
-        "catalogue_url": "https://catalogue.data.wa.gov.au/dataset/current-active-schools-semester-1-2026-public-det-024",
-        "licence_url": "https://creativecommons.org/licenses/by-nc/4.0/",
-        "download_timeout_seconds": 120,
-        "minimum_source_bytes": 10000,
-        "project_bounds": {
-          "minimum_longitude": 112.0,
-          "maximum_longitude": 129.0,
-          "minimum_latitude": -36.0,
-          "maximum_latitude": -13.0
-        },
-        "approved_sectors": [
-          "GOVERNMENT",
-          "NON-GOVERNMENT",
-          "COMMUNITY KINDER"
-        ],
-        "approved_low_year_codes": [
-          "KIN",
-          "PKG",
-          "PRP",
-          "Y01",
-          "Y03",
-          "Y04",
-          "Y05",
-          "Y07",
-          "Y08",
-          "Y09",
-          "Y10",
-          "Y11"
-        ],
-        "approved_high_year_codes": [
-          "KIN",
-          "Y02",
-          "Y03",
-          "Y04",
-          "Y06",
-          "Y07",
-          "Y09",
-          "Y10",
-          "Y11",
-          "Y12"
-        ]
-      }
-    },
-    "microsoft_building_footprints": {
-      "enabled": true,
-      "options": {
-        "buffer_radius_m": 500,
-        "source_release": "2026-07-24",
-        "country": "Australia",
-        "quadkey_zoom": 9,
-        "cache_directory": "data/external_raw/microsoft_building_footprints/2026-07-24",
-        "connect_timeout_seconds": 30,
-        "read_timeout_seconds": 300,
-        "max_retries": 3,
-        "allow_download": true
-      }
-    },
-    "overture_places": {
-      "enabled": true,
-      "options": {
-        "release": "2026-08-19.0",
-        "buffer_radius_m": 500,
-        "cache_directory": "data/external_raw/overture_places/{release}",
-        "allow_download": true,
-        "connect_timeout_seconds": 15,
-        "request_timeout_seconds": 120,
-        "max_workers": 4
-      }
-    },
-    "google_places_aggregate_poi": {
-      "enabled": false,
-      "options": {
-        "governance_status": "excluded_from_modeling_by_uwa_project_decision",
-        "decision_archive": "../07_Archive/20260908_google_places_aggregate_poi_experiment"
       }
     }
   }

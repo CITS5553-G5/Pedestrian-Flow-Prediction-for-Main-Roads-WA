@@ -33,7 +33,7 @@ def build_context_features(
 ) -> ContextBuildResult:
     """Run enabled sources, validate each table, and combine them one-to-one."""
 
-    active_registry = registry or build_default_registry()
+    active_registry = build_default_registry() if registry is None else registry
 
     # The shared site contract is checked once before any source performs
     # network, file, or spatial work.
@@ -46,32 +46,33 @@ def build_context_features(
             "or select one explicitly for a development run."
         )
 
+    # Validate the complete request before ABS or any explicitly supplied research
+    # source performs I/O. Old multi-source configs must not partly execute.
+    unavailable = [source.name for source in enabled_sources if source.name not in active_registry]
+    if unavailable:
+        raise ConfigurationError(
+            f"Context sources are not available in this workflow: {unavailable}. "
+            f"Available sources: {', '.join(active_registry) or '(none)'}. "
+            "The default prediction workflow supports ABS only; research workflows "
+            "must supply their source registry explicitly."
+        )
+
     source_results: list[FeatureResult] = []
     validated_tables: list[pd.DataFrame] = []
 
     for source_config in enabled_sources:
-        try:
-            definition = active_registry[source_config.name]
-        except KeyError as exc:
-            available = ", ".join(active_registry) or "(none)"
-            raise ConfigurationError(
-                f"Context source '{source_config.name}' is not available. "
-                f"Available sources: {available}."
-            ) from exc
+        definition = active_registry[source_config.name]
 
         try:
             result = definition.extractor(normalised_sites.copy(), source_config, project_root)
         except SourceExecutionError:
             raise
         except Exception as exc:
-            raise SourceExecutionError(
-                f"Context source '{definition.name}' failed: {exc}"
-            ) from exc
+            raise SourceExecutionError(f"Context source '{definition.name}' failed: {exc}") from exc
 
         if result.source_name != definition.name:
             raise SourceExecutionError(
-                f"Source '{definition.name}' returned the mismatched name "
-                f"'{result.source_name}'."
+                f"Source '{definition.name}' returned the mismatched name '{result.source_name}'."
             )
 
         checked = validate_source_features(

@@ -22,8 +22,8 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="pedflow-context",
         description=(
-            "Build a validated context-feature table through registered source adapters."
-        )
+            "Build validated ABS context features for the selected pedestrian-flow model."
+        ),
     )
     parser.add_argument(
         "--config",
@@ -33,8 +33,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--sources",
         help=(
-            "Development-only comma-separated source override. A released model must use "
-            "the frozen source set recorded in its manifest."
+            "Select configured sources. The formal workflow supports abs_meshblock_sa1 "
+            "only; historical research sources are not enabled by this option."
         ),
     )
     parser.add_argument(
@@ -53,7 +53,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--list-sources",
         action="store_true",
-        help="List registered sources and their implementation status, then exit.",
+        help="List sources available to the formal ABS-only workflow, then exit.",
     )
     return parser.parse_args()
 

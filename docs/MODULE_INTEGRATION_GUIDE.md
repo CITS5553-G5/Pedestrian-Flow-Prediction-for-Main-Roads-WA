@@ -107,7 +107,7 @@ To integrate a context source:
 
 1. Confirm the source, feature definitions, licence, access method, units and missing-value semantics in the notebook.
 2. Move reusable retrieval, cleaning and calculation functions into one source module under `src/pedflow/context/sources/`.
-3. Export `DEFINITION` and add it explicitly to `build_default_registry()` in `src/pedflow/context/sources/registry.py`.
+3. Export `DEFINITION`. The selected model's `build_default_registry()` contains ABS only; add another source there only when an approved model release requires it. Research workflows pass an explicit source registry instead.
 4. Add its options and enabled state to the appropriate versioned file under `configs/`; do not hard-code local paths in the module.
 5. Add unit tests for deterministic calculations and validation, plus mocked or fixture-based tests for external I/O.
 6. Run a small integrated context build and confirm exact site coverage, stable names, provenance and output types.
