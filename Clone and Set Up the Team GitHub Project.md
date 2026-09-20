@@ -35,6 +35,8 @@ code .
 
 ## 4. Create the Python environment
 
+The pinned packages support binary installation on Windows x64 and Apple Silicon macOS 14 or newer. Use the container for a consistent Linux environment; other native platforms require separate compatibility checks.
+
 `requirements.txt` is already included in the repository. It does not need to be sent separately.
 
 On macOS:
@@ -44,6 +46,8 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pip check
 ```
 
 On Windows PowerShell:
@@ -53,6 +57,8 @@ py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pip check
 ```
 
 Creating `.venv` and installing the packages is normally required only once.

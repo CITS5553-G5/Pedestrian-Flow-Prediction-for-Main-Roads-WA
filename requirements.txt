@@ -1,3 +1,6 @@
+# Python 3.11 dependency lock; direct dependencies are in requirements.in.
+# Install with: python -m pip install -r requirements.txt
+# Maintenance: see .devcontainer/CONTAINER_GUIDE.md.
 annotated-types==0.8.0
 anyio==4.15.1
 appnope==1.0.0 ; sys_platform == 'darwin'

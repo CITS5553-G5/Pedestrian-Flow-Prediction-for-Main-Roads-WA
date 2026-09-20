@@ -1,66 +1,40 @@
-# Pedestrian Exposure WA - Optional Container Guide
+# Pedestrian Exposure WA — Container Guide
 
-This environment is optional. The shared code and notebooks must also run in a Python 3.11 virtual environment on Windows or macOS as documented in the repository `README.md`.
+## Environment
 
-## Current environment
+The optional development container uses the Rocker R 4.5.3 image pinned by digest, Python 3.11.16 and Node.js 22.23.2. It includes R Markdown, Pandoc, LaTeX and the project's analysis tools. The image supports Linux ARM64 and AMD64. VS Code connects as the Linux user `rstudio` and opens the repository at `/workspace`.
 
-The development environment starts one service named `app`, using the `pedestrian-exposure-wa-app` container. It provides Python 3.11, Node.js 22, R, R Markdown, Pandoc and LaTeX development tools, and mounts the repository at `/workspace`.
+Python packages are installed in `/opt/pedflow-venv`, outside the host repository. VS Code uses `/opt/pedflow-venv/bin/python`; notebooks can select **Pedflow (Python 3.11)**. The shared `pedflow` package is installed in editable mode, so source edits are immediately available to notebooks and the `pedflow-context` command.
 
-The frontend dependency directory is mounted as the Docker named volume `pedestrian-exposure-wa-frontend-node-modules`. Packages installed at `/workspace/05_application/frontend/node_modules` therefore remain inside Docker storage rather than being written into the host project directory.
+`requirements.in` declares the direct Python dependencies, and `requirements.txt` fixes the installation versions, including transitive dependencies and platform markers. `renv.lock` records the R version and package versions. The setup script restores R packages into the container's site library and checks their versions; it does not activate a host-side R project library. Frontend dependencies are fixed by `package-lock.json`. Dev Container Features are fixed by `devcontainer-lock.json`.
 
-## Prerequisites
+The frontend's `node_modules` directory uses a Compose-managed named volume. Python and R libraries belong to the container and are restored when it is recreated. The repository itself is a bind mount, so source files and project outputs remain on the host.
 
-- OrbStack or Docker Desktop
-- Visual Studio Code
-- The Microsoft Dev Containers extension for Visual Studio Code
+## Open the project
 
-## Open the project in the container
+Install OrbStack or Docker Desktop, Visual Studio Code and the Microsoft Dev Containers extension.
 
-1. Start OrbStack or Docker Desktop.
-2. Open the cloned repository root in Visual Studio Code.
-3. Open the Command Palette with `Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Windows/Linux.
-4. Select `Dev Containers: Reopen in Container`.
-5. Wait while the container starts and the Python packages in `requirements.txt` are installed.
+1. Start the container engine and open the cloned repository root in VS Code.
+2. Run **Dev Containers: Reopen in Container** from the Command Palette.
+3. Wait for initialization to install Python dependencies, register the notebook kernel and restore the R library.
+4. Select **Pedflow (Python 3.11)** when opening a project notebook.
 
-Visual Studio Code should reopen in the `app` service with `/workspace` as the project directory.
-
-## Runtime environment
-
-The project uses one local environment file at the repository root. Copy `.env.example` to `.env` and add only the credentials required by the active experiment. The same file is available inside the container as `/workspace/.env`; Python code and notebooks that require runtime configuration load it explicitly with `python-dotenv`.
-
-The development container does not require a separate `.devcontainer/.env` file. Changing a runtime API key or provider setting does not require rebuilding the container; restart the Python command or notebook kernel instead.
-
-## Verify Python
-
-Run the following commands inside the container:
+The Dev Container CLI provides the equivalent terminal entry point. With the CLI installed, run this from the repository root:
 
 ```bash
-python --version
-python -c "import pandas, geopandas, sklearn, statsmodels, xgboost; print('Python environment: OK')"
+devcontainer up --workspace-folder . --frozen-lockfile
+devcontainer exec --workspace-folder . bash
 ```
 
-The Python version should be 3.11 and the import test should print `Python environment: OK`.
+Environment creation uses Dev Containers so that Features and initialization commands are applied. Ordinary `docker compose up` does not perform that initialization.
 
-## Verify R Markdown
+## Runtime configuration and data
 
-Run the following commands inside the container:
+Copy `.env.example` to `.env` at the repository root and fill in only the credentials required by the active experiment. Python code loads `/workspace/.env` explicitly with `python-dotenv`. Restart the command or notebook kernel after changing runtime settings. Keep `.env` local and out of Git.
 
-```bash
-R --version
-Rscript -e "library(rmarkdown); library(glmnet); library(ranger); library(gbm); library(readxl); library(PerformanceAnalytics); library(fst); cat('R environment: OK\n')"
-pandoc --version
-pdflatex --version
-```
+Authorised source data belongs in `data/raw/`. Code uses repository-relative paths so that Python work also runs in a native Python 3.11 environment on Windows or macOS, as described in the repository README.
 
-To render an R Markdown document from the repository root, run:
-
-```bash
-Rscript -e "rmarkdown::render('03_model_development/03_Yashika_Predict_Pedestrians_Final_Model_Comparison.Rmd')"
-```
-
-The document chooses its output format from the YAML header. Pass `output_format = 'html_document'` or `output_format = 'pdf_document'` to `rmarkdown::render()` when only one format is required.
-
-## Install and run the frontend
+## Frontend
 
 Run these commands inside the container:
 
@@ -70,37 +44,70 @@ npm ci
 npm run dev -- --host 0.0.0.0
 ```
 
-Open `http://localhost:5173` on the host after VS Code reports that port 5173 has been forwarded.
+VS Code forwards port 5173. Open the forwarded address shown by VS Code, normally `http://localhost:5173`. Run `npm ci` again whenever `package-lock.json` changes. Initialization assigns the frontend dependency volume to the connected user.
 
-The first `npm ci` populates the Docker volume. Later container rebuilds reuse that volume unless it is explicitly removed. If `package-lock.json` changes, run `npm ci` again.
+## R Markdown
 
-The container creation process assigns this volume to the `vscode` user before installing packages. If an older container was created before that setup was added, repair it once with `sudo chown -R vscode:vscode /workspace/05_application/frontend/node_modules`.
-
-## Project data
-
-Place authorised source data in the repository-relative directory `data/raw/`. Inside the container, the same directory is `/workspace/data/raw/`. Use project-relative paths in code whenever possible.
-
-## Start, stop and rebuild
-
-The recommended method is `Dev Containers: Reopen in Container`. The environment can also be managed from `.devcontainer`:
+Render a project document from the repository root:
 
 ```bash
-docker compose -f compose.yaml up -d
-docker compose -f compose.yaml ps
-docker compose -f compose.yaml stop
-docker compose -f compose.yaml down
+Rscript -e "rmarkdown::render('03_model_development/03_Yashika_Predict_Pedestrians_Final_Model_Comparison.Rmd', output_format = 'html_document')"
 ```
 
-Use `Dev Containers: Rebuild Container` after changing `Dockerfile`, `compose.yaml`, `devcontainer.json` or the base image. A normal rebuild recreates the app container but retains repository files and the named frontend dependency volume.
+Use `output_format = 'pdf_document'` for PDF, or `output_format = 'all'` for every format declared in the document. Without an explicit format, R Markdown selects the first format in the YAML header. Rendering project documents runs their analysis code and requires their input datasets.
 
-To inspect the app service logs, run:
+## Verify the environment
+
+From the repository root inside the container:
 
 ```bash
-docker compose -f compose.yaml logs app
+bash .devcontainer/verify.sh
 ```
 
-## Persistence and removal
+The check verifies Python and Node versions, Python dependency consistency and imports, the installed project command, the project test suite, frontend installation/lint/build, R package versions, and HTML/PDF rendering of a small synthetic document. It writes frontend build files under the ignored `dist/` directory. Tests that require the optional local Overture download cache skip when that cache is absent.
 
-Stopping, rebuilding or running `docker compose down` does not normally remove named volumes. Do not add `--volumes` unless the stored frontend dependencies can be discarded.
+## Restore, rebuild and stop
 
-Removing `pedestrian-exposure-wa-frontend-node-modules` only deletes installed frontend packages; they can be restored with `npm ci`.
+After pulling changes to `requirements.txt` or `renv.lock`, restore the environment from the repository root and restart active Python kernels and R sessions:
+
+```bash
+bash .devcontainer/setup.sh
+```
+
+Use **Dev Containers: Rebuild Container** after changing the base image, Features, toolchain versions or container configuration. VS Code waits for initialization to finish before the environment is ready.
+
+For status, logs and stopping an existing environment, run from the repository root on the host:
+
+```bash
+docker compose -f .devcontainer/compose.yaml ps
+docker compose -f .devcontainer/compose.yaml logs app
+docker compose -f .devcontainer/compose.yaml stop
+```
+
+`docker compose -f .devcontainer/compose.yaml down` removes the project's containers and network while retaining named volumes. Adding `--volumes` also deletes the frontend dependency volume; `npm ci` restores those packages. Closing the VS Code remote connection stops the Compose services according to `shutdownAction`.
+
+## Parallel copies
+
+The default Compose project name is `pedestrian-exposure-wa`. Each concurrently running clone or worktree needs a distinct `COMPOSE_PROJECT_NAME`. For example, in a host terminal:
+
+```bash
+export COMPOSE_PROJECT_NAME=pedestrian-exposure-wa-experiment
+devcontainer up --workspace-folder . --frozen-lockfile
+devcontainer exec --workspace-folder . bash
+```
+
+Use the same environment variable for that copy's subsequent CLI and Compose commands. On PowerShell, set it with `$env:COMPOSE_PROJECT_NAME = "pedestrian-exposure-wa-experiment"`. Container and frontend volume names are scoped to the chosen project name.
+
+## Dependency maintenance
+
+Team members install with pip from the committed `requirements.txt`. Maintainers edit `requirements.in` and regenerate the lock using a universal Python 3.11 resolution; uv is only a lock-generation tool here, not a required team package manager:
+
+```bash
+uv pip compile requirements.in --python-version 3.11 --universal --output-file requirements.txt
+```
+
+Existing pins are retained where compatible. Use `--upgrade-package PACKAGE` for a deliberate package upgrade, then verify the environment and commit both requirements files. Validate native Windows/macOS environments as well as the container before claiming support for all three platforms.
+
+For R updates, install and test the selected package versions in a disposable copy of the container, then record that container library with `renv::snapshot(lockfile = 'renv.lock', library = .libPaths()[1L], type = 'all', prompt = FALSE)`. Keep the R package versions in the `r-packages` Feature aligned with the lockfile, rebuild, and run the verification script. Base-image digests and exact Python/Node versions are updated deliberately together with compatibility checks. System packages installed by apt are resolved from the distribution repositories at build time; the configuration does not freeze those repositories.
+
+The setup follows the [Dev Container CLI](https://code.visualstudio.com/docs/devcontainers/devcontainer-cli), [renv restore](https://rstudio.github.io/renv/reference/restore.html), [uv requirements locking](https://docs.astral.sh/uv/pip/compile/) and [R Markdown rendering](https://rmarkdown.rstudio.com/docs/reference/render.html) documentation.

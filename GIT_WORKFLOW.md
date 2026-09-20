@@ -11,6 +11,8 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pip check
 ```
 
 Windows PowerShell:
@@ -20,6 +22,8 @@ py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pip check
 ```
 
 Creating `.venv` and installing the packages is normally a one-time setup. The `.venv` folder remains on the computer and is not committed to Git. In a new terminal, do nothing if `(.venv)` is already shown at the start of the prompt. Otherwise run `source .venv/bin/activate` on macOS or `.venv\Scripts\Activate.ps1` on Windows. Reinstall the requirements only after `requirements.txt` changes.

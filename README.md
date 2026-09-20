@@ -30,6 +30,8 @@ future backend should call that implementation rather than duplicate it.
 
 ## Native setup for Windows and macOS
 
+The pinned packages support binary installation on Windows x64 and Apple Silicon macOS 14 or newer. Use the container for a consistent Linux environment; other native platforms require separate compatibility checks.
+
 Python 3.11 is the supported team version. Clone the repository to any local folder; code must not depend on the host folder name or an absolute path.
 
 The following setup is required once after cloning.
@@ -40,6 +42,8 @@ py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pip check
 ```
 
 On macOS:
@@ -48,11 +52,13 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pip check
 ```
 
 Open the repository root in VS Code and select the `.venv` Python interpreter. The repository path may differ between members. Python code and notebooks should build paths from the discovered repository root with `pathlib.Path`.
 
-The single `requirements.txt` contains the shared analysis, notebook and code-quality packages so every member uses the same straightforward installation command. Application and database packages should be added only after the team selects that technical path.
+`requirements.in` declares the shared analysis, notebook and code-quality dependencies. `requirements.txt` pins their installation versions, including transitive dependencies and platform markers. Team members install with pip from `requirements.txt`; the editable installation exposes the shared `pedflow` code and `pedflow-context` command. Reinstall the requirements after the lock changes. Application and database packages are added only after the team selects that technical path.
 
 ## Runtime configuration
 
@@ -60,6 +66,6 @@ The repository uses one local environment file for runtime API configuration. Co
 
 ## Optional container environment
 
-The `.devcontainer/` configuration is an optional OrbStack or Docker Desktop environment. It provides the shared Python, Node.js and R Markdown toolchains, including Pandoc and LaTeX for HTML and PDF rendering. Team members do not need it for ordinary notebook or Python work. It mounts the repository at `/workspace` inside the container, but project code must remain runnable outside the container.
+The optional `.devcontainer/` environment uses a digest-pinned Rocker image with R 4.5.3, Python 3.11.16 and Node.js 22.23.2. VS Code connects as `rstudio`, mounts the repository at `/workspace`, and uses an isolated Python environment at `/opt/pedflow-venv`. R packages are restored from `renv.lock`; Pandoc and LaTeX support HTML and PDF rendering. Frontend dependencies use `npm ci` and a dedicated Docker volume.
 
-See `.devcontainer/CONTAINER_GUIDE.md` for the optional Python and frontend development environment.
+Open it through **Dev Containers: Reopen in Container**. Team members can use the native Python setup for ordinary Python work. See [the container guide](.devcontainer/CONTAINER_GUIDE.md) for setup, verification and dependency maintenance.
