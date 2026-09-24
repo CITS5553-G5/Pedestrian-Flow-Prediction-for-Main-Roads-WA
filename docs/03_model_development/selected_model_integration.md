@@ -82,7 +82,7 @@ the saved training median (2), missing footpath values with FALSE, and missing o
 unseen simplified categories with Residential. Every replacement appears in the
 row's warning; the returned feature columns show the values actually used. This
 option does not permit malformed numbers or invalid boolean values. Upstream
-source failures must still be handled by the future prediction service, not
+source failures are handled by the shared prediction service, not
 silently converted into imputable values.
 
 Building counts outside the training range of 0–12 receive a warning. This is a
@@ -124,11 +124,13 @@ when showing generalisation performance.
 
 ## Remaining workflow integration
 
-This completes the model inference component. Imagery extraction still needs its
-formal shared module, and feature assembly, location-to-prediction orchestration,
-batch I/O and the dashboard backend remain separate work. Both client interfaces
-should ultimately call the same prediction service, which obtains these three
-features and calls this loaded model. No frontend model formulas are needed.
+This completes the model inference component. Imagery now has its shared module
+and concurrent batch adapter; its live feature compatibility remains to be reviewed.
+Feature assembly, location-to-prediction orchestration and batch I/O now use
+`pedflow.prediction.predict_sites` and `pedflow-predict`. See the
+[prediction run guide](../04_prediction_pipeline/prediction_workflow.md).
+The dashboard backend remains separate work and should call the same service.
+No frontend model formulas are needed.
 
 The R research workflow remains the source for training and scientific validation.
 For a future approved fit, create a new model version, regenerate the release and

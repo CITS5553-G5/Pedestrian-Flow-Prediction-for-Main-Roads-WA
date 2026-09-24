@@ -1,4 +1,4 @@
-# GitHub Team Workflow (English)
+# GitHub Team Workflow
 
 ## 1. First clone and setup
 

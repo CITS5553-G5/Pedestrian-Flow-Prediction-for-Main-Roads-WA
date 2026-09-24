@@ -1,84 +1,224 @@
 # Pedestrian Flow Prediction for Main Roads WA
 
-This private repository is the CITS5553 Group 5 workspace for pedestrian-flow prediction on major roads in Western Australia.
+CITS5553 Group 5 — predict peak crossing and along-road pedestrian flows using
+the saved `pedestrian-linear-v1` models.
+
+```text
+Location table → ABS + imagery → three selected features → model → predictions.xlsx
+```
 
 ## Repository structure
 
-The repository has two complementary parts: numbered project workspaces for
-team-facing analysis and communication, and shared infrastructure for the formal,
-reusable workflow.
-
 ### Numbered project workspaces
 
-1. `01_data_preparation` — prepare, reconcile and link the survey, AusRAP and road-network data.
-2. `02_feature_extraction` — obtain approved external sources and develop spatial or imagery features. Shared source-specific notebooks are kept in `02_feature_extraction/context/`.
-3. `03_model_development` — explain, train, compare and select models.
-4. `04_prediction_pipeline` — document and demonstrate the integration of validated preparation, feature and model code into one reproducible prediction workflow.
-5. `05_application` — contain the frontend prototype and the reserved area for a future backend.
-6. `06_outputs` — store reviewed outputs that teammates may use without rerunning every upstream notebook.
+| Directory | Purpose |
+| --- | --- |
+| `01_data_preparation/` | Prepare and reconcile survey and road-network data |
+| `02_feature_extraction/` | Develop Context and Imagery features |
+| `03_model_development/` | Train, compare and select models |
+| `04_prediction_pipeline/` | Integrate and demonstrate the prediction workflow |
+| `05_application/` | Dashboard prototype and future backend |
+| `06_outputs/` | Reviewed team outputs |
 
 ### Shared workflow infrastructure
 
-- `configs/` — versioned settings for reproducible workflow runs.
-- `data/` — authorised source data, approved processed datasets and input/output templates.
-- `docs/` — shared schemas, technical decisions and documentation aligned with the project stages.
-- `src/pedflow/` — authoritative reusable preparation, feature extraction, training and prediction code.
-- `tests/` — automated tests for the reusable code under `src/pedflow/`.
+| Directory | Purpose |
+| --- | --- |
+| `src/pedflow/` | Reusable extraction and prediction code |
+| `configs/` | Prediction settings and retained research configurations |
+| `data/` | Source data, processed datasets and templates |
+| `docs/` | Technical documentation |
+| `tests/` | Automated verification |
+| `outputs/` | Local run results; ignored by Git |
 
-Stable calculations belong in `src/pedflow/`; notebooks, batch interfaces and any
-future backend should call that implementation rather than duplicate it.
-
-The selected three-feature linear models are available through
-`from pedflow.modeling import load_model`. The packaged release provides Python
-inference verified against the saved R models; client feature orchestration and
-dashboard integration remain pending. See the
-[model integration guide](docs/03_model_development/selected_model_integration.md)
-for inputs, outputs, usage and release reproduction.
-
-The formal Context workflow now runs ABS only, using
-`configs/context_features_v1.json` (`context_abs_v1`). Its default registry excludes
-all other sources. Historical candidate-feature code and results are retained for
-research, with the previous settings under `configs/research/`; they are not run
-as part of prediction. ABS feature definitions and calculations are unchanged.
+Notebooks and application code use the shared implementation in `src/pedflow/`.
+See the [code guide](src/pedflow/README.md) for module and script responsibilities.
 
 ## Native setup for Windows and macOS
 
-The pinned packages support binary installation on Windows x64 and Apple Silicon macOS 14 or newer. Use the container for a consistent Linux environment; other native platforms require separate compatibility checks.
+Install Python 3.11 and run all commands from the repository root, beside this
+README and `pyproject.toml`. Each teammate creates their own `.venv`; dependencies
+are installed from the shared `requirements.txt`.
 
-Python 3.11 is the supported team version. Clone the repository to any local folder; code must not depend on the host folder name or an absolute path.
+Windows PowerShell:
 
-The following setup is required once after cloning.
-
-On Windows PowerShell:
 ```powershell
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install --no-deps -e .
-python -m pip check
 ```
 
-On macOS:
+macOS:
+
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
+```
+
+Then install on either platform:
+
+```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip install --no-deps -e .
 python -m pip check
 ```
 
-Open the repository root in VS Code and select the `.venv` Python interpreter. The repository path may differ between members. Python code and notebooks should build paths from the discovered repository root with `pathlib.Path`.
-
-`requirements.in` declares the shared analysis, notebook and code-quality dependencies. `requirements.txt` pins their installation versions, including transitive dependencies and platform markers. Team members install with pip from `requirements.txt`; the editable installation exposes the shared `pedflow` code and `pedflow-context` command. Reinstall the requirements after the lock changes. Application and database packages are added only after the team selects that technical path.
+Select `.venv` as the VS Code interpreter and notebook kernel. Reactivate it in
+new terminals. After dependency changes, reinstall `requirements.txt`; after new
+commands are added, rerun the editable installation (`pip install --no-deps -e .`).
 
 ## Runtime configuration
 
-The repository uses one local environment file for runtime API configuration. Copy `.env.example` to `.env`, add only the credentials required by the active experiment, and keep the file local. Python code and notebooks that need these settings load the root `.env` explicitly with `python-dotenv`. Changing a provider, model or API key does not require rebuilding the development container.
+### API keys
+
+If `.env` is absent, copy `.env.example` to `.env`. If it exists, fill its missing
+keys from the template. `.env` stays local; the shared template currently contains
+the imagery notebook's temporary test keys, to be removed after testing.
+
+| Variable | Used for |
+| --- | --- |
+| `GOOGLE_MAPS_API_KEY` | Satellite/Static Maps and Street View |
+| `GEMINI_API_KEY` | Imagery feature extraction |
+
+`pedflow-imagery` and `pedflow-predict` load `.env` automatically. Existing process
+environment variables take precedence. Context and model-only tests need no keys.
+
+### Data and settings
+
+Confirm that `data/external_raw/Mesh Block Counts, 2021.xlsx` exists. If stored
+elsewhere, update `sources.abs_meshblock_sa1.options.counts_path` in the Context
+configuration.
+
+| Configuration | Controls |
+| --- | --- |
+| `configs/prediction/context_abs_v1.json` | ABS source path, input worksheet and export formats |
+| `configs/prediction/imagery_v1.json` | Gemini model, sampling, concurrency and request limits |
+| `configs/prediction/workflow_v1.json` | Selected feature and model versions |
+
+The prediction workflow uses ABS only for Context. Other candidate sources remain
+under `configs/research/`. See the [configuration guide](configs/README.md) before
+changing feature or model versions.
+
+## Run the workflow
+
+### Prepare input
+
+Use `data/processed/batch_input_dataset.xlsx` for the prepared 51-site batch,
+worksheet `Batch_Input`. `data/templates/batch_input_template.xlsx` contains the
+restored 100-location test batch (49 observed sites and 51 new sites). To test all
+100 locations, use that file as `--input` and a new output directory. Replace its
+rows when preparing your own locations. CSV and Parquet are also supported.
+
+| Column | Requirement | Example |
+| --- | --- | --- |
+| `site_id` | Unique, nonblank text identifier | `site_001` |
+| `latitude` | WGS84 latitude | `-31.95` |
+| `longitude` | WGS84 longitude | `115.86` |
+| `coordinate_crs` | Optional; defaults to `EPSG:4326` | `EPSG:4326` |
+| `road_no`, `slk_km` | Optional road references; checked against registered locations | `H001`, `356.36` |
+| `road_name`, `local_government_name` | Optional display labels | `Albany Highway`, `Albany` |
+
+Address-only input is not supported.
+
+### Complete prediction
+
+```bash
+pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_002
+```
+
+This command extracts ABS and imagery, joins the three features by `site_id` and
+runs the saved models. No additional script or model training is required.
+
+| Output | Contents |
+| --- | --- |
+| `predictions.xlsx` | `Predictions`: results and comparisons; `Features`: model inputs and source checks; `Metadata`: batch settings and definitions |
+| `predictions.manifest.json` | Run versions, settings and source descriptions |
+| `imagery.checkpoint.json` | Saved imagery progress |
+
+Predictions are in **pedestrians/hour**. Check `status` and `message`; failed sites
+retain blank predictions. Use a new output directory for each batch. To continue
+the same batch from its checkpoint:
+
+```bash
+pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_002 --resume
+```
+
+Resume refreshes ABS, reuses completed imagery and retries failed imagery. See the
+[run guide](docs/04_prediction_pipeline/prediction_workflow.md) for recovery details.
+
+`Features` contains only model features and their extraction diagnostics. All
+iRAP numeric comparisons, original labels and comparison identifiers appear in
+`Predictions`. The output puts reconciled observations, predictions, the client's original iRAP
+numeric references and raw AusRAP labels side by side. Observations are available
+for the 49 training sites; their comparisons are in-sample. The original numeric
+references are spatially averaged estimates from `data/raw/Ped_iRAP_merged.csv`,
+not measured pedestrian counts. Raw labels are read from
+`data/raw/AusRAP Data - Words - MSDS.xlsx` without converting them to numbers.
+
+`comparison_sites.csv` in `data/processed/` records the 100 verified site/segment
+links. Both ID and coordinates must match. New locations still receive predictions,
+but need verified links before iRAP labels can be attached. Check `comparison_status`
+separately from prediction `status`; unavailable comparisons remain blank.
+The model dataset and released model remain unchanged.
+
+To update comparisons and the workbook layout in an existing run without calling
+Maps, Gemini or the model again:
+
+```bash
+pedflow-predict --refresh-comparison --output-directory outputs/predictions/run_001
+```
+
+This refreshes comparison values and preserves the predictions and original
+run ID. CRS, model version and run times are recorded once in `Metadata`.
+
+### Independent modules
+
+| Module | Input | Output | Access needed |
+| --- | --- | --- | --- |
+| Context | Location table | ABS features and match status | Internet and ABS workbook |
+| Imagery | Location table | Building count, footpath feature and status | Maps and Gemini keys |
+| Model | Three prepared features and `site_id` | Crossing and along-road predictions | Local model release |
+
+**Context — ABS only**
+
+```bash
+pedflow-context --input data/processed/batch_input_dataset.xlsx --output-directory outputs/context_features/run_001
+```
+
+Writes `batch_abs_context_features.xlsx`, a Parquet copy and a manifest. Check
+`abs_match_status` and `abs_error_message` in the `Context_Features` worksheet.
+
+**Imagery — Google Maps + Gemini**
+
+```bash
+pedflow-imagery --input data/processed/batch_input_dataset.xlsx --output-directory outputs/imagery_features/run_001 --workers 10
+```
+
+Writes `imagery_features.csv`, a manifest and a checkpoint. Check `imagery_status`,
+`imagery_error` and `imagery_warnings`. Use `--sheet Name` for another worksheet or
+`--resume` to continue the same batch. See the [Imagery guide](docs/02_feature_extraction/imagery_integration.md).
+
+**Model — included in complete prediction**
+
+`pedflow-predict` calls the model automatically. Direct prediction from prepared
+features uses the Python interface in the [model guide](docs/03_model_development/selected_model_integration.md);
+there is no separate model-only command. To test the model, use the command below.
+
+## Verification and current status
+
+Run the existing model and integrated workflow tests offline:
+
+```bash
+python -m pytest tests/unit/test_model.py tests/integration/test_prediction_tracer.py -q
+```
+
+These check model results against R references and exercise workflow recovery with
+simulated provider responses. Live sample validation and dashboard integration
+remain pending. Use `--help` with any installed command for its options.
 
 ## Optional container environment
 
-The optional `.devcontainer/` environment uses a digest-pinned Rocker image with R 4.5.3, Python 3.11.16 and Node.js 22.23.2. VS Code connects as `rstudio`, mounts the repository at `/workspace`, and uses an isolated Python environment at `/opt/pedflow-venv`. R packages are restored from `renv.lock`; Pandoc and LaTeX support HTML and PDF rendering. Frontend dependencies use `npm ci` and a dedicated Docker volume.
-
-Open it through **Dev Containers: Reopen in Container**. Team members can use the native Python setup for ordinary Python work. See [the container guide](.devcontainer/CONTAINER_GUIDE.md) for setup, verification and dependency maintenance.
+Open the repository in VS Code and select **Dev Containers: Reopen in Container**.
+The container provides Python, R and Node.js with a separate environment at
+`/opt/pedflow-venv`. Use the same runtime configuration and workflow commands above.
+See the [container guide](.devcontainer/CONTAINER_GUIDE.md) for setup and maintenance.
