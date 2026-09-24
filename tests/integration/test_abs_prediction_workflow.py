@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class AbsPredictionWorkflowTests(unittest.TestCase):
     def setUp(self):
-        self.config = load_context_config(ROOT / "configs/context_features_v1.json")
+        self.config = load_context_config(ROOT / "configs/prediction/context_abs_v1.json")
         self.sites = pd.DataFrame(
             {
                 "site_id": ["site-2", "site-1"],

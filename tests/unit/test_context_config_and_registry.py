@@ -82,7 +82,7 @@ class ContextConfigTests(unittest.TestCase):
 
     def test_formal_config_contains_only_abs(self) -> None:
         project_root = Path(__file__).resolve().parents[2]
-        config = load_context_config(project_root / "configs" / "context_features_v1.json")
+        config = load_context_config(project_root / "configs" / "prediction" / "context_abs_v1.json")
         self.assertEqual(config.feature_set_version, "context_abs_v1")
         self.assertEqual(tuple(source.name for source in config.sources), ("abs_meshblock_sa1",))
         self.assertEqual(config.enabled_sources(), config.sources)

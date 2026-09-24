@@ -27,7 +27,7 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--config",
-        default="configs/context_features_v1.json",
+        default="configs/prediction/context_abs_v1.json",
         help="JSON configuration path, relative to the project root by default.",
     )
     parser.add_argument(

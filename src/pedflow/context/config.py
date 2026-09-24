@@ -13,6 +13,7 @@ from pedflow.exceptions import ConfigurationError
 
 
 def _required_mapping(payload: dict[str, Any], key: str) -> dict[str, Any]:
+    """Require a settings object before reading nested fields."""
     value = payload.get(key)
     if not isinstance(value, dict):
         raise ConfigurationError(f"Configuration field '{key}' must be an object.")
@@ -20,6 +21,7 @@ def _required_mapping(payload: dict[str, Any], key: str) -> dict[str, Any]:
 
 
 def _required_text(payload: dict[str, Any], key: str) -> str:
+    """Reject blank identifiers and paths at configuration load time."""
     value = payload.get(key)
     if not isinstance(value, str) or not value.strip():
         raise ConfigurationError(f"Configuration field '{key}' must be non-empty text.")

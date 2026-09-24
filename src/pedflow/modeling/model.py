@@ -22,6 +22,7 @@ DEFAULT_RELEASE = "pedestrian_linear_v1.json"
 
 
 def _finite_number(value: object) -> bool:
+    """Reject nonfinite coefficients and boolean values in a model release."""
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
@@ -84,6 +85,7 @@ def _validate_release(release: dict) -> None:
 
 
 def _is_missing(value: object) -> bool:
+    """Define missing feature cells consistently across validation and preprocessing."""
     if not pd.api.types.is_scalar(value):
         raise ContractError("Feature cells must contain scalar values.")
     return bool(pd.isna(value)) or (isinstance(value, str) and value.strip() == "")
@@ -97,6 +99,7 @@ def simplify_abs_categories(categories: pd.Series) -> pd.Series:
     """
 
     def simplify(value: object) -> object:
+        """Preserve missing geography; map non-selected ABS land-use categories to Other."""
         if _is_missing(value):
             return pd.NA
         if not isinstance(value, str):
@@ -110,11 +113,13 @@ class PedestrianFlowModel:
     """Loaded model with strict input checks and explicit optional R fallbacks."""
 
     def __init__(self, release: dict) -> None:
+        """Validate and copy the release so callers cannot mutate loaded coefficients."""
         _validate_release(release)
         self._release = copy.deepcopy(release)
 
     @property
     def model_version(self) -> str:
+        """Identify the immutable model release attached to each prediction."""
         return self._release["model_version"]
 
     def predict(self, features: pd.DataFrame, *, allow_fallback: bool = False) -> pd.DataFrame:

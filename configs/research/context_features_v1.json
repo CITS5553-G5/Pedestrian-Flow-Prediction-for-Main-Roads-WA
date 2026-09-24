@@ -1,7 +1,7 @@
 {
   "feature_set_version": "context_v1_draft",
   "input": {
-    "path": "data/templates/batch_input_template.xlsx",
+    "path": "data/processed/batch_input_dataset.xlsx",
     "sheet": "Batch_Input"
   },
   "output": {
