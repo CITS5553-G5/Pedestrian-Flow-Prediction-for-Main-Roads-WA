@@ -6,6 +6,7 @@ never scientific evidence of imagery accuracy or a live provider speed test.
 
 import hashlib
 import json
+import shutil
 from collections import Counter
 from io import BytesIO
 from pathlib import Path
@@ -29,6 +30,12 @@ def test_tracer_cli_to_r_reference_and_resume(tmp_path, monkeypatch):
     # Keep actual workbook parsing, ABS calculations and recipe/release validation.
     config_dir = tmp_path / "configs/prediction"
     config_dir.mkdir(parents=True)
+    template_dir = tmp_path / "data/templates"
+    template_dir.mkdir(parents=True)
+    shutil.copy2(
+        ROOT / "data/templates/prediction_output_template.xlsx",
+        template_dir / "prediction_output_template.xlsx",
+    )
     settings = json.loads((ROOT / "configs/prediction/workflow_v1.json").read_text())
     settings["model_release"] = str(ROOT / settings["model_release"])
     context = json.loads((ROOT / settings["context_config"]).read_text())
@@ -134,7 +141,7 @@ def test_tracer_cli_to_r_reference_and_resume(tmp_path, monkeypatch):
     assert main() == 2
     workbook = tmp_path / "output/predictions.xlsx"
     first = pd.read_excel(
-        workbook, sheet_name="Predictions", keep_default_na=False, dtype={"site_id": "string"}
+        workbook, sheet_name="Prediction_Output", keep_default_na=False, dtype={"site_id": "string"}
     )
     assert first.site_id.tolist() == ["003", "NA", "001"]
     assert first.status.tolist() == [
@@ -151,7 +158,7 @@ def test_tracer_cli_to_r_reference_and_resume(tmp_path, monkeypatch):
     assert main() == 0
     assert calls == {"abs": 6, "maps": 24, "gemini-1": 1, "gemini-2": 1, "gemini-3": 2}
     result = pd.read_excel(
-        workbook, sheet_name="Predictions", keep_default_na=False, dtype={"site_id": "string"}
+        workbook, sheet_name="Prediction_Output", keep_default_na=False, dtype={"site_id": "string"}
     )
     features = pd.read_excel(
         workbook, sheet_name="Features", keep_default_na=False, dtype={"site_id": "string"}

@@ -68,9 +68,56 @@ def test_order_mapping_and_prediction_parity(sites, providers):
     expected = load_model().predict(result.features)
     for name in ("pred_peak_cross_ped_per_h", "pred_peak_along_ped_per_h"):
         pd.testing.assert_series_equal(result.predictions[name], expected[name])
-    assert result.predictions.status.eq("predicted").all()
+    assert result.predictions.status.eq("predicted_with_warning").all()
     assert result.metadata["context"]["sources"][0]["metadata"] == {"fixture": True}
     assert result.metadata["imagery"]["configuration"]["max_workers"] == 2
+
+
+def test_road_only_input_predicts_from_measured_coordinate(providers):
+    providers[0].drop(index=[1, 2], inplace=True)
+    source = pd.DataFrame({"site_id": ["001"], "road_no": ["H001"], "slk_km": [356.36]})
+    result = predict_sites(source, ROOT)
+    row = result.predictions.iloc[0]
+    assert row.input_type == "road_slk"
+    assert row.location_status == "matched"
+    assert row.matched_road_no == "H001"
+    assert row.latitude < 0
+    assert row.longitude > 0
+    assert row.status == "predicted"
+    assert pd.notna(row.pred_peak_cross_ped_per_h)
+
+
+def test_current_50_site_batch_reaches_model_and_export(providers, tmp_path):
+    source = pd.read_excel(ROOT / "data/processed/batch_input_dataset.xlsx", sheet_name="Batch_Input").head(50)
+    table = providers[0]
+    table.drop(index=table.index, inplace=True)
+    for site_id in source.site_id:
+        table.loc[len(table)] = [site_id, "Commercial", "matched"]
+    providers[2].side_effect = lambda site: (
+        {"commercial_buildings": 1, "footpath_both_sides": True},
+        {"image_count": 6, "warnings": [], "source": "offline fixture"},
+    )
+    result = predict_sites(source, ROOT)
+    assert len(result.predictions) == 50
+    assert result.predictions.location_status.eq("matched").all()
+    assert result.predictions.status.eq("predicted").all()
+    assert result.predictions[list(("pred_peak_cross_ped_per_h", "pred_peak_along_ped_per_h"))].notna().all().all()
+    output = write_prediction_outputs(result, tmp_path)["workbook"]
+    saved = pd.read_excel(output, sheet_name="Prediction_Output")
+    assert saved.site_id.tolist() == source.site_id.tolist()
+
+
+def test_unresolved_road_row_does_not_block_other_locations(providers):
+    providers[0].drop(index=[1, 2], inplace=True)
+    source = pd.DataFrame({
+        "site_id": ["002", "001"], "road_no": ["UNKNOWN", None], "slk_km": [1.0, None],
+        "latitude": [None, -32.0], "longitude": [None, 116.0],
+    })
+    result = predict_sites(source, ROOT)
+    assert result.predictions.site_id.tolist() == ["002", "001"]
+    assert result.predictions.status.tolist() == ["not_predicted", "predicted_with_warning"]
+    assert pd.isna(result.predictions.pred_peak_cross_ped_per_h.iloc[0])
+    assert result.features.site_id.tolist() == ["002", "001"]
 
 
 def test_shuffled_imagery_results_join_by_id(sites, providers, monkeypatch):
@@ -101,7 +148,7 @@ def test_partial_failures_remain_null_and_resume_retries_only_failed(sites, prov
     extractor.side_effect = first
     checkpoint = tmp_path / "imagery.json"
     result = predict_sites(sites, ROOT, checkpoint_path=checkpoint)
-    assert result.predictions.status.tolist() == ["predicted", "not_predicted", "not_predicted"]
+    assert result.predictions.status.tolist() == ["predicted_with_warning", "not_predicted", "not_predicted"]
     assert result.predictions.pred_peak_cross_ped_per_h.iloc[1:].isna().all()
     assert result.predictions.message.str.contains("request_failed").any()
     table.loc[0, "abs_match_status"] = "matched"
@@ -111,7 +158,7 @@ def test_partial_failures_remain_null_and_resume_retries_only_failed(sites, prov
     extractor.assert_called_once()
     assert extractor.call_args.args[0]["site_id"] == "002"
     assert source.call_count == 2  # ABS is refreshed, including recovered matches.
-    assert resumed.predictions.status.eq("predicted").all()
+    assert resumed.predictions.status.eq("predicted_with_warning").all()
     assert resumed.metadata["imagery"]["reused_sites"] == 2
 
 
@@ -124,7 +171,7 @@ def test_missing_category_is_not_other_and_unused_counts_do_not_block(sites, pro
     assert result.predictions.status.tolist() == [
         "predicted_with_warning",
         "not_predicted",
-        "predicted",
+        "predicted_with_warning",
     ]
     assert pd.isna(result.predictions.pred_peak_cross_ped_per_h.iloc[1])
 
@@ -211,15 +258,15 @@ def test_cli_workbook_manifest_and_resume_match_service(sites, providers, tmp_pa
     monkeypatch.setattr("sys.argv", argv)
     assert main() == 0
     workbook = output / "predictions.xlsx"
-    saved = pd.read_excel(workbook, sheet_name="Predictions", dtype={"site_id": "string"})
+    saved = pd.read_excel(workbook, sheet_name="Prediction_Output", dtype={"site_id": "string"})
     expected = predict_sites(sites, ROOT).predictions
     assert saved.site_id.tolist() == expected.site_id.tolist()
     for name in ("pred_peak_cross_ped_per_h", "pred_peak_along_ped_per_h"):
         pd.testing.assert_series_equal(saved[name], expected[name])
-    assert load_workbook(workbook).sheetnames == ["Predictions", "Features", "Metadata"]
+    assert load_workbook(workbook).sheetnames == ["Metadata", "Prediction_Output", "Features"]
     manifest = json.loads((output / "predictions.manifest.json").read_text())
     assert "workbook_sha256" not in manifest
-    assert manifest["status_counts"] == {"predicted": 3}
+    assert manifest["status_counts"] == {"predicted_with_warning": 3}
     providers[3].reset_mock()
     monkeypatch.setattr("sys.argv", argv + ["--resume"])
     assert main() == 0
@@ -251,6 +298,6 @@ def test_excel_site_id_is_literal_text(sites, providers, tmp_path):
     result = predict_sites(sites, ROOT)
     result.predictions.loc[0, "site_id"] = '=HYPERLINK("example")'
     paths = write_prediction_outputs(result, tmp_path)
-    cell = load_workbook(paths["workbook"])["Predictions"]["A2"]
+    cell = load_workbook(paths["workbook"])["Prediction_Output"]["A2"]
     assert cell.data_type == "s"
     assert cell.value == '=HYPERLINK("example")'

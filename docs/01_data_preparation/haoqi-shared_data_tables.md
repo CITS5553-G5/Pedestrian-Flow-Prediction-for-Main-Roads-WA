@@ -7,10 +7,9 @@ Identifiers are text; blanks mean unavailable, never zero.
 | File | Purpose |
 | --- | --- |
 | `data/processed/model_dataset.xlsx` | Unchanged, authoritative 49-site research dataset |
-| `data/processed/batch_input_dataset.xlsx` | Prepared 51-site prediction batch |
-| `data/templates/batch_input_template.xlsx` | Restored 100-location test input |
-| `data/templates/prediction_output_template.xlsx` | 100-location `prediction_output_v3` comparison template; prediction values blank |
-| `data/processed/comparison_sites.csv` | 100 verified site/coordinate/source-row links migrated from the old output template |
+| `data/processed/batch_input_dataset.xlsx` | Current 50-location test batch; formal prediction input after its rows are replaced |
+| `data/templates/batch_input_template.xlsx` | Example input layout, not the formal prediction source |
+| `data/templates/prediction_output_template.xlsx` | Styled `prediction_output_v4` layout with empty result and feature tables |
 | `data/templates/model_dataset_template.xlsx` | Preserved original modelling foundation |
 
 Raw sources and the approved model dataset remain unchanged. Generated predictions
@@ -55,116 +54,26 @@ Primary model development may use all 49 rows. Because two target values were co
 
 ## 2. Batch input
 
-Use `Batch_Input` in the processed dataset for the prepared batch, or use the
-restored 100-location template for testing. Replace its rows for other locations. The seven input columns are:
+`data/processed/batch_input_dataset.xlsx` contains 50 current test points, not a geographic or batch-size limit. Formal runs read the locations in the chosen processed input file. `data/templates/batch_input_template.xlsx` provides three alternative sheets: `Batch_Input` for both road reference and coordinates, `Road_SLK` for road reference only, and `Coordinates` for coordinates only. Each row needs a unique `site_id`.
 
-| Column | Required | Definition |
-| --- | --- | --- |
-| `site_id` | Yes | Unique, nonblank location ID |
-| `latitude` | Yes | WGS84 latitude in degrees |
-| `longitude` | Yes | WGS84 longitude in degrees |
-| `road_no` | No | Road number hint, checked against the comparison register |
-| `slk_km` | No | SLK position hint in kilometres |
-| `road_name` | No | Road display name |
-| `local_government_name` | No | Local government display name |
+Coordinates are a WGS84 `latitude`/`longitude` pair. A point road reference is `road_no` plus `slk_km`. An official segment uses `road_no`, `start_slk` and `end_slk`, with optional `cway`; its representative prediction point is the SLK midpoint on the measured road line. `slk_km` alone is a point and does not mean the start or end of a segment. The optional `coordinate_crs` defaults to `EPSG:4326`; other systems are rejected.
+The existing `road_name` and `local_government_name` columns in the 50-site test sheet are legacy notes; formal matching and modelling do not read them.
 
-Readers accept an optional `coordinate_crs`, defaulting to `EPSG:4326`; other CRS
-values are rejected. Do not add model features or observed targets to user input.
-Unverified road hints do not establish a road match.
+When both input pairs exist, entered coordinates drive feature extraction and the road reference is checked. A conflict blocks that row's prediction. A coordinate-only row retains its exact entered position and can still be predicted if no road can be matched; `location_status` records the issue. Road-only rows must resolve to a unique measured road point. The local [Main Roads SLK snapshot](../../data/external_raw/README.md) enables both directions without sending submitted locations to the road service.
 
 ## 3. Prediction output
 
-The service, exported workbook and output template share `prediction_output_v3`.
-The extraction/model configuration remains `prediction_v1` because neither the
-features nor the model changed. The workbook has `Predictions`, `Features` and
-`Metadata`, in that order. The restored output template contains 100 locations and available reference
-values, with blank predictions and `pending` status until inference. Its Features
-sheet has headers only because the template has not extracted features. Completed
-runs contain actual features and prediction statuses; no values are imputed.
+The formal output schema is `prediction_output_v4`; model recipe `prediction_v1` is unchanged. `data/templates/prediction_output_template.xlsx` retains its established workbook style and has `Metadata`, `Prediction_Output` and `Features`. The exporter writes exactly one row per submitted site, preserving input order.
 
-### Predictions
+`Prediction_Output` contains the input type; supplied `road_no`, `slk_km`, `cway` and optional segment bounds; prediction `latitude`/`longitude`; matched road number, SLK and carriageway; offset from the measured road; location status; crossing and along-road predicted pedestrians/hour; prediction status; and message. For a road-only input, the prediction coordinate is interpolated from measured geometry. For coordinate input, the supplied coordinate remains the prediction point. Missing numbers stay blank.
 
-| Column | Meaning |
-| --- | --- |
-| `site_id` | Input location ID |
-| `road_no`, `slk_km`, `road_name`, `local_government_name` | Input road hints, replaced by registered values only for verified locations |
-| `latitude`, `longitude` | Validated WGS84 coordinates |
-| `location_role` | `observed_benchmark` when ID and coordinates match the model dataset; otherwise `unobserved` |
-| `obs_peak_cross_ped_per_h` | Reconciled observed peak crossing flow, pedestrians/hour |
-| `pred_peak_cross_ped_per_h` | Predicted peak crossing flow, pedestrians/hour |
-| `irap_peak_cross_reference` | Original `Ped_Peak_Cross` from the client CSV, copied without conversion |
-| `irap_ped_cross_band` | Original crossing label from the registered AusRAP source row |
-| `obs_peak_along_ped_per_h` | Reconciled observed peak along-road flow, pedestrians/hour |
-| `pred_peak_along_ped_per_h` | Predicted peak along-road flow, pedestrians/hour |
-| `irap_peak_along_reference` | Original `Ped_Peak_Along` from the client CSV, copied without conversion |
-| `irap_peak_driver_reference`, `irap_peak_passenger_reference` | Original separate-side numeric references, copied without filling missing values |
-| `irap_numeric_status` | Availability of the original client numeric reference |
-| `matched_segment_id`, `irap_numeric_source_id` | Identifiers linking the result to the raw segment and client numeric record |
-| `irap_ped_along_driver_band`, `irap_ped_along_passenger_band` | Original along-road labels for each side |
-| `status` | `predicted`, `predicted_with_warning`, `not_predicted` or `prediction_failed` |
-| `message` | Prediction warning or failure explanation; blank when none |
-| `comparison_status` | `matched`, `unregistered_site`, `coordinate_mismatch`, `road_reference_conflict` or `source_unavailable_or_changed` |
+`Features` records the deployed inputs `commercial_buildings`, `footpath_both_sides` and `abs_mb_category_simple`, plus original ABS category/codes and ABS/imagery status diagnostics. `Metadata` and the JSON manifest record run ID, times, versions, units and source information. Formal output contains no surveyed counts, RAP estimates or text bands.
 
-Prediction status is independent of comparison availability. A matched iRAP row
-may itself contain blank labels; `matched` never implies complete reference data.
-The 49 observed locations trained the released model, so their current predictions
-are in-sample checks, not independent model evaluation.
-
-### Features
-
-The first columns hold `site_id` and the three actual model inputs:
-`commercial_buildings`, `footpath_both_sides`, `abs_mb_category_simple`.
-Retain the original ABS category and MB/SA1 codes, ABS/imagery statuses and errors,
-imagery warnings, image count and extraction time for traceability. Population,
-density and area fields unused by the deployed model are omitted from this report;
-the standalone Context export and research dataset retain them.
-
-`Features` contains no observed targets or iRAP comparison fields. Original iRAP
-numbers, labels, availability and source identifiers are in `Predictions`. Detailed
-per-site source rows, survey dates and match diagnostics are retained in the JSON
-manifest under `comparison.site_records`; duplicate row identifiers and statuses
-are not repeated in the feature table.
-
-### Metadata and source meaning
-
-CRS, model version, run ID, inference times, output schema, units, source descriptions
-and key definitions appear once in `Metadata`. The JSON manifest retains full
-configuration and source details. An offline comparison refresh
-preserves the original run ID and inference times and adds its own refresh time.
-
-`data/raw/AusRAP Data - Words - MSDS.xlsx` supplies the original text labels.
-`data/raw/Ped_iRAP_merged.csv` supplies the existing numeric references. The local
-client script `data/raw/R scripts for process and linkage/2. Link to iRAP.R` documents
-code-to-representative-count conversion and averaging overlapping segments within
-SLK +/- 0.1 km. Those approximate numeric references are not measured counts and
-do not describe the same single-segment aggregation as the text labels. Do not
-decode the word labels to invent missing numeric references or calculate automatic
-errors against them. Observations come from the reconciled model dataset, not the
-CSV's historical uncorrected observation columns.
-
-The literal label `None` in the word export remains text. It is distinct from an
-empty source cell and is not silently parsed as missing or converted to zero.
-
-### Comparison registration
-
-`comparison_sites.csv` stores the existing 100 approved site/coordinate/road links
-and raw Excel row numbers. Every original label was verified against raw data
-when moving these links out of the former output template. Runtime matching
-requires exact ID and coordinates within 1e-7 degrees; supplied road number and
-SLK must not conflict. Stored source rows must match the registered road and SLK.
-
-For additional locations, prediction works immediately, with unavailable
-comparisons left blank. To add comparison coverage, verify the road, SLK,
-coordinates and source Excel row, then append the approved link. When replacing
-the raw source, update the row links to match. This is a curated reference join, not
-an automatic nearest-road matcher. Templates are never runtime reference sources.
+Formal prediction does not need a fixed site comparison register. The separate 49-site surveyed dataset and client RAP files remain available for model evaluation. The client numeric RAP estimates cover only some sites; raw AusRAP pedestrian categories should not be turned into arbitrary continuous counts.
 
 ## Application integration
 
-The backend should call `predict_sites` and use the same `PredictionResult` for
-JSON and workbook export. Display point locations from latitude/longitude and
-comparison values from the returned table. Convert missing values to JSON null;
-never replace them with zero. The backend connection remains to be implemented.
+The backend should call `predict_sites` and use the returned `PredictionResult` for JSON and workbook export. Display location and prediction statuses with both numerical predictions; represent missing values as JSON null, never zero. The backend connection remains to be implemented.
 
 ## Model development and cross-validation
 

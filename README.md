@@ -103,27 +103,35 @@ changing feature or model versions.
 
 ### Prepare input
 
-Use `data/processed/batch_input_dataset.xlsx` for the prepared 51-site batch,
-worksheet `Batch_Input`. `data/templates/batch_input_template.xlsx` contains the
-restored 100-location test batch (49 observed sites and 51 new sites). To test all
-100 locations, use that file as `--input` and a new output directory. Replace its
-rows when preparing your own locations. CSV and Parquet are also supported.
+`data/processed/batch_input_dataset.xlsx` contains the current 50-location test
+batch. Formal runs read the specified processed input, with any positive number
+of locations. `data/templates/batch_input_template.xlsx` offers three input
+sheets: `Batch_Input` (both identifiers and coordinates), `Road_SLK` (road and
+SLK), and `Coordinates` (latitude/longitude). Select one sheet with `--sheet`.
+CSV and Parquet with the same columns are also supported.
 
 | Column | Requirement | Example |
 | --- | --- | --- |
 | `site_id` | Unique, nonblank text identifier | `site_001` |
-| `latitude` | WGS84 latitude | `-31.95` |
-| `longitude` | WGS84 longitude | `115.86` |
+| `latitude`, `longitude` | WGS84 coordinate pair; required for coordinate input | `-31.95`, `115.86` |
 | `coordinate_crs` | Optional; defaults to `EPSG:4326` | `EPSG:4326` |
-| `road_no`, `slk_km` | Optional road references; checked against registered locations | `H001`, `356.36` |
-| `road_name`, `local_government_name` | Optional display labels | `Albany Highway`, `Albany` |
+| `road_no`, `slk_km` | Road number and point SLK pair; required for road input | `H001`, `356.36` |
+| `start_slk`, `end_slk` | Optional official segment bounds instead of `slk_km`; the midpoint SLK is used | `356.30`, `356.40` |
+| `cway` | Optional carriageway code where a divided road is ambiguous | `Single` |
+| `road_name`, `local_government_name` | Optional legacy notes in the 50-site test sheet; not used for matching or modelling | `Albany Highway`, `Albany` |
 
-Address-only input is not supported.
+When both pairs are present, the entered coordinates drive feature extraction;
+the road reference is checked against the local measured road line. Conflicts
+are flagged without a prediction. A coordinate near, but not exactly on, the
+road is retained as the prediction point and matched to a road within 30 m when
+unambiguous. Road-only points are placed directly on the measured line. The
+[local Main Roads SLK snapshot](data/external_raw/README.md) is
+used for matching; the client's submitted locations are not sent to that service.
 
 ### Complete prediction
 
 ```bash
-pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_002
+pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_001
 ```
 
 This command extracts ABS and imagery, joins the three features by `site_id` and
@@ -131,7 +139,7 @@ runs the saved models. No additional script or model training is required.
 
 | Output | Contents |
 | --- | --- |
-| `predictions.xlsx` | `Predictions`: results and comparisons; `Features`: model inputs and source checks; `Metadata`: batch settings and definitions |
+| `predictions.xlsx` | `Prediction_Output`: location details and two pedestrian/hour predictions; `Features`: model inputs and source checks; `Metadata`: definitions and run details |
 | `predictions.manifest.json` | Run versions, settings and source descriptions |
 | `imagery.checkpoint.json` | Saved imagery progress |
 
@@ -140,36 +148,16 @@ retain blank predictions. Use a new output directory for each batch. To continue
 the same batch from its checkpoint:
 
 ```bash
-pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_002 --resume
+pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_001 --resume
 ```
 
 Resume refreshes ABS, reuses completed imagery and retries failed imagery. See the
 [run guide](docs/04_prediction_pipeline/prediction_workflow.md) for recovery details.
 
-`Features` contains only model features and their extraction diagnostics. All
-iRAP numeric comparisons, original labels and comparison identifiers appear in
-`Predictions`. The output puts reconciled observations, predictions, the client's original iRAP
-numeric references and raw AusRAP labels side by side. Observations are available
-for the 49 training sites; their comparisons are in-sample. The original numeric
-references are spatially averaged estimates from `data/raw/Ped_iRAP_merged.csv`,
-not measured pedestrian counts. Raw labels are read from
-`data/raw/AusRAP Data - Words - MSDS.xlsx` without converting them to numbers.
-
-`comparison_sites.csv` in `data/processed/` records the 100 verified site/segment
-links. Both ID and coordinates must match. New locations still receive predictions,
-but need verified links before iRAP labels can be attached. Check `comparison_status`
-separately from prediction `status`; unavailable comparisons remain blank.
-The model dataset and released model remain unchanged.
-
-To update comparisons and the workbook layout in an existing run without calling
-Maps, Gemini or the model again:
-
-```bash
-pedflow-predict --refresh-comparison --output-directory outputs/predictions/run_001
-```
-
-This refreshes comparison values and preserves the predictions and original
-run ID. CRS, model version and run times are recorded once in `Metadata`.
+`Features` contains the model inputs and extraction diagnostics. Formal predictions
+do not read RAP pedestrian values or a fixed site register. Existing RAP and
+survey files remain available for separate model evaluation. The released model
+and its three predictors remain unchanged.
 
 ### Independent modules
 

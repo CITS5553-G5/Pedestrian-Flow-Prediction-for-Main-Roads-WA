@@ -11,12 +11,12 @@ API keys and standalone commands.
 | [context](context/README.md) | Extract ABS context features | Site coordinates → ABS categories, attributes and match status |
 | [imagery](imagery/README.md) | Retrieve images and use Gemini to assess visible features | Site coordinates → commercial building count, footpaths on both sides and extraction status |
 | [modeling](modeling/README.md) | Load trained models and calculate predictions | Three complete features → crossing and along-road pedestrian flows |
-| [prediction](prediction/README.md) | Coordinate extraction, modeling, status handling and export | Site table → predictions, features and run metadata |
+| [prediction](prediction/README.md) | Resolve road/SLK or coordinates, extract features, predict and export | Site table → predictions, features and run metadata |
 
 ```text
 pedflow-predict
     │
-    └─ prediction: validate sites, load configuration and model
+    └─ prediction: resolve road/SLK and coordinates, validate sites, load configuration and model
           │
           ├─ context: extract ABS features
           ├─ imagery: extract imagery features concurrently across sites
@@ -43,9 +43,10 @@ features.
 ## Data and configuration
 
 Workflow settings are in [configs/prediction](../../configs/prediction/); API keys
-are in the project root `.env`. Context and Imagery inputs require `site_id`,
-`latitude`, `longitude` and `coordinate_crs`. File readers default a missing CRS
-column to `EPSG:4326`.
+are in the project root `.env`. Prediction accepts either road number plus SLK,
+WGS84 coordinates, or both; it resolves a coordinate before invoking Context
+and Imagery. Those source modules require `site_id`, `latitude`, `longitude`
+and `coordinate_crs`. File readers default a missing CRS column to `EPSG:4326`.
 
 Source modules return features and statuses for each site without calling the
 model. Prediction checks source statuses and feature completeness before inference.

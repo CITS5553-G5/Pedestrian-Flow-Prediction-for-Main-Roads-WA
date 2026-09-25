@@ -1,94 +1,39 @@
 # Run predictions
 
-Run from `03_Project` after completing [setup](../SETUP.md).
+Run from `03_Project` after completing [setup](../SETUP.md). The current 50 rows in `data/processed/batch_input_dataset.xlsx` are test locations. A formal run reads the chosen processed input file and has no fixed location count.
 
-## 1. Prepare input
+## 1. Prepare locations
 
-Use CSV, Parquet or an Excel worksheet named `Batch_Input`. Required columns are `site_id`,
-`latitude` and `longitude`. IDs must be unique; coordinates must be WGS84.
-`coordinate_crs` defaults to `EPSG:4326` when omitted. Address-only input is not supported. The processed dataset contains 51 prepared
-locations; `data/templates/batch_input_template.xlsx` restores the original
-100-location test batch. Replace its rows for other locations. Optional
-road number, SLK, road name and local government fields remain reporting hints.
+The workbook `data/templates/batch_input_template.xlsx` has three alternative sheets. `Batch_Input` includes both road references and coordinates; `Road_SLK` accepts `site_id`, `road_no` and point `slk_km`; `Coordinates` accepts `site_id`, `latitude` and `longitude`. Keep only the rows for the current prediction batch in a processed copy. CSV and Parquet inputs use the same columns. IDs must be unique. Coordinates are WGS84 (`coordinate_crs=EPSG:4326`, the default).
+
+An official whole road segment can be supplied as `road_no`, `start_slk` and `end_slk`, with optional `cway`, and no `slk_km`. The predictor uses the SLK midpoint along the actual measured road line. A plain `road_no` + `slk_km` denotes one point, not a start or end. On divided roads, supply `cway` if the two carriageways cannot be distinguished.
+
+When both a coordinate pair and road reference are present, the coordinates determine the feature point. The road reference is checked against the local Main Roads measured line. A conflicting pair is reported as `road_coordinate_conflict` and is not predicted. A coordinate within 30 m of an unambiguous road is assigned its road number and SLK, while the original coordinate remains the feature point. If no safe road match is found, a coordinate-only row can still be predicted with a warning and blank road fields.
+
+The local [Main Roads SLK snapshot](../../data/external_raw/README.md) provides the road geometry. Location matching does not send submitted coordinates to that service. Refreshing the complete public snapshot is a separate maintenance task.
 
 ## 2. Run
 
 ```bash
-pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_002
+pedflow-predict --input data/processed/batch_input_dataset.xlsx --sheet Batch_Input --output-directory outputs/predictions/run_002
 ```
 
-Use a new output directory for a new batch. The default is at most 10 concurrent
-imagery sites, with no local requests-per-minute cap for Maps or Gemini. Request
-failures still respect retry backoff and server cooldowns. Use `--workers` to change
-the number of active sites; this is separate from input batch size.
+Choose `--sheet Road_SLK` or `--sheet Coordinates` for the other template layouts. `--workers` controls concurrent imagery extraction, `--config` selects the reviewed recipe, and `--project-root` allows execution from elsewhere. Use a new output directory for a new batch. The feature and model recipes are unchanged.
 
-| Option | Use |
-| --- | --- |
-| `--workers 5` | Change imagery concurrency |
-| `--sheet Name` | Select another input worksheet |
-| `--project-root PATH` | Run from outside the project directory |
-| `--config PATH` | Override `configs/prediction/workflow_v1.json` |
+## 3. Read the result
 
-Settings are documented in [configs](../../configs/README.md).
-`python -m pedflow.prediction` accepts the same arguments.
+`predictions.xlsx` contains `Prediction_Output`, `Features` and `Metadata`. The main sheet retains the entered road reference, the prediction coordinates, matched road number/SLK/carriageway, road distance, location status, and two pedestrian/hour predictions. `Features` records the three model inputs plus extraction diagnostics. `predictions.manifest.json` records run provenance. `imagery.checkpoint.json` supports recovery. Rows retain input order; missing predictions remain blank rather than zero.
 
-## 3. Check results
+`location_status` describes road matching. `status` is `predicted`, `predicted_with_warning`, `not_predicted` or `prediction_failed`; `message` gives the reason. The command exits `0` when every row has both predictions, `2` when some rows are not predicted, and `1` for a run-level error.
 
-| File | Contents |
-| --- | --- |
-| `predictions.xlsx` | `Predictions`: observations, predictions and iRAP comparisons; `Features`: three model inputs and diagnostics; `Metadata`: CRS, versions, run details and source definitions |
-| `predictions.manifest.json` | Run ID/time, source descriptions, settings and model/recipe versions |
-| `imagery.checkpoint.json` | Saved imagery progress |
-
-Rows retain input order. Failed predictions and unavailable comparisons are blank,
-never zero-filled. `status` describes prediction; `comparison_status` describes
-the registered raw segment match. iRAP numeric references are copied from the
-client CSV; text labels come from the raw AusRAP workbook. Neither is substituted
-for measured counts or used as a model input. See the [table contract](../01_data_preparation/haoqi-shared_data_tables.md).
-
-| Status | Action |
-| --- | --- |
-| `predicted` | Prediction available |
-| `predicted_with_warning` | Read the message before using the result |
-| `not_predicted` | Check missing features or source failure |
-| `prediction_failed` | Check the reported model input/inference error |
-
-Exit codes: `0` all sites predicted, possibly with warnings; `2` some sites not
-predicted; `1` run failed. A failed rerun can leave earlier output files in place;
-check the exit code and manifest timestamp.
+Formal results contain no RAP estimates or observed counts. The 49 surveyed sites and RAP files can be used in a separate evaluation; their coverage does not limit where the released model can predict.
 
 ## 4. Resume
 
 ```bash
-pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directory outputs/predictions/run_002 --resume
+pedflow-predict --input data/processed/batch_input_dataset.xlsx --sheet Batch_Input --output-directory outputs/predictions/run_002 --resume
 ```
 
-Resume reuses completed imagery and retries failed or unavailable imagery. Records
-marked `needs_review` remain saved; use a new output directory to re-extract them.
-ABS is refreshed on every run. Changed locations or image recipes require a new
-checkpoint; reordering input and changing worker counts are allowed.
-`--resume` requires an existing checkpoint; it cannot start a fresh imagery run.
+Resume reuses completed imagery and retries failed imagery; ABS is refreshed. Changing locations or imagery recipes requires a new checkpoint. `--resume` needs an existing checkpoint and cannot start a fresh imagery run.
 
-If a crash leaves a checkpoint lock, remove it only after confirming the recorded
-process has stopped.
-
-## 5. Refresh comparison columns only
-
-```bash
-pedflow-predict --refresh-comparison --output-directory outputs/predictions/run_001
-```
-
-This local operation refreshes comparisons and upgrades the output layout. It preserves predictions, model inputs, run ID
-and inference times. No API call or model inference is performed. An optional
-`--input` may supply road hints but must identify the same locations as the saved
-run. This option cannot be combined with `--resume`.
-
-## Current limits
-
-Live sample validation and the dashboard connection remain pending. Historical
-training imagery lacks complete recipe provenance; see the
-[imagery reference](../02_feature_extraction/imagery_integration.md).
-Comparison coverage currently uses the 100 verified links in
-`data/processed/comparison_sites.csv`. New locations require verified source links
-to receive iRAP labels; missing comparisons never block inference. The 49 observed
-benchmark sites participated in training, so they are not an independent test set.
+The current 50 test points all match the local road snapshot. Live source/model validation for every new address remains a separate operational check, especially for ambiguous carriageways and locations beyond the 30 m road threshold.

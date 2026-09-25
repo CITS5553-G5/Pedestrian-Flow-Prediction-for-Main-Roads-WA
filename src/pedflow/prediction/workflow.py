@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import hashlib
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,8 +14,9 @@ from pedflow.exceptions import ContractError
 from pedflow.imagery.workflow import build_imagery_features
 from pedflow.modeling import simplify_abs_categories
 from pedflow.modeling.model import FEATURES
-from pedflow.prediction.comparison import FEATURE_COLUMNS, OUTPUT_SCHEMA_VERSION, add_comparisons
 from pedflow.prediction.config import load_settings
+from pedflow.prediction.location import RoadLocator, resolve_locations
+from pedflow.prediction.schema import FEATURE_COLUMNS, OUTPUT_COLUMNS, OUTPUT_SCHEMA_VERSION
 from pedflow.validation import (
     merge_source_features,
     validate_and_normalise_sites,
@@ -47,24 +49,49 @@ def predict_sites(
     checkpoint_path: str | Path | None = None,
     resume: bool = False,
     progress=None,
+    locator=None,
 ) -> PredictionResult:
     """One service for all interfaces; no training, fallback values or file export.
 
-    Sites require site_id, latitude, longitude and coordinate_crs='EPSG:4326'.
+    Sites require an ID and either WGS84 coordinates or road number plus SLK.
     Progress is the imagery callback (done, total, site_id, status). A checkpoint
     reuses imagery; ABS is refreshed on each run. Partial source failures keep
     their rows with null predictions. Invalid schemas/configurations fail the run.
     Library callers load environment credentials before calling this function.
     """
-    input_sites = sites.reset_index(drop=True).copy()
-    sites = validate_and_normalise_sites(sites).reset_index(drop=True)
-    # Keep road hints for reporting while extractors receive only validated locations.
-    input_sites[list(sites.columns)] = sites
-    started = datetime.now(UTC).isoformat()
     root = Path(project_root).resolve()
+    if locator is None:
+        locator = RoadLocator(root / "data/external_raw/main_roads_slk/road_slk.sqlite.gz")
+    snapshot_path = getattr(locator, "path", None)
+    snapshot_sha256 = (
+        hashlib.sha256(Path(snapshot_path).read_bytes()).hexdigest()
+        if snapshot_path is not None and Path(snapshot_path).is_file() else None
+    )
+    input_sites = resolve_locations(sites, locator=locator)
+    eligible = input_sites.latitude.notna() & input_sites.longitude.notna() & ~input_sites.location_status.isin(
+        ["road_reference_not_found", "ambiguous_carriageway", "road_coordinate_conflict", "road_lookup_failed"]
+    )
+    # A failed reverse lookup does not prevent coordinate-based feature extraction.
+    eligible |= input_sites.input_type.eq("coordinates")
+    sites = validate_and_normalise_sites(input_sites.loc[eligible]).reset_index(drop=True) if eligible.any() else None
+    started = datetime.now(UTC).isoformat()
     settings, context_config, imagery_config, model = load_settings(
         root, config_path, workers=workers
     )
+    if sites is None:
+        predictions = input_sites.reindex(columns=OUTPUT_COLUMNS).copy()
+        predictions["status"] = "not_predicted"
+        predictions["message"] = predictions.location_status
+        features = pd.DataFrame({"site_id": input_sites.site_id}).reindex(columns=FEATURE_COLUMNS)
+        return PredictionResult(predictions, features, {
+            "run_id": uuid4().hex, "workflow_version": settings["workflow_version"],
+            "output_schema_version": OUTPUT_SCHEMA_VERSION, "coordinate_crs": "EPSG:4326",
+            "model_version": model.model_version, "started_at_utc": started,
+            "finished_at_utc": datetime.now(UTC).isoformat(), "row_count": len(input_sites),
+            "prediction_units": "pedestrians_per_hour", "status_counts": {"not_predicted": len(input_sites)},
+            "configuration": settings, "location_status_counts": input_sites.location_status.value_counts().to_dict(),
+            "road_snapshot_sha256": snapshot_sha256,
+        })
     context = build_context_features(sites, context_config, root)
     context.features = validate_feature_table(
         context.features,
@@ -85,14 +112,18 @@ def predict_sites(
     features = merge_source_features(sites, [context.features, imagery.features])
     features["abs_mb_category_simple"] = simplify_abs_categories(features.abs_mb_category_2021)
     rows = []
+    resolved = input_sites.set_index("site_id", drop=False)
     for index, feature in features.iterrows():
+        location = resolved.loc[sites.iloc[index].site_id]
         result = {
-            **sites.iloc[index].to_dict(),
+            **location.to_dict(),
             **dict.fromkeys(PREDICTION_COLUMNS, float("nan")),
             "status": "not_predicted",
             "message": "",
         }
         blocked, warnings = [], []
+        if location.location_status != "matched":
+            warnings.append(f"road:{location.location_status}")
         abs_status = _text(feature.abs_match_status)
         if abs_status not in {"matched", "matched_no_local_counts"}:
             blocked.append(f"abs:{abs_status or 'missing_status'}")
@@ -125,8 +156,16 @@ def predict_sites(
                 result["status"] = "prediction_failed"
                 result["message"] = str(exc)
         rows.append(result)
-    predictions, _, comparison_metadata = add_comparisons(pd.DataFrame(rows), input_sites, root)
-    features = features.reindex(columns=FEATURE_COLUMNS)
+    predictions = pd.DataFrame(rows).set_index("site_id", drop=False)
+    for location in input_sites.loc[~eligible].to_dict("records"):
+        predictions.loc[location["site_id"]] = {
+            **location, **dict.fromkeys(PREDICTION_COLUMNS, float("nan")),
+            "status": "not_predicted", "message": location["location_status"],
+        }
+    predictions = predictions.loc[input_sites.site_id].reset_index(drop=True).reindex(columns=OUTPUT_COLUMNS)
+    features = pd.DataFrame({"site_id": input_sites.site_id}).merge(
+        features.reindex(columns=FEATURE_COLUMNS), on="site_id", how="left", validate="one_to_one"
+    ).reindex(columns=FEATURE_COLUMNS)
     return PredictionResult(
         predictions=predictions,
         features=features,
@@ -138,12 +177,13 @@ def predict_sites(
             "model_version": model.model_version,
             "started_at_utc": started,
             "finished_at_utc": datetime.now(UTC).isoformat(),
-            "row_count": len(sites),
+            "row_count": len(input_sites),
             "prediction_units": "pedestrians_per_hour",
             "status_counts": predictions.status.value_counts().to_dict(),
             "configuration": settings,
             "context": build_manifest(context),
             "imagery": imagery.metadata,
-            "comparison": comparison_metadata,
+            "location_status_counts": input_sites.location_status.value_counts().to_dict(),
+            "road_snapshot_sha256": snapshot_sha256,
         },
     )
