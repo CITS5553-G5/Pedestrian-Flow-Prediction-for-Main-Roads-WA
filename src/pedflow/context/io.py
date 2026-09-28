@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from datetime import UTC, datetime
 from pathlib import Path
-from uuid import uuid4
 
 import pandas as pd
 
 from pedflow.context.contracts import ContextBuildResult, ContextPipelineConfig
-from pedflow.exceptions import ConfigurationError
+from pedflow.io import atomic_path, read_sites, write_json_atomic
 from pedflow.paths import resolve_project_path
 
 
@@ -21,46 +19,13 @@ def read_batch_input(
 ) -> pd.DataFrame:
     """Read a batch table and add its documented WGS84 CRS when omitted."""
 
-    path = resolve_project_path(project_root, config.input_path)
-    if not path.is_file():
-        raise ConfigurationError(f"Configured batch input does not exist: {path}")
-
-    suffix = path.suffix.lower()
-    if suffix in {".xlsx", ".xls"}:
-        frame = pd.read_excel(
-            path,
-            sheet_name=config.input_sheet,
-            dtype={"site_id": "string", "coordinate_crs": "string"},
-        )
-    elif suffix == ".csv":
-        frame = pd.read_csv(
-            path,
-            dtype={"site_id": "string", "coordinate_crs": "string"},
-        )
-    elif suffix == ".parquet":
-        frame = pd.read_parquet(path)
-    else:
-        raise ConfigurationError(f"Unsupported batch input format: {path.suffix}")
-
-    if "coordinate_crs" not in frame.columns:
-        frame.insert(min(3, len(frame.columns)), "coordinate_crs", "EPSG:4326")
-    return frame
-
-
-def _temporary_path(target: Path) -> Path:
-    return target.with_name(f".{target.stem}.{uuid4().hex}.tmp{target.suffix}")
-
-
-def _write_atomic(target: Path, writer) -> None:
-    temporary = _temporary_path(target)
-    try:
-        writer(temporary)
-        temporary.replace(target)
-    finally:
-        temporary.unlink(missing_ok=True)
+    return read_sites(
+        resolve_project_path(project_root, config.input_path), sheet=config.input_sheet
+    )
 
 
 def _site_id_hash(frame: pd.DataFrame) -> str:
+    """Record the exact output population and order in the Context manifest."""
     serialised = "\n".join(frame["site_id"].astype(str)).encode("utf-8")
     return hashlib.sha256(serialised).hexdigest()
 
@@ -95,37 +60,22 @@ def write_context_outputs(
     """Write requested table formats and an always-present JSON manifest."""
 
     output_directory = resolve_project_path(project_root, config.output_directory)
-    output_directory.mkdir(parents=True, exist_ok=True)
     written: dict[str, Path] = {}
 
     if "xlsx" in config.output_formats:
         xlsx_path = output_directory / f"{config.output_stem}.xlsx"
-        _write_atomic(
-            xlsx_path,
-            lambda path: result.features.to_excel(
-                path,
-                sheet_name="Context_Features",
-                index=False,
-            ),
-        )
+        with atomic_path(xlsx_path) as temporary:
+            result.features.to_excel(temporary, sheet_name="Context_Features", index=False)
         written["xlsx"] = xlsx_path
 
     if "parquet" in config.output_formats:
         parquet_path = output_directory / f"{config.output_stem}.parquet"
-        _write_atomic(
-            parquet_path,
-            lambda path: result.features.to_parquet(path, index=False),
-        )
+        with atomic_path(parquet_path) as temporary:
+            result.features.to_parquet(temporary, index=False)
         written["parquet"] = parquet_path
 
     manifest_path = output_directory / f"{config.output_stem}.manifest.json"
     manifest = build_manifest(result)
-    _write_atomic(
-        manifest_path,
-        lambda path: path.write_text(
-            json.dumps(manifest, indent=2, ensure_ascii=False, default=str) + "\n",
-            encoding="utf-8",
-        ),
-    )
+    write_json_atomic(manifest_path, manifest)
     written["manifest"] = manifest_path
     return written

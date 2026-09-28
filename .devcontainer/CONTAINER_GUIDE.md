@@ -30,9 +30,9 @@ Environment creation uses Dev Containers so that Features and initialization com
 
 ## Runtime configuration and data
 
-Copy `.env.example` to `.env` at the repository root and fill in only the credentials required by the active experiment. Python code loads `/workspace/.env` explicitly with `python-dotenv`. Restart the command or notebook kernel after changing runtime settings. Keep `.env` local and out of Git.
+Copy `.env.example` to `.env` at the repository root and set `GOOGLE_MAPS_API_KEY` and `GEMINI_API_KEY`. The prediction command loads `/workspace/.env`. Keep this file local. Runtime settings are in `configs/prediction/`.
 
-Authorised source data belongs in `data/raw/`. Code uses repository-relative paths so that Python work also runs in a native Python 3.11 environment on Windows or macOS, as described in the repository README.
+Store data according to [the data directory guide](../data/README.md). For native Python 3.11 on Windows or macOS, see [setup](../docs/SETUP.md).
 
 ## Frontend
 

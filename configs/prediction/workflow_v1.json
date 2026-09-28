@@ -1,0 +1,10 @@
+{
+  "workflow_version": "prediction_v1",
+  "context_config": "configs/prediction/context_abs_v1.json",
+  "context_feature_set_version": "context_abs_v1",
+  "imagery_config": "configs/prediction/imagery_v1.json",
+  "imagery_recipe_sha256": "2a1e102ad8f4642345ed797462c1e09235bed9c35b10d157c988c90e229c637d",
+  "model_release": "src/pedflow/modeling/releases/pedestrian_linear_v1.json",
+  "model_version": "pedestrian-linear-v1",
+  "model_release_sha256": "f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042"
+}

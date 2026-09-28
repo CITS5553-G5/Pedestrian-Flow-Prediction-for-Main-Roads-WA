@@ -1,5 +1,11 @@
 # Haoqi's Stage 2 feature summary
 
+Runtime scope (20 September 2026): the selected linear model needs only the ABS
+category from Context. Formal extraction now uses `context_abs_v1` and the default
+ABS-only registry. The six-source catalogue below documents historical candidate
+features and reviewed research outputs; it is not the current prediction source
+list. Its configuration is preserved under `configs/research/`.
+
 These six approved notebooks prepare candidate context features for the same 49 project sites. Every table contains one row per `site_id` and can be joined to `data/processed/model_dataset.xlsx` using `site_id`. The previously reviewed combined context snapshot is `06_outputs/02_feature_extraction/02_00_haoqi_context_features.xlsx`; source-specific workbooks remain the traceable source outputs. The four approved fields from `06_outputs/02_feature_extraction/02_09_haoqi_overture_places_features.xlsx` are now integrated into the authoritative `Model_Data` table, while `overture_places_data_status` remains source QA only. No active table contains Google-derived POI fields.
 
 ## Feature dimensions

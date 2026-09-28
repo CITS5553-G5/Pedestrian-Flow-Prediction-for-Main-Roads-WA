@@ -1,0 +1,23 @@
+{
+  "feature_set_version": "context_abs_v1",
+  "input": {
+    "path": "data/processed/batch_input_dataset.xlsx",
+    "sheet": "Batch_Input"
+  },
+  "output": {
+    "directory": "outputs/context_features",
+    "stem": "batch_abs_context_features",
+    "formats": [
+      "xlsx",
+      "parquet"
+    ]
+  },
+  "sources": {
+    "abs_meshblock_sa1": {
+      "enabled": true,
+      "options": {
+        "counts_path": "data/external_raw/Mesh Block Counts, 2021.xlsx"
+      }
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "model_version": "pedestrian-linear-v1",
+  "model_type": "linear_log1p",
+  "features": ["commercial_buildings", "footpath_both_sides", "abs_mb_category_simple"],
+  "prediction_units": "pedestrians_per_hour",
+  "inverse_transform": "max(expm1(eta), 0)",
+  "numeric_preprocessing": {
+    "commercial_buildings": {
+      "median": 2,
+      "training_min": 0,
+      "training_max": 12
+    }
+  },
+  "categorical_preprocessing": {
+    "footpath_both_sides": {
+      "levels": ["FALSE", "TRUE"],
+      "mode": "FALSE"
+    },
+    "abs_mb_category_simple": {
+      "levels": ["Residential", "Other", "Commercial"],
+      "mode": "Residential"
+    }
+  },
+  "models": {
+    "cross": {
+      "target": "obs_peak_cross_ped_per_h",
+      "prediction_column": "pred_peak_cross_ped_per_h",
+      "intercept": 1.4402570081977895,
+      "commercial_buildings_coefficient": 0.26156686137941076,
+      "categorical_effects": {
+        "footpath_both_sides": {
+          "FALSE": 0,
+          "TRUE": 0.42608877551699104
+        },
+        "abs_mb_category_simple": {
+          "Residential": 0,
+          "Other": 0.16762921225336133,
+          "Commercial": 0.072446402453793038
+        }
+      }
+    },
+    "along": {
+      "target": "obs_peak_along_ped_per_h",
+      "prediction_column": "pred_peak_along_ped_per_h",
+      "intercept": 1.9802432609294673,
+      "commercial_buildings_coefficient": 0.29619151204234023,
+      "categorical_effects": {
+        "footpath_both_sides": {
+          "FALSE": 0,
+          "TRUE": 0.27267747427830846
+        },
+        "abs_mb_category_simple": {
+          "Residential": 0,
+          "Other": 0.11930264673603803,
+          "Commercial": -0.10733846802794623
+        }
+      }
+    }
+  },
+  "provenance": {
+    "source_bundle": "03_pedestrian_flow_final_model_bundle.rds",
+    "source_bundle_md5": "c5abe383c96e435384526511f57d7c8e",
+    "training_dataset": "model_dataset.xlsx",
+    "training_dataset_md5": "14da741c4a5cf75499703d9ec290f68c",
+    "training_observations": 49,
+    "training_roads": 28,
+    "export_runtime": "R version 4.5.3 (2026-03-11)",
+    "exporter": "tools/export_linear_model.R"
+  },
+  "evaluation": {
+    "method": "road_no grouped five-fold out-of-fold cross-validation",
+    "metrics": [
+      {
+        "Target": "Cross-road",
+        "Model": "Linear regression",
+        "R2": 0.42459545527785358,
+        "RMSE": 29.138061375841392,
+        "MAE": 15.180864535012445,
+        "Median_AE": 4.7403904808958011
+      },
+      {
+        "Target": "Along-road",
+        "Model": "Linear regression",
+        "R2": 0.7187739803597113,
+        "RMSE": 37.016684961596013,
+        "MAE": 20.260734806485306,
+        "Median_AE": 8.8358381569279381
+      }
+    ]
+  }
+}

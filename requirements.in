@@ -22,6 +22,7 @@ joblib
 # External sources and the active imagery prototype
 requests
 urllib3
+pillow
 google-genai
 pydantic
 python-dotenv

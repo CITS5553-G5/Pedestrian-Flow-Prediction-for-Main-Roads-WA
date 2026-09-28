@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from contextlib import ExitStack, closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -28,9 +29,7 @@ DEFAULT_COUNTS_PATH = "data/external_raw/Mesh Block Counts, 2021.xlsx"
 DEFAULT_COUNTS_SHEET = "Table 5"
 DEFAULT_COUNTS_HEADER_ROW = 6
 DEFAULT_STATE_CODE = 5
-DEFAULT_QUERY_URL = (
-    "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/MB/MapServer/0/query"
-)
+DEFAULT_QUERY_URL = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/MB/MapServer/0/query"
 DEFAULT_TIMEOUT_SECONDS = 60.0
 DEFAULT_USER_AGENT = "CITS5553-pedflow-abs-meshblock-sa1/1.0"
 
@@ -95,13 +94,17 @@ class MeshBlockCountSnapshot:
 
 
 def _option(config: SourceConfig, name: str, default: Any) -> Any:
+    """Use an explicit source option or the reviewed ABS default."""
     return config.options.get(name, default)
 
 
 def _positive_float(value: Any, option_name: str) -> float:
+    """Validate request timeouts before starting source requests."""
+    if isinstance(value, bool):
+        raise SourceExecutionError(f"ABS option '{option_name}' must be a positive number.")
     try:
         parsed = float(value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise SourceExecutionError(
             f"ABS option '{option_name}' must be a positive number."
         ) from exc
@@ -111,23 +114,23 @@ def _positive_float(value: Any, option_name: str) -> float:
 
 
 def _non_negative_int(value: Any, option_name: str) -> int:
+    """Reject fractional or nonfinite sheet/state settings."""
     if isinstance(value, bool):
         raise SourceExecutionError(f"ABS option '{option_name}' must be a non-negative integer.")
     try:
         numeric = float(value)
         parsed = int(numeric)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise SourceExecutionError(
             f"ABS option '{option_name}' must be a non-negative integer."
         ) from exc
     if not np.isfinite(numeric) or parsed < 0 or parsed != numeric:
-        raise SourceExecutionError(
-            f"ABS option '{option_name}' must be a non-negative integer."
-        )
+        raise SourceExecutionError(f"ABS option '{option_name}' must be a non-negative integer.")
     return parsed
 
 
 def _sha256(path: Path) -> str:
+    """Fingerprint the local source workbook without loading a second copy."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -186,9 +189,7 @@ def prepare_source(
 
     missing = set(SOURCE_COLUMNS).difference(snapshot.frame.columns)
     if missing:
-        raise SourceExecutionError(
-            f"ABS count table is missing required fields: {sorted(missing)}"
-        )
+        raise SourceExecutionError(f"ABS count table is missing required fields: {sorted(missing)}")
 
     state_code = _non_negative_int(
         _option(config, "state_code", DEFAULT_STATE_CODE),
@@ -199,9 +200,7 @@ def prepare_source(
 
     counts = snapshot.frame.loc[:, list(SOURCE_COLUMNS)].copy()
     counts["MB_CODE_2021"] = counts["MB_CODE_2021"].astype("string").str.strip()
-    counts["MB_CATEGORY_NAME_2021"] = (
-        counts["MB_CATEGORY_NAME_2021"].astype("string").str.strip()
-    )
+    counts["MB_CATEGORY_NAME_2021"] = counts["MB_CATEGORY_NAME_2021"].astype("string").str.strip()
     counts["State"] = pd.to_numeric(counts["State"], errors="coerce")
     counts = counts.loc[
         counts["State"].eq(state_code)
@@ -224,17 +223,13 @@ def prepare_source(
         raise SourceExecutionError(
             f"ABS count table contains duplicate MB_CODE_2021 values: {duplicates[:10]}"
         )
-    if counts["MB_CATEGORY_NAME_2021"].isna().any() or counts[
-        "MB_CATEGORY_NAME_2021"
-    ].eq("").any():
+    if counts["MB_CATEGORY_NAME_2021"].isna().any() or counts["MB_CATEGORY_NAME_2021"].eq("").any():
         raise SourceExecutionError("ABS count table contains blank Mesh Block categories.")
     # The official WA table includes special SHIPPING/MIGRATORY Mesh Blocks with
     # no land area and one record with a missing dwelling count. Preserve those
     # source records; a supplied site that actually matches incomplete attributes
     # is rejected later by source-specific output validation.
-    invalid_area = counts["AREA_ALBERS_SQKM"].notna() & counts[
-        "AREA_ALBERS_SQKM"
-    ].le(0)
+    invalid_area = counts["AREA_ALBERS_SQKM"].notna() & counts["AREA_ALBERS_SQKM"].le(0)
     if invalid_area.any():
         raise SourceExecutionError("ABS count table contains non-positive Mesh Block areas.")
     if counts[["Dwelling", "Person"]].lt(0).any().any():
@@ -278,6 +273,7 @@ def build_query_params(longitude: float, latitude: float) -> dict[str, Any]:
 
 
 def _empty_match(site_id: str) -> dict[str, Any]:
+    """Represent unresolved geography with missing values, never invented codes."""
     return {
         "site_id": site_id,
         "abs_match_status": pd.NA,
@@ -288,11 +284,14 @@ def _empty_match(site_id: str) -> dict[str, Any]:
 
 
 def _parse_query_payload(site_id: str, payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Distinguish no intersection, ambiguous matches and malformed responses."""
     result = _empty_match(site_id)
     if "error" in payload:
         raise ValueError("ABS ArcGIS service returned an error object.")
 
-    matches = payload.get("features", [])
+    if "features" not in payload:
+        raise ValueError("ABS ArcGIS response omitted features.")
+    matches = payload["features"]
     if not isinstance(matches, list):
         raise TypeError("ABS ArcGIS response field 'features' is not a list.")
     if len(matches) == 0:
@@ -300,9 +299,7 @@ def _parse_query_payload(site_id: str, payload: Mapping[str, Any]) -> dict[str, 
         return result
     if len(matches) > 1:
         result["abs_match_status"] = "multiple_matches"
-        result["abs_error_message"] = (
-            f"ABS returned {len(matches)} intersecting Mesh Blocks."
-        )
+        result["abs_error_message"] = f"ABS returned {len(matches)} intersecting Mesh Blocks."
         return result
 
     match = matches[0]
@@ -340,34 +337,37 @@ def query_meshblock_codes(
         "timeout_seconds",
     )
 
-    active_session = session or requests.Session()
-    if session is None:
-        active_session.headers.update(
-            {"User-Agent": str(_option(config, "user_agent", DEFAULT_USER_AGENT))}
-        )
-
     rows: list[dict[str, Any]] = []
-    for row in sites.itertuples(index=False):
-        site_id = str(row.site_id)
-        try:
-            response = active_session.get(
-                query_url,
-                params=build_query_params(row.longitude, row.latitude),
-                timeout=timeout,
+    # Close the session we own; injected sessions remain the caller's responsibility.
+    with ExitStack() as stack:
+        active_session = session if session is not None else stack.enter_context(requests.Session())
+        if session is None:
+            active_session.headers.update(
+                {"User-Agent": str(_option(config, "user_agent", DEFAULT_USER_AGENT))}
             )
-            response.raise_for_status()
-            payload = response.json()
-            if not isinstance(payload, Mapping):
-                raise TypeError("ABS ArcGIS response is not a JSON object.")
-            rows.append(_parse_query_payload(site_id, payload))
-        except Exception as exc:  # noqa: BLE001 - each site must retain a safe QA row
-            result = _empty_match(site_id)
-            result["abs_match_status"] = "request_failed"
-            # Do not expose raw responses, request URLs, coordinates, or secrets in output.
-            result["abs_error_message"] = (
-                f"{type(exc).__name__}: ABS Mesh Block request failed."
-            )
-            rows.append(result)
+        for row in sites.itertuples(index=False):
+            site_id = str(row.site_id)
+            try:
+                with closing(
+                    active_session.get(
+                        query_url,
+                        params=build_query_params(row.longitude, row.latitude),
+                        timeout=timeout,
+                    )
+                ) as response:
+                    response.raise_for_status()
+                    payload = response.json()
+                if not isinstance(payload, Mapping):
+                    raise TypeError("ABS ArcGIS response is not a JSON object.")
+                rows.append(_parse_query_payload(site_id, payload))
+            except Exception as exc:  # noqa: BLE001 - each site must retain a safe QA row
+                result = _empty_match(site_id)
+                result["abs_match_status"] = "request_failed"
+                # Expose the error class, never a raw URL or provider response.
+                result["abs_error_message"] = (
+                    f"{type(exc).__name__}: ABS Mesh Block request failed."
+                )
+                rows.append(result)
 
     matches = pd.DataFrame(rows, columns=list(API_COLUMNS))
     matches["site_id"] = matches["site_id"].astype("string")
@@ -418,8 +418,7 @@ def build_features(
     )
 
     missing_local_counts = (
-        features["abs_match_status"].eq("matched")
-        & features["abs_mb_category_2021"].isna()
+        features["abs_match_status"].eq("matched") & features["abs_mb_category_2021"].isna()
     )
     features.loc[missing_local_counts, "abs_match_status"] = "matched_no_local_counts"
     features.loc[missing_local_counts, "abs_error_message"] = (
@@ -428,9 +427,7 @@ def build_features(
 
     valid_area = features["abs_mb_area_sqkm_2021"].gt(0)
     features["abs_mb_dwellings_per_sqkm_2021"] = (
-        features["abs_mb_dwellings_2021"]
-        .div(features["abs_mb_area_sqkm_2021"])
-        .where(valid_area)
+        features["abs_mb_dwellings_2021"].div(features["abs_mb_area_sqkm_2021"]).where(valid_area)
     )
     features["abs_mb_persons_per_sqkm_2021"] = (
         features["abs_mb_persons_usual_resident_2021"]
@@ -467,9 +464,7 @@ def validate_source_specific(
         "request_failed",
         "matched_no_local_counts",
     }
-    unexpected_statuses = set(features["abs_match_status"].dropna()).difference(
-        allowed_statuses
-    )
+    unexpected_statuses = set(features["abs_match_status"].dropna()).difference(allowed_statuses)
     if unexpected_statuses:
         raise SourceExecutionError(
             f"ABS features contain unexpected statuses: {sorted(unexpected_statuses)}"
@@ -490,10 +485,15 @@ def validate_source_specific(
         raise SourceExecutionError("Matched ABS rows contain missing feature values.")
     if features.loc[matched, "abs_mb_area_sqkm_2021"].le(0).any():
         raise SourceExecutionError("Matched ABS rows contain non-positive areas.")
-    if features.loc[
-        matched,
-        ["abs_mb_dwellings_2021", "abs_mb_persons_usual_resident_2021"],
-    ].lt(0).any().any():
+    if (
+        features.loc[
+            matched,
+            ["abs_mb_dwellings_2021", "abs_mb_persons_usual_resident_2021"],
+        ]
+        .lt(0)
+        .any()
+        .any()
+    ):
         raise SourceExecutionError("Matched ABS rows contain negative counts.")
 
     for column in ("abs_mb_code_2021", "abs_sa1_code_2021"):
@@ -506,9 +506,9 @@ def validate_source_specific(
     expected_dwelling_density = features.loc[matched, "abs_mb_dwellings_2021"].div(
         features.loc[matched, "abs_mb_area_sqkm_2021"]
     )
-    expected_person_density = features.loc[
-        matched, "abs_mb_persons_usual_resident_2021"
-    ].div(features.loc[matched, "abs_mb_area_sqkm_2021"])
+    expected_person_density = features.loc[matched, "abs_mb_persons_usual_resident_2021"].div(
+        features.loc[matched, "abs_mb_area_sqkm_2021"]
+    )
     if not np.allclose(
         features.loc[matched, "abs_mb_dwellings_per_sqkm_2021"],
         expected_dwelling_density,

@@ -27,7 +27,7 @@ def find_project_root(start: Path | None = None) -> Path:
     )
 
 
-def resolve_project_path(project_root: Path, configured_path: str) -> Path:
+def resolve_project_path(project_root: Path, configured_path: str | Path) -> Path:
     """Resolve a configuration path relative to the project root."""
 
     path = Path(configured_path)

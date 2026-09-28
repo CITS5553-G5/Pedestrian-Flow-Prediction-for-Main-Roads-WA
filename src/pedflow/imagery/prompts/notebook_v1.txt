@@ -1,0 +1,33 @@
+
+  Analyze this aerial/satellite and street view image of a road segment.
+  Identify features that may be useful for predicting pedestrian peak-flow.
+
+  Return ONLY valid JSON using this structure:
+
+  {
+    "footpath_both_sides": true,
+    "footpath_one_side": true,
+    "pedestrian_crossings": 1,
+    "commercial_buildings": 6,
+    "residential_buildings": 12,
+    "industrial_buildings": 0,
+    "parking_areas": 2,
+    "fencing_barriers": true,
+    "railway_station": true,
+    "bus_stops": true,
+    "overpass_bridge": true,
+    "park_bushland_reserve": true,
+    "shared_pedestrian_and_cycle_path": true
+  }
+
+  Main Point/Rules:
+  - All images per request are within the same road segment
+  - Only report visible features that can be clearly seen in the image.
+  - Do NOT infer features that cannot reasonably be observed.
+  - Use null when a feature cannot be determined from the image.
+  - Use 0 when a countable feature is clearly not visible.
+  - Use true or false for binary features.
+  - Do not use "NA", "N/A", or other text values.
+  - Counts should be integers when countable.
+  - Disregard any repeated images
+  

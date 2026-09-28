@@ -21,6 +21,10 @@ class FakeResponse:
     def __init__(self, payload, error=None):
         self.payload = payload
         self.error = error
+        self.closed = False
+
+    def close(self):
+        self.closed = True
 
     def raise_for_status(self):
         if self.error is not None:

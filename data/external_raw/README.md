@@ -1,15 +1,5 @@
 # External source snapshots
 
-This directory holds only selected snapshots of external sources used by a documented feature workflow. Files are not approved for Git merely because they were downloaded into this directory.
+`Mesh Block Counts, 2021.xlsx` supports ABS location features. `main_roads_slk/road_slk.sqlite.gz` is the local prediction-location reference: 73,275 measured road lines from the [Main Roads WA Road Network SLK Search dataset](https://catalogue.data.wa.gov.au/dataset/mrwa-road-network-slk-search), downloaded on 25 September 2026. It contains road numbers, SLK measures and carriageways, not RAP pedestrian counts. The predictor expands it to the system temporary directory; `python scripts/download_road_slk.py` refreshes the complete public snapshot without sending prediction locations.
 
-Each shared source should have a stable provider directory and, when the source changes over time, a dated snapshot directory. Its corresponding guidance under `docs/feature_sources/` should record the provider, source URL, retrieval or release date, licence, expected files and the notebook that consumes it.
-
-Before adding a snapshot to Git, confirm all of the following:
-
-1. The source licence and client arrangements permit sharing it with approved collaborators in this private repository.
-2. The file is required to reproduce the current project workflow.
-3. A download script or external approved storage location would not be a better option.
-4. The file size and expected update frequency are suitable for ordinary Git.
-5. No credentials, private cache files or disposable partial downloads are included.
-
-Temporary `.part` downloads, imagery payloads and local caches must not be committed. Treat existing tracked snapshots as immutable; add a new dated snapshot rather than silently replacing source evidence.
+The Commissioner of Main Roads is the creator and owner of that road data, available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) with the source's disclaimer of warranties and limitation of liability. Review source changes before replacing the snapshot used for a recorded run. `microsoft_building_footprints/2026-07-24/` holds building tiles and `dataset-links.csv`; `overture_places/2026-08-19.0/` holds nearby food and shopping source files; `pta_stops/2026-08-24/` and `2026-08-25/` hold transport snapshots; `wa_education/2026_S1/` holds `currentactiveschools20261.xlsx`; `wa_health_establishments/2026-08-24/` holds health source files. These dated folders are research extraction inputs. Keep source files and their dates intact.

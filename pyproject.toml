@@ -11,9 +11,15 @@ requires-python = ">=3.11"
 
 [project.scripts]
 pedflow-context = "pedflow.context.__main__:main"
+pedflow-imagery = "pedflow.imagery.__main__:main"
+pedflow-predict = "pedflow.prediction.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"pedflow.modeling" = ["releases/*.json"]
+"pedflow.imagery" = ["prompts/*.txt"]
 
 [tool.ruff]
 line-length = 100

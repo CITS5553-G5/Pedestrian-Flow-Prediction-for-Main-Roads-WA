@@ -1,13 +1,5 @@
-# Curated source inputs
+# Raw client sources
 
-The private team repository tracks only source inputs that are directly required by the current project workflow. Do not edit or overwrite these files during cleaning or analysis.
+`Ped_iRAP_merged.csv` contains client numeric pedestrian references; `AusRAP Data - Words - MSDS.xlsx` contains road segments and original categorical pedestrian bands; `Road_Network.csv` supports road and SLK checks. These files are source evidence and must not be overwritten by predictions.
 
-The tracked sources are:
-
-- `Ped_iRAP_merged.csv`, the compact client-derived target source used to check most site targets in `../processed/model_dataset.xlsx`;
-- `Road_Network.csv`, used to resolve Road Number and SLK intervals;
-- `AusRAP Data - Words - MSDS.xlsx`, used for road-segment matching and retained road attributes.
-
-The 147 macro-enabled observation workbooks, R linkage files and duplicate FST form are excluded from the current Git tree. The observation workbooks are already consolidated into the 49-site modelling table and are only required when the team needs to reconstruct or audit the target aggregation. Keep them in approved archival storage; do not copy them into a public service.
-
-Candidate PBI index files are also excluded until the team selects them as model features and implements a reproducible join. Write approved, cleaned and feature-engineered forms to `../processed/`. Keep disposable intermediate files outside `data/` and Git.
+`Obs Count Data/` holds the original 250303 South West, 250341 Kimberley and 260335 vulnerable-road-user survey batches used to reconcile the 49 observed modelling targets. `R scripts for process and linkage/` holds the client's original processing and linkage scripts. These are audit evidence; the formal prediction input is in `../processed/` and may contain other locations.

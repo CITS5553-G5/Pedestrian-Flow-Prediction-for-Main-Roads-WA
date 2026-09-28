@@ -1,0 +1,11 @@
+{
+  "feature_set_version": "imagery_notebook_v1",
+  "model": "gemini-3.7-flash",
+  "max_workers": 50,
+  "maps_requests_per_minute": null,
+  "llm_requests_per_minute": null,
+  "request_timeout_seconds": 60,
+  "llm_timeout_seconds": 120,
+  "max_attempts": 4,
+  "sampling_offset_m": 50
+}

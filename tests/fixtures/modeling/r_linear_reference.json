@@ -1,0 +1,718 @@
+{
+  "model_version": "pedestrian-linear-v1",
+  "source_bundle_md5": "c5abe383c96e435384526511f57d7c8e",
+  "reference_method": "R stats::predict.lm with saved preprocessing, expm1 and pmax",
+  "cases": [
+    {
+      "site_id": "250303-01",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "250303-02",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.6444125546794446,
+      "pred_peak_along_ped_per_h": 9.7212031334587596
+    },
+    {
+      "site_id": "250303-03",
+      "commercial_buildings": 6,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 35.722004911369936,
+      "pred_peak_along_ped_per_h": 62.394205045500883
+    },
+    {
+      "site_id": "250303-04",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 4.8959771067252191,
+      "pred_peak_along_ped_per_h": 7.750372797966854
+    },
+    {
+      "site_id": "250303-05",
+      "commercial_buildings": 8,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 55.335623383333825,
+      "pred_peak_along_ped_per_h": 90.388016879942313
+    },
+    {
+      "site_id": "250303-06",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 4.4839402679234981,
+      "pred_peak_along_ped_per_h": 8.7418863854395141
+    },
+    {
+      "site_id": "250303-07",
+      "commercial_buildings": 8,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 55.335623383333825,
+      "pred_peak_along_ped_per_h": 90.388016879942313
+    },
+    {
+      "site_id": "250303-08",
+      "commercial_buildings": 6,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 30.054600199881758,
+      "pred_peak_along_ped_per_h": 55.264838815626739
+    },
+    {
+      "site_id": "250303-09",
+      "commercial_buildings": 4,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 20.763678175110318,
+      "pred_peak_along_ped_per_h": 34.057495074228981
+    },
+    {
+      "site_id": "250303-10",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 159.38778236250104,
+      "pred_peak_along_ped_per_h": 297.83166205606096
+    },
+    {
+      "site_id": "250303-11",
+      "commercial_buildings": 10,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 87.412591519962064,
+      "pred_peak_along_ped_per_h": 182.98161895425
+    },
+    {
+      "site_id": "250303-12",
+      "commercial_buildings": 7,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 42.369664229769825,
+      "pred_peak_along_ped_per_h": 66.960241575971054
+    },
+    {
+      "site_id": "250303-13",
+      "commercial_buildings": 4,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 17.404831823266854,
+      "pred_peak_along_ped_per_h": 30.114899354213332
+    },
+    {
+      "site_id": "250303-14",
+      "commercial_buildings": 4,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 17.404831823266854,
+      "pred_peak_along_ped_per_h": 30.114899354213332
+    },
+    {
+      "site_id": "250303-15",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.9922475563430817,
+      "pred_peak_along_ped_per_h": 7.1624625592122477
+    },
+    {
+      "site_id": "250303-16",
+      "commercial_buildings": 3,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 14.23343632738697,
+      "pred_peak_along_ped_per_h": 19.78344597616519
+    },
+    {
+      "site_id": "250303-17",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "250341-01",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 5.4646300282756206,
+      "pred_peak_along_ped_per_h": 8.5154875083722033
+    },
+    {
+      "site_id": "250341-02",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.9922475563430817,
+      "pred_peak_along_ped_per_h": 7.1624625592122477
+    },
+    {
+      "site_id": "250341-03",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.9922475563430817,
+      "pred_peak_along_ped_per_h": 7.1624625592122477
+    },
+    {
+      "site_id": "250341-04",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "250341-05",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "250341-06",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 5.4847488023082906,
+      "pred_peak_along_ped_per_h": 9.9762892074081986
+    },
+    {
+      "site_id": "250341-07",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "260335-28",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "260335-29",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 5.4646300282756206,
+      "pred_peak_along_ped_per_h": 8.5154875083722033
+    },
+    {
+      "site_id": "260335-30",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "260335-31",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 7.4234538761220197,
+      "pred_peak_along_ped_per_h": 13.760119742134911
+    },
+    {
+      "site_id": "260335-32",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 7.3973203171709017,
+      "pred_peak_along_ped_per_h": 11.795739286239765
+    },
+    {
+      "site_id": "260335-33",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 7.4234538761220197,
+      "pred_peak_along_ped_per_h": 13.760119742134911
+    },
+    {
+      "site_id": "260335-34",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "260335-35",
+      "commercial_buildings": 9,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 72.177934815790806,
+      "pred_peak_along_ped_per_h": 121.89199443048435
+    },
+    {
+      "site_id": "260335-36",
+      "commercial_buildings": 3,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 8.2530903936381783,
+      "pred_peak_along_ped_per_h": 16.616179984933158
+    },
+    {
+      "site_id": "260335-37",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "260335-38",
+      "commercial_buildings": 5,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 17.462110066714974,
+      "pred_peak_along_ped_per_h": 34.891606569894869
+    },
+    {
+      "site_id": "260335-39",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "260335-40",
+      "commercial_buildings": 4,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 20.763678175110318,
+      "pred_peak_along_ped_per_h": 34.057495074228981
+    },
+    {
+      "site_id": "260335-41",
+      "commercial_buildings": 3,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 8.9483230053502147,
+      "pred_peak_along_ped_per_h": 14.823233411410055
+    },
+    {
+      "site_id": "260335-42",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 4.4839402679234981,
+      "pred_peak_along_ped_per_h": 8.7418863854395141
+    },
+    {
+      "site_id": "260335-43",
+      "commercial_buildings": 4,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 20.763678175110318,
+      "pred_peak_along_ped_per_h": 34.057495074228981
+    },
+    {
+      "site_id": "260335-44",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "260335-45",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 4.4839402679234981,
+      "pred_peak_along_ped_per_h": 8.7418863854395141
+    },
+    {
+      "site_id": "260335-46",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "260335-47",
+      "commercial_buildings": 6,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 32.38789317381412,
+      "pred_peak_along_ped_per_h": 49.53829367073218
+    },
+    {
+      "site_id": "260335-48",
+      "commercial_buildings": 1,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 4.4839402679234981,
+      "pred_peak_along_ped_per_h": 8.7418863854395141
+    },
+    {
+      "site_id": "260335-49",
+      "commercial_buildings": 3,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 8.2530903936381783,
+      "pred_peak_along_ped_per_h": 16.616179984933158
+    },
+    {
+      "site_id": "260335-50",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.9922475563430817,
+      "pred_peak_along_ped_per_h": 7.1624625592122477
+    },
+    {
+      "site_id": "260335-51",
+      "commercial_buildings": 4,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 11.92251134700888,
+      "pred_peak_along_ped_per_h": 20.277939697737839
+    },
+    {
+      "site_id": "260335-52",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "training",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "grid-1",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "grid-2",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "grid-3",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 96.422709908681355,
+      "pred_peak_along_ped_per_h": 252.29160284648907
+    },
+    {
+      "site_id": "grid-4",
+      "commercial_buildings": 13,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 125.54857241509218,
+      "pred_peak_along_ped_per_h": 339.6082253343111
+    },
+    {
+      "site_id": "grid-5",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 5.4646300282756206,
+      "pred_peak_along_ped_per_h": 8.5154875083722033
+    },
+    {
+      "site_id": "grid-6",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 9.9078150181442659,
+      "pred_peak_along_ped_per_h": 16.206784595887616
+    },
+    {
+      "site_id": "grid-7",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 148.17917798178127,
+      "pred_peak_along_ped_per_h": 331.69257977198595
+    },
+    {
+      "site_id": "grid-8",
+      "commercial_buildings": 13,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 192.77835029786127,
+      "pred_peak_along_ped_per_h": 446.38091553199979
+    },
+    {
+      "site_id": "grid-9",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 3.9922475563430817,
+      "pred_peak_along_ped_per_h": 7.1624625592122477
+    },
+    {
+      "site_id": "grid-10",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 7.4234538761220197,
+      "pred_peak_along_ped_per_h": 13.760119742134911
+    },
+    {
+      "site_id": "grid-11",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 114.20216678748892,
+      "pred_peak_along_ped_per_h": 284.38640019518272
+    },
+    {
+      "site_id": "grid-12",
+      "commercial_buildings": 13,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 148.64344309193723,
+      "pred_peak_along_ped_per_h": 382.76698719041667
+    },
+    {
+      "site_id": "grid-13",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 6.6444125546794446,
+      "pred_peak_along_ped_per_h": 9.7212031334587596
+    },
+    {
+      "site_id": "grid-14",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 11.898470245646042,
+      "pred_peak_along_ped_per_h": 18.387071105276288
+    },
+    {
+      "site_id": "grid-15",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 175.40409057792218,
+      "pred_peak_along_ped_per_h": 373.84834335514483
+    },
+    {
+      "site_id": "grid-16",
+      "commercial_buildings": 13,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Other",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 228.14252592381848,
+      "pred_peak_along_ped_per_h": 503.0689370072904
+    },
+    {
+      "site_id": "grid-17",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 3.5389849631224628,
+      "pred_peak_along_ped_per_h": 5.5071709566788121
+    },
+    {
+      "site_id": "grid-18",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 6.6586607634659396,
+      "pred_peak_along_ped_per_h": 10.766868369242637
+    },
+    {
+      "site_id": "grid-19",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 103.74258274775407,
+      "pred_peak_along_ped_per_h": 226.51198934264167
+    },
+    {
+      "site_id": "grid-20",
+      "commercial_buildings": 13,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 135.05682217444439,
+      "pred_peak_along_ped_per_h": 304.94166589581442
+    },
+    {
+      "site_id": "grid-21",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 5.9503511686851196,
+      "pred_peak_along_ped_per_h": 7.5470164358621794
+    },
+    {
+      "site_id": "grid-22",
+      "commercial_buildings": 2,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 10.727375662267026,
+      "pred_peak_along_ped_per_h": 14.455505629112011
+    },
+    {
+      "site_id": "grid-23",
+      "commercial_buildings": 12,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 159.38778236250104,
+      "pred_peak_along_ped_per_h": 297.83166205606096
+    },
+    {
+      "site_id": "grid-24",
+      "commercial_buildings": 13,
+      "footpath_both_sides": "TRUE",
+      "abs_mb_category_simple": "Commercial",
+      "case_kind": "category_grid",
+      "pred_peak_cross_ped_per_h": 207.3379215156522,
+      "pred_peak_along_ped_per_h": 400.84720276062819
+    },
+    {
+      "site_id": "fallback-1",
+      "commercial_buildings": null,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "fallback",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "fallback-2",
+      "commercial_buildings": 0,
+      "footpath_both_sides": null,
+      "abs_mb_category_simple": "Residential",
+      "case_kind": "fallback",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "fallback-3",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": null,
+      "case_kind": "fallback",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "fallback-4",
+      "commercial_buildings": null,
+      "footpath_both_sides": null,
+      "abs_mb_category_simple": null,
+      "case_kind": "fallback",
+      "pred_peak_cross_ped_per_h": 6.1234398300546129,
+      "pred_peak_along_ped_per_h": 12.100184119266128
+    },
+    {
+      "site_id": "fallback-5",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "Unseen",
+      "case_kind": "fallback",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    },
+    {
+      "site_id": "fallback-6",
+      "commercial_buildings": 0,
+      "footpath_both_sides": "FALSE",
+      "abs_mb_category_simple": "",
+      "case_kind": "fallback",
+      "pred_peak_cross_ped_per_h": 3.2217807098291007,
+      "pred_peak_along_ped_per_h": 6.244505075866698
+    }
+  ]
+}
