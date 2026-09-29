@@ -1,6 +1,7 @@
 # Setup
 
-Run commands from `03_Project`. Use Python 3.11.
+Run commands from the repository root (the folder containing `README.md` and
+`pyproject.toml`), regardless of its local folder name. Use Python 3.11.
 
 ## Create the environment
 

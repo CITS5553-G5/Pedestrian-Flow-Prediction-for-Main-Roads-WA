@@ -22,7 +22,7 @@ def find_project_root(start: Path | None = None) -> Path:
             return candidate
 
     raise ConfigurationError(
-        "Could not find the 03_Project root. Run the command from inside the project "
+        "Could not find the repository root. Run the command from within the "
         "repository or pass an explicit project root."
     )
 

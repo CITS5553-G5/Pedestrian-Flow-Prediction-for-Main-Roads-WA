@@ -17,7 +17,7 @@ cd Pedestrian-Flow-Prediction-for-Main-Roads-WA
 
 GitHub may ask you to sign in through a browser the first time.
 
-You can clone the repository into any normal folder on your computer. Team members do not need to use the same local path.
+You can clone the repository anywhere on your computer. Team members do not need to use the same local path or folder name. The `cd` command above uses Git's default folder name. If you specify a different folder name when cloning (or rename the folder later), use that name instead of `Pedestrian-Flow-Prediction-for-Main-Roads-WA` in the `cd` command. Run the remaining commands from the repository root, the folder containing this guide and `pyproject.toml`.
 
 ## 3. Open the project
 
@@ -26,6 +26,8 @@ In VS Code, select **File → Open Folder**, then open:
 ```text
 Pedestrian-Flow-Prediction-for-Main-Roads-WA
 ```
+
+If you chose a different local folder name, open that folder instead.
 
 If the VS Code terminal command is available, you can instead run:
 

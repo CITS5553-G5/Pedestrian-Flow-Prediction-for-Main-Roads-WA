@@ -1,6 +1,10 @@
 # Run predictions
 
-Run from `03_Project` after completing [setup](../SETUP.md). The current 50 rows in `data/processed/batch_input_dataset.xlsx` are test locations. A formal run reads the chosen processed input file and has no fixed location count.
+Run from the repository root (the folder containing `README.md` and
+`pyproject.toml`), regardless of its local folder name, after completing
+[setup](../SETUP.md). The current 50 rows in
+`data/processed/batch_input_dataset.xlsx` are test locations. A formal run
+reads the chosen processed input file and has no fixed location count.
 
 ## 1. Prepare locations
 

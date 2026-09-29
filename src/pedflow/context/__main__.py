@@ -48,7 +48,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--project-root",
         type=Path,
-        help="Explicit 03_Project root; normally discovered automatically.",
+        help="Explicit repository root; normally discovered automatically.",
     )
     parser.add_argument(
         "--list-sources",

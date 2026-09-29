@@ -1,7 +1,6 @@
 # Pedestrian Flow Prediction for Main Roads WA
 
-CITS5553 Group 5 — predict peak crossing and along-road pedestrian flows using
-the saved `pedestrian-linear-v1` models.
+CITS5553 Group 5 — predict peak crossing and along-road pedestrian flows
 
 ```text
 Location table → ABS + imagery → three selected features → model → predictions.xlsx
@@ -38,7 +37,8 @@ See the [code guide](src/pedflow/README.md) for module and script responsibiliti
 
 Install Python 3.11 and run all commands from the repository root, beside this
 README and `pyproject.toml`. Each teammate creates their own `.venv`; dependencies
-are installed from the shared `requirements.txt`.
+are installed from the shared `requirements.txt`. The local folder containing the
+repository can have any name.
 
 Windows PowerShell:
 
