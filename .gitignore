@@ -66,6 +66,8 @@ data/raw/R scripts for process and linkage/*
 !data/raw/R scripts for process and linkage/README.md
 data/raw/SS_all_index PBI 2010-2024 Download.xlsx
 data/raw/ST_all_index PBI 2010-2025 Download.xlsx
+data/processed/batch_input dataset.xlsx
+data/processed/model_dataset.xlsx
 
 # Generated prediction runs, model files and reports stay local.
 outputs/
