@@ -32,10 +32,9 @@ dist/
 *.part
 *.inspect.ndjson
 
-# Private-team data policy
-# Only source files directly used by the current feature/model pipeline,
-# approved processed datasets and shared schemas are versioned. Original survey
-# evidence and unselected candidate datasets remain in approved archival storage.
+# Private data and downloaded source caches
+# Client source files, processed inputs and generated research outputs stay local.
+# Public source snapshots are handled separately below.
 data/cache/
 data/tmp/
 data/external_raw/overture_places/*
@@ -68,9 +67,7 @@ data/raw/R scripts for process and linkage/*
 data/raw/SS_all_index PBI 2010-2024 Download.xlsx
 data/raw/ST_all_index PBI 2010-2025 Download.xlsx
 
-# Approved shared outputs are versioned under 06_outputs/.
-# Keep the old path ignored so outdated or personal notebooks cannot add files
-# outside the reviewed shared-output directory.
+# Generated prediction runs, model files and reports stay local.
 outputs/
 models/
 reports/generated/
@@ -88,6 +85,7 @@ tmp/
 /docs/personal_notes/
 /docs/03_model_development/haoqi-feature_selection_recommendations.md
 /docs/03_model_development/haoqi-scientific_modeling_guide.md
+/docs/03_model_development/selected_model_explained_zh.md
 /01_data_preparation/README.md
 /02_feature_extraction/README.md
 
@@ -101,3 +99,18 @@ tmp/
 
 # Local backup copies of superseded work
 /archive/
+
+# Client source data: retain locally
+/data/raw/*
+!/data/raw/README.md
+
+# Private training data and prediction inputs
+/data/processed/*
+!/data/processed/README.md
+
+# Generated research results
+/06_outputs/*
+!/06_outputs/README.md
+
+# The audit notebook writes another copy beside itself
+/01_data_preparation/model_dataset_candidate.xlsx

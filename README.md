@@ -72,8 +72,7 @@ commands are added, rerun the editable installation (`pip install --no-deps -e .
 ### API keys
 
 If `.env` is absent, copy `.env.example` to `.env`. If it exists, fill its missing
-keys from the template. `.env` stays local; the shared template currently contains
-the imagery notebook's temporary test keys, to be removed after testing.
+keys from the template. `.env` stays local; supply your own API credentials.
 
 | Variable | Used for |
 | --- | --- |
@@ -89,6 +88,10 @@ Confirm that `data/external_raw/Mesh Block Counts, 2021.xlsx` exists. If stored
 elsewhere, update `sources.abs_meshblock_sa1.options.counts_path` in the Context
 configuration.
 
+Keep client source data and processed inputs local. See the
+[raw-data setup](data/raw/README.md) for the files needed for data auditing and
+model training; formal prediction does not require those client source files.
+
 | Configuration | Controls |
 | --- | --- |
 | `configs/prediction/context_abs_v1.json` | ABS source path, input worksheet and export formats |
@@ -103,8 +106,10 @@ changing feature or model versions.
 
 ### Prepare input
 
-`data/processed/batch_input_dataset.xlsx` contains the current 50-location test
-batch. Formal runs read the specified processed input, with any positive number
+When supplied locally, `data/processed/batch_input_dataset.xlsx` contains the
+current 50-location test batch. Otherwise, copy the input template to that path
+and replace its example rows with your locations.
+Formal runs read the specified processed input, with any positive number
 of locations. `data/templates/batch_input_template.xlsx` offers three input
 sheets: `Batch_Input` (both identifiers and coordinates), `Road_SLK` (road and
 SLK), and `Coordinates` (latitude/longitude). Select one sheet with `--sheet`.
