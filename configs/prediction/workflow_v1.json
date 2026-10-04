@@ -1,5 +1,6 @@
 {
-  "workflow_version": "prediction_v1",
+  "workflow_version": "prediction_v2",
+  "ausrap_source": "data/raw/AusRAP Data - Words - MSDS.xlsx",
   "context_config": "configs/prediction/context_abs_v1.json",
   "context_feature_set_version": "context_abs_v1",
   "imagery_config": "configs/prediction/imagery_v1.json",

@@ -1,4 +1,4 @@
-"""Formal location matching and output remain independent of RAP comparison data."""
+"""Location matching and v5 output preserve model and reference distinctions."""
 
 from pathlib import Path
 
@@ -76,7 +76,7 @@ def test_invalid_incomplete_location_fails_clearly():
         resolve_locations(pd.DataFrame({"site_id": ["x"], "road_no": ["H001"]}))
 
 
-def test_export_has_two_predictions_and_features_but_no_rap_columns(tmp_path):
+def test_export_has_two_predictions_and_nullable_reference_columns(tmp_path):
     prediction = pd.DataFrame([{
         "site_id": "new-location", "input_type": "coordinates", "latitude": -32.0,
         "longitude": 116.0, "location_status": "no_nearby_road",
@@ -90,5 +90,12 @@ def test_export_has_two_predictions_and_features_but_no_rap_columns(tmp_path):
     book = load_workbook(paths["workbook"])
     assert book.sheetnames == ["Metadata", "Prediction_Output", "Features"]
     assert tuple(c.value for c in book["Prediction_Output"][1][:len(OUTPUT_COLUMNS)]) == OUTPUT_COLUMNS
-    assert not any("irap" in column or "obs_" in column for column in OUTPUT_COLUMNS)
-    assert book["Prediction_Output"]["O2"].value == 12.0
+    assert len(OUTPUT_COLUMNS) == 29
+    assert book["Prediction_Output"]["O2"].value is None
+    assert book["Prediction_Output"]["P2"].value == 12.0
+    assert book["Prediction_Output"]["Q2"].value is None
+    assert book["Prediction_Output"]["W2"].value == 15.0
+    assert book["Prediction_Output"]["X2"].value is None
+    assert not any("mae" in c.lower() or "rmse" in c.lower() for c in OUTPUT_COLUMNS)
+    assert book["Metadata"]["B14"].value == "prediction_output_v5"
+    assert book["Metadata"]["A47"].value == "comparison_notes"

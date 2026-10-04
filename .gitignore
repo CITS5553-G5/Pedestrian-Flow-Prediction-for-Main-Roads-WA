@@ -86,8 +86,13 @@ tmp/
 # Personal guidance and working notes; not shared with the team
 /GIT_WORKFLOW_ZH.md
 /docs/personal_notes/
+/docs/handover/
 /docs/03_model_development/haoqi-feature_selection_recommendations.md
 /docs/03_model_development/haoqi-scientific_modeling_guide.md
+/docs/03_model_development/selected_model_explained_zh.md
+/docs/04_prediction_pipeline/ausrap_reference_integration_zh.md
+/docs/05_model_evaluation/irap_comparison_protocol_zh.md
+/docs/05_model_evaluation/irap_comparison_results_20261003_zh.md
 /01_data_preparation/README.md
 /02_feature_extraction/README.md
 

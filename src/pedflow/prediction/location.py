@@ -15,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 
 from pedflow.exceptions import ContractError
+from pedflow.flow import flow_category
 
 DEFAULT_SNAPSHOT = Path(__file__).resolve().parents[3] / "data/external_raw/main_roads_slk/road_slk.sqlite.gz"
 MATCH_RADIUS_M = 30.0
@@ -151,6 +152,11 @@ def resolve_locations(table: pd.DataFrame, locator=None) -> pd.DataFrame:
         raise ContractError("Segment end_slk must exceed start_slk.")
     if has_lat.any() and ((~sites.latitude[has_lat].between(-90, 90)) | (~sites.longitude[has_lat].between(-180, 180))).any():
         raise ContractError("Invalid WGS84 coordinates.")
+    for column in ("obs_peak_cross_ped_per_h", "obs_peak_along_ped_per_h"):
+        if column in sites:
+            invalid = sites[column].map(_present) & sites[column].map(flow_category).isna()
+            if invalid.any():
+                raise ContractError(f"{column} must be finite and non-negative when provided.")
     service = locator or RoadLocator()
     records = []
     for row in sites.to_dict("records"):
@@ -194,6 +200,7 @@ def resolve_locations(table: pd.DataFrame, locator=None) -> pd.DataFrame:
                         if not coordinates:
                             row["latitude"], row["longitude"] = position
                         row.update(matched_road_no=attributes["ROAD"], matched_slk_km=round(measured_slk, 3),
+                                   _matched_slk_km_exact=measured_slk,
                                    matched_cway=attributes["CWY"], road_offset_m=round(distance, 2),
                                    location_status="matched")
             else:
@@ -209,6 +216,7 @@ def resolve_locations(table: pd.DataFrame, locator=None) -> pd.DataFrame:
                         row["location_status"] = "ambiguous_road"
                     else:
                         row.update(matched_road_no=attributes["ROAD"], matched_slk_km=round(measured_slk, 3),
+                                   _matched_slk_km_exact=measured_slk,
                                    matched_cway=attributes["CWY"], road_offset_m=round(distance, 2),
                                    location_status="matched")
                 else:

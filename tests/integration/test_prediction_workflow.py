@@ -301,3 +301,78 @@ def test_excel_site_id_is_literal_text(sites, providers, tmp_path):
     cell = load_workbook(paths["workbook"])["Prediction_Output"]["A2"]
     assert cell.data_type == "s"
     assert cell.value == '=HYPERLINK("example")'
+
+
+@pytest.fixture
+def small_ausrap(tmp_path):
+    from pedflow.prediction.ausrap import SOURCE_COLUMNS, AusRAPIndex
+
+    source = tmp_path / "reference.xlsx"
+    pd.DataFrame([
+        ["H001", 356.3, 356.4, "S", "None", "1 pedestrian", "2 to 3 pedestrians"],
+        ["H001", 356.4, 356.5, "S", "2 to 3 pedestrians", "None", "None"],
+    ], columns=SOURCE_COLUMNS).to_excel(source, index=False)
+    return AusRAPIndex(source, tmp_path / "cache")
+
+
+def test_prediction_and_reference_share_one_export_without_accuracy_metrics(providers, small_ausrap, tmp_path):
+    providers[0].drop(index=[1, 2], inplace=True)
+    source = pd.DataFrame({"site_id": ["001"], "road_no": ["H001"], "slk_km": [356.36]})
+    result = predict_sites(source, ROOT, ausrap_index=small_ausrap)
+    row = result.predictions.iloc[0]
+    expected = load_model().predict(result.features).iloc[0]
+    assert row.pred_peak_cross_ped_per_h == expected.pred_peak_cross_ped_per_h
+    assert row.pred_peak_along_ped_per_h == expected.pred_peak_along_ped_per_h
+    assert row.existing_irap_cross_recoded_ped_per_h == 7.5
+    assert row.existing_irap_along_recoded_ped_per_h == 9
+    assert row.comparison_status == "matched"
+    assert pd.isna(row.obs_peak_cross_ped_per_h)
+    assert pd.isna(row.existing_ausrap_cross_category)
+    assert result.metadata["ausrap"]["accuracy_metrics_computed"] is False
+    assert result.metadata["ausrap"]["sites"][0]["matched_source_rows"] == [2, 3]
+    output = write_prediction_outputs(result, tmp_path / "output")
+    saved = pd.read_excel(output["workbook"], sheet_name="Prediction_Output")
+    assert saved.existing_irap_cross_recoded_ped_per_h.iloc[0] == 7.5
+    manifest = json.loads(output["manifest"].read_text())
+    assert manifest["ausrap"]["source"]["sha256"] == small_ausrap.sha256
+    assert manifest["prediction_basis"] == "released_model_inference"
+
+
+def test_missing_reference_source_does_not_block_inference(providers, tmp_path):
+    providers[0].drop(index=[1, 2], inplace=True)
+    source = pd.DataFrame({"site_id": ["001"], "road_no": ["H001"], "slk_km": [356.36]})
+    settings = json.loads((ROOT / "configs/prediction/workflow_v1.json").read_text())
+    settings["ausrap_source"] = str(tmp_path / "missing.xlsx")
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps(settings))
+    result = predict_sites(source, ROOT, config_path=config)
+    assert result.predictions.status.tolist() == ["predicted"]
+    assert result.predictions.comparison_status.tolist() == ["source_unavailable"]
+    assert result.predictions.pred_peak_cross_ped_per_h.notna().all()
+    assert result.predictions.existing_irap_cross_recoded_ped_per_h.isna().all()
+
+
+def test_reference_remains_available_when_model_features_fail(providers, small_ausrap):
+    providers[0].drop(index=[1, 2], inplace=True)
+    providers[0].loc[0, "abs_match_status"] = "request_failed"
+    source = pd.DataFrame({"site_id": ["001"], "road_no": ["H001"], "slk_km": [356.36]})
+    result = predict_sites(source, ROOT, ausrap_index=small_ausrap)
+    assert result.predictions.status.tolist() == ["not_predicted"]
+    assert result.predictions.pred_peak_cross_ped_per_h.isna().all()
+    assert result.predictions.comparison_status.tolist() == ["matched"]
+    assert result.predictions.existing_irap_cross_recoded_ped_per_h.tolist() == [7.5]
+
+
+def test_reference_survives_batch_with_no_resolved_prediction_locations(providers, small_ausrap, tmp_path):
+    locator = Mock(path=None)
+    locator.by_road.return_value = []
+    source = pd.DataFrame({"site_id": ["001"], "road_no": ["H001"], "slk_km": [356.36]})
+    result = predict_sites(source, ROOT, locator=locator, ausrap_index=small_ausrap)
+    providers[1].assert_not_called()
+    providers[3].assert_not_called()
+    assert result.predictions.status.tolist() == ["not_predicted"]
+    assert result.predictions.comparison_status.tolist() == ["matched"]
+    assert result.predictions.existing_irap_cross_recoded_ped_per_h.tolist() == [7.5]
+    assert result.predictions.pred_peak_cross_ped_per_h.isna().all()
+    output = write_prediction_outputs(result, tmp_path / "output")
+    assert json.loads(output["manifest"].read_text())["ausrap"]["status_counts"] == {"matched": 1}

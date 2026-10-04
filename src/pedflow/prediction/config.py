@@ -30,13 +30,14 @@ def load_settings(root: Path, path: str | Path, *, workers: int | None = None):
         }
         if (
             not isinstance(settings, dict)
-            or set(settings) != required
+            or not required.issubset(settings)
+            or set(settings) - required - {"ausrap_source"}
             or any(not isinstance(value, str) or not value.strip() for value in settings.values())
         ):
             raise ConfigurationError(
                 "Prediction configuration requires exactly the documented text fields."
             )
-        if settings["workflow_version"] != "prediction_v1":
+        if settings["workflow_version"] not in {"prediction_v1", "prediction_v2"}:
             raise ConfigurationError("Unsupported prediction workflow version.")
         context = load_context_config(resolve_project_path(root, settings["context_config"]))
         imagery = load_imagery_config(resolve_project_path(root, settings["imagery_config"]))

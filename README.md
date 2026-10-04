@@ -3,7 +3,7 @@
 CITS5553 Group 5 — predict peak crossing and along-road pedestrian flows
 
 ```text
-Location table → ABS + imagery → three selected features → model → predictions.xlsx
+Location table → ABS + imagery → three selected features → model → add AusRAP reference → predictions.xlsx
 ```
 
 ## Repository structure
@@ -139,8 +139,8 @@ runs the saved models. No additional script or model training is required.
 
 | Output | Contents |
 | --- | --- |
-| `predictions.xlsx` | `Prediction_Output`: location details and two pedestrian/hour predictions; `Features`: model inputs and source checks; `Metadata`: definitions and run details |
-| `predictions.manifest.json` | Run versions, settings and source descriptions |
+| `predictions.xlsx` | `Prediction_Output`: 29 columns with locations, model predictions and existing AusRAP references; `Features`: model inputs and source checks; `Metadata`: bilingual field definitions and run details |
+| `predictions.manifest.json` | Run versions, settings, source fingerprint and matched AusRAP source rows |
 | `imagery.checkpoint.json` | Saved imagery progress |
 
 Predictions are in **pedestrians/hour**. Check `status` and `message`; failed sites
@@ -154,10 +154,13 @@ pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directo
 Resume refreshes ABS, reuses completed imagery and retries failed imagery. See the
 [run guide](docs/04_prediction_pipeline/prediction_workflow.md) for recovery details.
 
-`Features` contains the model inputs and extraction diagnostics. Formal predictions
-do not read RAP pedestrian values or a fixed site register. Existing RAP and
-survey files remain available for separate model evaluation. The released model
-and its three predictors remain unchanged.
+`Features` contains the model inputs and extraction diagnostics. After model
+inference, the workflow adds existing categories, derived flow bands and
+**Existing iRAP flow estimate (recoded)** from the local AusRAP Words workbook.
+Check `comparison_status` and `comparison_notes` separately from prediction status.
+Unknown sites need no observed counts; the prediction workflow computes no
+MAE/RMSE and reads no fixed survey-site register. The released model and its
+three predictors remain unchanged. See the [integration record (中文)](docs/04_prediction_pipeline/ausrap_reference_integration_zh.md).
 
 ### Independent modules
 

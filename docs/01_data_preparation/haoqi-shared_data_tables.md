@@ -9,7 +9,7 @@ Identifiers are text; blanks mean unavailable, never zero.
 | `data/processed/model_dataset.xlsx` | Unchanged, authoritative 49-site research dataset |
 | `data/processed/batch_input_dataset.xlsx` | Current 50-location test batch; formal prediction input after its rows are replaced |
 | `data/templates/batch_input_template.xlsx` | Example input layout, not the formal prediction source |
-| `data/templates/prediction_output_template.xlsx` | Styled `prediction_output_v4` layout with empty result and feature tables |
+| `data/templates/prediction_output_template.xlsx` | Styled `prediction_output_v5` layout with 29 result columns and bilingual definitions |
 | `data/templates/model_dataset_template.xlsx` | Preserved original modelling foundation |
 
 Raw sources and the approved model dataset remain unchanged. Generated predictions
@@ -63,17 +63,19 @@ When both input pairs exist, entered coordinates drive feature extraction and th
 
 ## 3. Prediction output
 
-The formal output schema is `prediction_output_v4`; model recipe `prediction_v1` is unchanged. `data/templates/prediction_output_template.xlsx` retains its established workbook style and has `Metadata`, `Prediction_Output` and `Features`. The exporter writes exactly one row per submitted site, preserving input order.
+The formal output schema is `prediction_output_v5`; workflow `prediction_v2` adds reference matching while the released model and feature recipes remain unchanged. `data/templates/prediction_output_template.xlsx` retains its established workbook style and has `Metadata`, `Prediction_Output` and `Features`. The exporter writes exactly one row per submitted site, preserving input order.
 
 `Prediction_Output` contains the input type; supplied `road_no`, `slk_km`, `cway` and optional segment bounds; prediction `latitude`/`longitude`; matched road number, SLK and carriageway; offset from the measured road; location status; crossing and along-road predicted pedestrians/hour; prediction status; and message. For a road-only input, the prediction coordinate is interpolated from measured geometry. For coordinate input, the supplied coordinate remains the prediction point. Missing numbers stay blank.
 
-`Features` records the deployed inputs `commercial_buildings`, `footpath_both_sides` and `abs_mb_category_simple`, plus original ABS category/codes and ABS/imagery status diagnostics. `Metadata` and the JSON manifest record run ID, times, versions, units and source information. Formal output contains no surveyed counts, RAP estimates or text bands.
+`Prediction_Output` also includes optional observed counts, observed/model crossing categories, existing AusRAP crossing category, crossing and combined along-road bands, **Existing iRAP flow estimate (recoded)** for both directions, and independent comparison status/notes. It has 29 columns; the complete ordered bilingual dictionary is in the [integration record](../04_prediction_pipeline/ausrap_reference_integration_zh.md). No per-side flow columns or MAE/RMSE metrics are exported. Optional observations come only from the current input and stay blank for unknown sites.
 
-Formal prediction does not need a fixed site comparison register. The separate 49-site surveyed dataset and client RAP files remain available for model evaluation. The client numeric RAP estimates cover only some sites; raw AusRAP pedestrian categories should not be turned into arbitrary continuous counts.
+`Features` records the deployed inputs `commercial_buildings`, `footpath_both_sides` and `abs_mb_category_simple`, plus original ABS category/codes and ABS/imagery status diagnostics. `Metadata` and the JSON manifest record run ID, times, versions, units, source fingerprint, matched AusRAP rows and aggregation rules.
+
+Formal prediction does not need a fixed site comparison register. Reference matching reads the full AusRAP Words table rather than the 45-site client compact table. It uses the documented client recoding, preserving missing values and identifying derived intervals. Optional snapshot-bound `ausrap_record_id` input selects one original source record; without it, matching uses the prediction point ±0.1 km. The separate 49-site OOF evaluation retains its own sample eligibility and accuracy metrics.
 
 ## Application integration
 
-The backend should call `predict_sites` and use the returned `PredictionResult` for JSON and workbook export. Display location and prediction statuses with both numerical predictions; represent missing values as JSON null, never zero. The backend connection remains to be implemented.
+The backend should call `predict_sites` and use the returned `PredictionResult` for JSON and workbook export. Display location, prediction and comparison statuses with the model and reference values; represent missing values as JSON null, never zero. The backend connection remains to be implemented.
 
 ## Model development and cross-validation
 
