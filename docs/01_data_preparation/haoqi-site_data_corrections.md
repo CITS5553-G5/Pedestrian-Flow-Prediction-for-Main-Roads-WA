@@ -44,7 +44,7 @@ All pedestrian-flow values below are pedestrians per hour.
 
 After reconciliation, `model_dataset.xlsx` contains 49 unique `site_id` values, 49 unique `location_id` values and 49 rows with `qa_status = ready`.
 
-The primary model may use all 49 sites. Because `250341-04` and `260335-38` contain corrected target values, final evaluation must also repeat the selected modelling procedure without those two sites. This sensitivity check determines whether either correction materially changes the reported model conclusion.
+The primary model uses all 49 sites. A refit without corrected sites `250341-04` and `260335-38` was suggested to assess sensitivity, but is outside the current agreed delivery scope and has not been performed. No negligible-impact conclusion is claimed.
 
 ## Reproducibility rule
 

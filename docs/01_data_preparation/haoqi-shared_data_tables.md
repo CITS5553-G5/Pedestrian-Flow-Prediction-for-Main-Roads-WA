@@ -7,9 +7,9 @@ Identifiers are text; blanks mean unavailable, never zero.
 | File | Purpose |
 | --- | --- |
 | `data/processed/model_dataset.xlsx` | Unchanged, authoritative 49-site research dataset |
-| `data/processed/batch_input_dataset.xlsx` | Current 50-location test batch; formal prediction input after its rows are replaced |
-| `data/templates/batch_input_template.xlsx` | Example input layout, not the formal prediction source |
-| `data/templates/prediction_output_template.xlsx` | Styled `prediction_output_v5` layout with 29 result columns and bilingual definitions |
+| `data/processed/batch_input_dataset.xlsx` | Current 20-site customer-use simulation; runs accept any positive row count |
+| `data/templates/batch_input_template.xlsx` | Independent 100-site example and blank alternative input layouts |
+| `data/templates/prediction_output_template.xlsx` | Styled `prediction_output_v5` layout with 29 result columns and English definitions |
 | `data/templates/model_dataset_template.xlsx` | Preserved original modelling foundation |
 
 Raw sources and the approved model dataset remain unchanged. Generated predictions
@@ -50,16 +50,18 @@ The local file contains 49 unique `site_id` values and 49 unique `location_id` v
 - `260335-31` and `260335-32`: `M010` is Chidlow York Road, while Road Network places Coolgardie Esperance Highway SLK 366.85 and 165.45 on `H010`. The standardised identifiers therefore use `H010`; observed targets independently reproduce from the workbooks.
 - `260335-40`: the location is absent from `Ped_iRAP_merged.csv`, but all three raw workbooks and their embedded hourly values reproduce the stored targets. The internal workbook label also resolves the filename's “Norseman” wording to Northampton.
 
-Primary model development may use all 49 rows. Because two target values were corrected from the client compact table, final reporting must also include a sensitivity check that repeats the evaluation without `250341-04` and `260335-38`; this tests whether either correction materially changes the model conclusion.
+Primary model development uses all 49 rows. A refit excluding corrected sites `250341-04` and `260335-38` was suggested to assess correction sensitivity, but is outside the current agreed delivery scope and has not been performed. No negligible-impact conclusion is claimed.
 
 ## 2. Batch input
 
-`data/processed/batch_input_dataset.xlsx` contains 50 current test points, not a geographic or batch-size limit. Formal runs read the locations in the chosen processed input file. `data/templates/batch_input_template.xlsx` provides three alternative sheets: `Batch_Input` for both road reference and coordinates, `Road_SLK` for road reference only, and `Coordinates` for coordinates only. Each row needs a unique `site_id`.
+Prediction accepts any positive number of rows with unique `site_id` values. Batch size is determined by the selected input table, with no predefined count or observed/random split. `data/processed/batch_input_dataset.xlsx` currently contains 20 example locations: 10 observed and 10 random sites. The [current batch manifest](../../data/processed/batch_input_dataset.manifest.json) records this input snapshot. `data/templates/batch_input_template.xlsx` independently retains a 100-site example (49 observed and 51 random), with its original sampling recorded in the [historical preparation record](../../data/templates/batch_input_example_100.manifest.json). These counts identify delivered example snapshots only. Template and processed row counts need not match; observed values may be absent.
 
 Coordinates are a WGS84 `latitude`/`longitude` pair. A point road reference is `road_no` plus `slk_km`. An official segment uses `road_no`, `start_slk` and `end_slk`, with optional `cway`; its representative prediction point is the SLK midpoint on the measured road line. `slk_km` alone is a point and does not mean the start or end of a segment. The optional `coordinate_crs` defaults to `EPSG:4326`; other systems are rejected.
-The existing `road_name` and `local_government_name` columns in the 50-site test sheet are legacy notes; formal matching and modelling do not read them.
+The `road_name` and `local_government_name` columns are descriptive labels. `site_group`, `sampling_source_row` and `location_precheck` record group membership, sampling provenance and the dated location audit. These fields do not affect matching or modelling. `sampling_source_row` is not an exact-record override. The unchanged 29-column prediction output can be joined to these annotations by `site_id`.
 
-When both input pairs exist, entered coordinates drive feature extraction and the road reference is checked. A conflict blocks that row's prediction. A coordinate-only row retains its exact entered position and can still be predicted if no road can be matched; `location_status` records the issue. Road-only rows must resolve to a unique measured road point. The local [Main Roads SLK snapshot](../../data/external_raw/README.md) enables both directions without sending submitted locations to the road service.
+The current processed precheck has 18 matched locations and 2 carriageway ambiguities; the template example has 87 and 13 respectively. Their coordinates and blank observed-site `cway` remain unchanged. Valid entered coordinates allow inference with a road warning even when carriageway matching is ambiguous. See the [dataset notes](../../data/processed/README.md). Filtering or hiding worksheet rows does not restrict pipeline input; use a separate file for a subset.
+
+When both input pairs exist, entered coordinates drive feature extraction and the road reference is checked. A road/coordinate conflict blocks prediction; carriageway ambiguity alone permits prediction with a warning. A coordinate-only row retains its exact entered position and can still be predicted if no road can be matched. Road-only rows must resolve to a unique measured road point. The local [Main Roads SLK snapshot](../../data/external_raw/README.md) enables both directions without sending submitted locations to the road service.
 
 ## 3. Prediction output
 
@@ -67,7 +69,7 @@ The formal output schema is `prediction_output_v5`; workflow `prediction_v2` add
 
 `Prediction_Output` contains the input type; supplied `road_no`, `slk_km`, `cway` and optional segment bounds; prediction `latitude`/`longitude`; matched road number, SLK and carriageway; offset from the measured road; location status; crossing and along-road predicted pedestrians/hour; prediction status; and message. For a road-only input, the prediction coordinate is interpolated from measured geometry. For coordinate input, the supplied coordinate remains the prediction point. Missing numbers stay blank.
 
-`Prediction_Output` also includes optional observed counts, observed/model crossing categories, existing AusRAP crossing category, crossing and combined along-road bands, **Existing iRAP flow estimate (recoded)** for both directions, and independent comparison status/notes. It has 29 columns; the complete ordered bilingual dictionary is in the [integration record](../04_prediction_pipeline/ausrap_reference_integration_zh.md). No per-side flow columns or MAE/RMSE metrics are exported. Optional observations come only from the current input and stay blank for unknown sites.
+`Prediction_Output` also includes optional observed counts, observed/model crossing categories, existing AusRAP crossing category, crossing and combined along-road bands, **Existing iRAP flow estimate (recoded)** for both directions, and independent comparison status/notes. It has 29 columns; the complete ordered English dictionary is in the [integration record](../04_prediction_pipeline/ausrap_reference.md). No per-side flow columns or MAE/RMSE metrics are exported. Optional observations come only from the current input and stay blank for unknown sites.
 
 `Features` records the deployed inputs `commercial_buildings`, `footpath_both_sides` and `abs_mb_category_simple`, plus original ABS category/codes and ABS/imagery status diagnostics. `Metadata` and the JSON manifest record run ID, times, versions, units, source fingerprint, matched AusRAP rows and aggregation rules.
 

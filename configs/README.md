@@ -2,13 +2,15 @@
 
 | File | Purpose |
 | --- | --- |
-| `prediction/workflow_v1.json` | Bind the Context, Imagery and model versions and local AusRAP reference source |
+| [prediction/workflow_v1.json](prediction/workflow_v1.json) | Bind the Context, Imagery and model versions and local AusRAP reference source |
 | `prediction/context_abs_v1.json` | ABS source and counts workbook path |
 | `prediction/imagery_v1.json` | Gemini model, image sampling, concurrency, optional local pacing (`null` = disabled) and retries |
-| `research/` | Historical experiment settings |
+| [research](research/README.md) | Historical experiment settings |
 
 Paths inside configurations are relative to the project root. API keys belong in
 `.env`. Batch input and output paths are supplied to `pedflow-predict`.
+The [prediction configuration guide](prediction/README.md) records current versions,
+concurrency and standalone versus unified command settings.
 
 The Context configuration's `input` and `output` sections apply only to the
 standalone `pedflow-context` command; the unified command uses its own arguments.

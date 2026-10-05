@@ -1,5 +1,7 @@
-# Raw client sources
+# Raw source evidence
 
-`Ped_iRAP_merged.csv` contains client numeric pedestrian references; `AusRAP Data - Words - MSDS.xlsx` contains road segments and original categorical pedestrian bands; `Road_Network.csv` supports road and SLK checks. These files are source evidence and must not be overwritten by predictions.
+The versioned source files are `Ped_iRAP_merged.csv` (processed pedestrian references), `AusRAP Data - Words - MSDS.xlsx` (road segments and original categorical pedestrian bands), and `Road_Network.csv` (road and SLK checks). They are source evidence and must not be overwritten by prediction runs. Operational reference matching uses the AusRAP Words workbook; it does not need the original survey workbooks or the compact merged CSV.
 
-`Obs Count Data/` holds the original 250303 South West, 250341 Kimberley and 260335 vulnerable-road-user survey batches used to reconcile the 49 observed modelling targets. `R scripts for process and linkage/` holds the client's original processing and linkage scripts. These are audit evidence; the formal prediction input is in `../processed/` and may contain other locations.
+`Obs Count Data/` is the local storage location for the original 250303 South West, 250341 Kimberley and 260335 vulnerable-road-user survey batches. `R scripts for process and linkage/` holds original processing and linkage scripts. Their source files are Git-ignored and are not supplied by cloning the repository. Obtain required evidence from the project's approved data storage and preserve the source folder structure and filenames; a cleanup backup is not a replacement for original survey evidence.
+
+The [historical evaluation guide](../../docs/05_model_evaluation/reproduction.md) describes the exact research snapshot and six survey workbooks needed for strict provenance verification. The [preflight audit](../../04_prediction_pipeline/irap_comparison/evidence/preflight_audit.json) records relative evidence paths and fingerprints. New-location prediction instead uses the selected input described in [processed tables](../processed/README.md); observations are optional supplied fields.

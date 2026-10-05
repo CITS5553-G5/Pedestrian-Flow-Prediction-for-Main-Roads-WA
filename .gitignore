@@ -12,6 +12,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
@@ -68,7 +69,8 @@ data/raw/R scripts for process and linkage/*
 data/raw/SS_all_index PBI 2010-2024 Download.xlsx
 data/raw/ST_all_index PBI 2010-2025 Download.xlsx
 
-# Approved shared outputs are versioned under 06_outputs/.
+# Reviewed research outputs are versioned under 06_outputs/.
+# Reviewed prediction deliverables are versioned under 04_prediction_pipeline/.
 # Keep the old path ignored so outdated or personal notebooks cannot add files
 # outside the reviewed shared-output directory.
 outputs/
@@ -84,17 +86,14 @@ tmp/
 07_test/
 
 # Personal guidance and working notes; not shared with the team
-/GIT_WORKFLOW_ZH.md
+/GIT_WORKFLOW_*.md
 /docs/personal_notes/
 /docs/handover/
 /docs/03_model_development/haoqi-feature_selection_recommendations.md
 /docs/03_model_development/haoqi-scientific_modeling_guide.md
-/docs/03_model_development/selected_model_explained_zh.md
-/docs/04_prediction_pipeline/ausrap_reference_integration_zh.md
-/docs/05_model_evaluation/irap_comparison_protocol_zh.md
-/docs/05_model_evaluation/irap_comparison_results_20261003_zh.md
-/01_data_preparation/README.md
-/02_feature_extraction/README.md
+/docs/03_model_development/selected_model_explained_*.md
+/docs/04_prediction_pipeline/ausrap_reference_integration_*.md
+/docs/05_model_evaluation/irap_comparison_protocol_*.md
 
 # Local-only Stage 2 notebooks; intentionally not shared
 /02_feature_extraction/**/02_020_haoqi_abs_asgs_remoteness_ucl.ipynb
@@ -106,3 +105,5 @@ tmp/
 
 # Local backup copies of superseded work
 /archive/
+
+# Local alternate drafts stay under ignored personal-note or backup folders.
