@@ -27,7 +27,7 @@ def metadata_table(metadata: dict) -> pd.DataFrame:
         values["execution_mode"] = metadata["execution_mode"]
     if metadata.get("feature_reuse"):
         reuse = metadata["feature_reuse"]
-        values["reused_feature_source"] = reuse["workbook"]
+        values["reused_feature_source"] = reuse.get("source", reuse.get("workbook", ""))
         values["original_feature_run_finished_at_utc"] = reuse["original_finished_at_utc"]
         values["feature_reuse_note"] = "Saved features reused; ABS and imagery were not retrieved again for this output."
     values.update(
@@ -87,7 +87,7 @@ def write_prediction_outputs(
                 if row_number > 2 and not cell.has_style:
                     cell._style = copy(sheet.cell(2, col_number)._style)
                 cell.value = value.item() if isinstance(value, np.generic) else value
-                if col_number == 1 and isinstance(value, str) and value.startswith("="):
+                if isinstance(cell.value, str):
                     cell.data_type = "s"
                 heading = schema[col_number - 1]
                 if heading in {"latitude", "longitude"}:
@@ -114,7 +114,9 @@ def write_prediction_outputs(
     for row_number, (field, value) in enumerate(metadata_table(result.metadata).itertuples(index=False, name=None), start=64):
         run_sheet.merge_cells(start_row=row_number, start_column=2, end_row=row_number, end_column=4)
         run_sheet.cell(row_number, 1, field)
-        run_sheet.cell(row_number, 2, value)
+        value_cell = run_sheet.cell(row_number, 2, value)
+        if isinstance(value_cell.value, str):
+            value_cell.data_type = "s"
         run_sheet.cell(row_number, 1).alignment = Alignment(wrap_text=True, vertical="top")
         run_sheet.cell(row_number, 2).alignment = Alignment(wrap_text=True, vertical="top")
         field_lines = math.ceil(len(field) / ((run_sheet.column_dimensions["A"].width or 28) * 0.9))
