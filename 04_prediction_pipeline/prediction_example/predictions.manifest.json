@@ -1,0 +1,898 @@
+{
+  "run_id": "e13c9a86b8fc40a3885165f6a008f89d",
+  "workflow_version": "prediction_v2",
+  "output_schema_version": "prediction_output_v5",
+  "coordinate_crs": "EPSG:4326",
+  "model_version": "pedestrian-linear-v1",
+  "started_at_utc": "2026-10-04T08:35:09.211482+00:00",
+  "finished_at_utc": "2026-10-04T08:35:09.304438+00:00",
+  "row_count": 10,
+  "prediction_units": "pedestrians_per_hour",
+  "status_counts": {
+    "predicted": 9,
+    "predicted_with_warning": 1
+  },
+  "configuration": {
+    "workflow_version": "prediction_v2",
+    "ausrap_source": "data/raw/AusRAP Data - Words - MSDS.xlsx",
+    "context_config": "configs/prediction/context_abs_v1.json",
+    "context_feature_set_version": "context_abs_v1",
+    "imagery_config": "configs/prediction/imagery_v1.json",
+    "imagery_recipe_sha256": "2a1e102ad8f4642345ed797462c1e09235bed9c35b10d157c988c90e229c637d",
+    "model_release": "src/pedflow/modeling/releases/pedestrian_linear_v1.json",
+    "model_version": "pedestrian-linear-v1",
+    "model_release_sha256": "f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042"
+  },
+  "context": {
+    "feature_set_version": "context_abs_v1",
+    "generated_at_utc": "2026-09-28T02:42:06.815271+00:00",
+    "row_count": 10,
+    "site_id_sha256": "46c7e57b4c453e9e4b6952fcaaa29d0d95e8de56773dafbe49d8cf77e959b675",
+    "columns": [
+      "site_id",
+      "abs_match_status",
+      "abs_error_message",
+      "abs_mb_code_2021",
+      "abs_sa1_code_2021",
+      "abs_mb_category_2021",
+      "abs_mb_area_sqkm_2021",
+      "abs_mb_dwellings_2021",
+      "abs_mb_persons_usual_resident_2021",
+      "abs_mb_dwellings_per_sqkm_2021",
+      "abs_mb_persons_per_sqkm_2021"
+    ],
+    "sources": [
+      {
+        "name": "abs_meshblock_sa1",
+        "version": "ABS Mesh Block Counts 2021 + ASGS Edition 3 (2021) MB layer 0",
+        "metadata": {
+          "provider": "Australian Bureau of Statistics",
+          "dataset": "Census of Population and Housing: Mesh Block counts, 2021",
+          "source_file": "data/external_raw/Mesh Block Counts, 2021.xlsx",
+          "source_file_sha256": "1ab520c2ff0e07ca88729258c30ee9f7a7133df113a81bac94812582f3b540a3",
+          "source_sheet": "Table 5",
+          "source_header_row_zero_based": 6,
+          "source_record_count": 43322,
+          "source_incomplete_attribute_rows": 24,
+          "state_code": 5,
+          "api_service_url": "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/MB/MapServer/0/query",
+          "api_layer_identifier": "ASGS2021/MB/MapServer/0",
+          "api_out_fields": [
+            "mb_code_2021",
+            "sa1_code_2021"
+          ],
+          "input_crs": "EPSG:4326",
+          "spatial_relation": "esriSpatialRelIntersects",
+          "request_timeout_seconds": 60.0,
+          "retrieval_method": "ArcGIS REST point-polygon query plus local workbook join"
+        },
+        "warnings": [
+          "ABS features describe the containing 2021 Mesh Block, not a site-centred neighbourhood.",
+          "The 2021 Census reference period may differ from the pedestrian survey period.",
+          "The official source contains 24 special-purpose Mesh Blocks with incomplete area or count attributes."
+        ],
+        "columns": [
+          "site_id",
+          "abs_match_status",
+          "abs_error_message",
+          "abs_mb_code_2021",
+          "abs_sa1_code_2021",
+          "abs_mb_category_2021",
+          "abs_mb_area_sqkm_2021",
+          "abs_mb_dwellings_2021",
+          "abs_mb_persons_usual_resident_2021",
+          "abs_mb_dwellings_per_sqkm_2021",
+          "abs_mb_persons_per_sqkm_2021"
+        ]
+      }
+    ]
+  },
+  "imagery": {
+    "started_at_utc": "2026-09-28T02:41:48.334644+00:00",
+    "finished_at_utc": "2026-09-28T02:42:06.767737+00:00",
+    "configuration": {
+      "feature_set_version": "imagery_notebook_v1",
+      "model": "gemini-3.7-flash",
+      "max_workers": 10,
+      "maps_requests_per_minute": null,
+      "llm_requests_per_minute": null,
+      "request_timeout_seconds": 60,
+      "llm_timeout_seconds": 120,
+      "max_attempts": 4,
+      "sampling_offset_m": 50,
+      "image_profile": "google_notebook_web_mercator_v1",
+      "prompt_sha256": "9c7a96a11250e0367227e7b1138f610fdfe05e6f2cba61fc4f087e84cb68d9c2",
+      "satellite": {
+        "zoom": 19,
+        "size": "640x640",
+        "scale": 2
+      },
+      "street_view": {
+        "size": "640x640",
+        "heading": 0,
+        "pitch": 0,
+        "fov": 90
+      }
+    },
+    "identity": {
+      "input_sha256": "55f61622a6ff729d46926f671181a7ebaef1253952027ed2d7d27478196f877d",
+      "extraction_sha256": "2a1e102ad8f4642345ed797462c1e09235bed9c35b10d157c988c90e229c637d"
+    },
+    "row_count": 10,
+    "reused_sites": 0,
+    "status_counts": {
+      "complete": 10
+    },
+    "sites": {
+      "TEST-AUSRAP-001": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "3_e4OOx4o2_MZbzeJrVWZQ",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "OMRPDj2K2zt07Jj133tVfQ",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "mPiuXwN8Spcu9MJwo_gdvw",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "oB5SdjzbhkYIMxHlw3ugSw",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "KqSbZh3IwKZpKVPfk7ET-A",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-002": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "6t-957a8uW9ZEXnK0yPBIg",
+            "image_date": "2025-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "gmxCsgZlacrdij--LS8lGg",
+            "image_date": "2019-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "brJPL4iczkNxuGbX2495SA",
+            "image_date": "2025-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "KrYfB_azXgXk8cSpVArtgg",
+            "image_date": "2025-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "JwtsEnq53NgwDOLgrbmy3g",
+            "image_date": "2025-11",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-003": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "NPIhCkI94CR3YlzDeqF76g",
+            "image_date": "2026-02",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "JKJStGhZn2IHh3TAm_Djyg",
+            "image_date": "2026-03",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "aD0dRJVif-tUeHv8kSlmHA",
+            "image_date": "2026-02",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "1vA0GhjRIiggHVK936oZgA",
+            "image_date": "2026-02",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "ce23uhVK7DGBkwMy3Ye9gA",
+            "image_date": "2026-02",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-004": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "x8Krwk_qC53KIV5ZAuhFdg",
+            "image_date": "2023-12",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "81s7lAuEcEdY-ypdEO4Nfw",
+            "image_date": "2025-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "1e2H8ZkPQQQH57gdMudYjw",
+            "image_date": "2023-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "GB_YqZT_bZjy9nFF1zdqFQ",
+            "image_date": "2023-12",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "jvIa0WHuYVAYlc482WbHMA",
+            "image_date": "2023-12",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-005": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "9A2D6jZCCq7wm0wH_h651Q",
+            "image_date": "2026-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "ZAD1zNVKmwGrSVx5xXN0Wg",
+            "image_date": "2026-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "inEO9vfvXyewLnsFLmfIvA",
+            "image_date": "2026-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "kgPB1NwTvXUziMa3yRbDEQ",
+            "image_date": "2024-06",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "0q1YJrQeOfOYsmqUmOt_aA",
+            "image_date": "2025-03",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-006": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "USZECDPmq3dg8xYwtJzpLA",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "gg57qFgFIBiJei0MwFJMKQ",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "fi1n5E1tbK9WJRUALHH4kg",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "h591BcTEL0CNNbArJDrB1Q",
+            "image_date": "2026-05",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "MwJBQ4EIUy3vfOPcTBSz9A",
+            "image_date": "2021-09",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-007": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "pspwC9hjigjSPNOhUsy9Ug",
+            "image_date": "2025-11",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "xA0ML8GEieWZx_pUiYPBYA",
+            "image_date": "2025-11",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "olUFx7otciVa2iMAsm63nQ",
+            "image_date": "2025-11",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "uvrDJRVCDD2donJ9L00CuA",
+            "image_date": "2025-11",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "U2Is4q0Kv_gCC5pstMfI0w",
+            "image_date": "2025-11",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-008": {
+        "image_count": 3,
+        "street_views": [
+          {
+            "pano_id": "Gw_ohSNmVSWWao8-FB27dw",
+            "image_date": "2017-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "bWKHMOJmkKnnWSAAGK3DxA",
+            "image_date": "2024-02",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [
+          "street_view_unavailable"
+        ],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-009": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "9FZLyh4yoFasev7DzZWOvg",
+            "image_date": "2008-03",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "9FZLyh4yoFasev7DzZWOvg",
+            "image_date": "2008-03",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "DipjGtyMRh1j1YVwX1ZERA",
+            "image_date": "2008-03",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "dmsceRG7UpUxUzYxTLf8fA",
+            "image_date": "2008-03",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "Q8PFYIUWjdUA-dlTEYIA3g",
+            "image_date": "2008-03",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      },
+      "TEST-AUSRAP-010": {
+        "image_count": 6,
+        "street_views": [
+          {
+            "pano_id": "-2gbci9A00o_Cnmn0sF5Mw",
+            "image_date": "2026-02",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "xhSuWJEAXPrtK6KWco8mfQ",
+            "image_date": "2022-04",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "9fH2mhH9qPS2LTlXb461Xw",
+            "image_date": "2026-02",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "bx9gbPltVuy34ErZvLOkJg",
+            "image_date": "2024-06",
+            "copyright": "© Google"
+          },
+          {
+            "pano_id": "Xn3DOI3ZlZeK0JwKMVE29Q",
+            "image_date": "2024-06",
+            "copyright": "© Google"
+          }
+        ],
+        "warnings": [],
+        "source": "Google Maps satellite + Street View"
+      }
+    },
+    "training_imagery_provenance": "Historical run recipe not fully documented; requires comparison"
+  },
+  "location_status_counts": {
+    "matched": 10
+  },
+  "road_snapshot_sha256": "dbff75c0d70ca4f48b60e633ac1101e9b98694d35e878cda20d0c4e4cc3d2d22",
+  "prediction_basis": "released_model_inference",
+  "execution_mode": "saved_feature_replay",
+  "feature_reuse": {
+    "source": "04_prediction_pipeline/prediction_example/evidence/saved_run.json",
+    "source_sha256": "17c7d6fc961c390355df2b644d4960c9e70bed87fb10ebd764c0586a6d501c18",
+    "original_workbook_sha256": "d0b7217506b3d66305e4a35cdf6099faedc12f11afac9ffc4eff92743959cefb",
+    "original_manifest_sha256": "cfed090f1d930588dfb4f24b38f4755f437de3a113cbb4b1bdbee6fe1c4bbb20",
+    "original_run_id": "20984a9ba6d246cc9e20ecc042552118",
+    "original_finished_at_utc": "2026-09-28T02:42:06.815013+00:00",
+    "external_requests_made": false,
+    "note": "Context, imagery diagnostics and row warnings are retained from the original extraction. Model inference and AusRAP attachment were rerun locally."
+  },
+  "ausrap": {
+    "version": "ausrap_reference_v1",
+    "category_rule": "positive_upper_bound_v1",
+    "reference_label": "Existing iRAP flow estimate (recoded)",
+    "prediction_basis": "released_model_inference",
+    "accuracy_metrics_computed": false,
+    "point_window_half_width_km": 0.1,
+    "carriageway_filter_for_point_window": false,
+    "aggregation": "Equal-weight mean of all matched source rows; no deduplication or missing-value deletion.",
+    "interval_meaning": "Derived source endpoint means, not model confidence intervals.",
+    "record_id_format": "ausrap:<source SHA-256>:<Excel row number>",
+    "source": {
+      "source_path": "/Users/haoqi/Nexus/09_Workspace/CITS5553 - Data Science Capstone Project/03_Project/data/raw/AusRAP Data - Words - MSDS.xlsx",
+      "sha256": "4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d",
+      "source_sheet": "AusRap Vida Extract.723141040..",
+      "index_version": "ausrap_index_v1",
+      "source_rows": 189222,
+      "missing_flow_cells": 2082,
+      "reversed_bounds_rows": 21
+    },
+    "sites": [
+      {
+        "site_id": "TEST-AUSRAP-001",
+        "matched_source_rows": [
+          166177,
+          166178,
+          166179
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "M043",
+        "slk_km": 17.4,
+        "window_km": [
+          17.299999999999997,
+          17.5
+        ],
+        "cross_categories": [
+          2,
+          3
+        ],
+        "cross_band": [
+          2.6666666666666665,
+          11.666666666666666
+        ],
+        "along_combined_band": [
+          12.0,
+          50.0
+        ],
+        "carriageways": [
+          "S"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:166177",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:166178",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:166179"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-002",
+        "matched_source_rows": [
+          80622,
+          80623,
+          80624,
+          80744,
+          80745,
+          80746
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H013",
+        "slk_km": 6.07,
+        "window_km": [
+          5.970000000000001,
+          6.17
+        ],
+        "cross_categories": [
+          2,
+          3
+        ],
+        "cross_band": [
+          2.6666666666666665,
+          11.666666666666666
+        ],
+        "along_combined_band": [
+          1.1666666666666667,
+          5.0
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:80622",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:80623",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:80624",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:80744",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:80745",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:80746"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-003",
+        "matched_source_rows": [
+          86988,
+          86989,
+          86990,
+          87090,
+          87091,
+          87092
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H027",
+        "slk_km": 9.05,
+        "window_km": [
+          8.950000000000001,
+          9.15
+        ],
+        "cross_categories": [
+          2
+        ],
+        "cross_band": [
+          1.0,
+          5.0
+        ],
+        "along_combined_band": [
+          1.0,
+          5.0
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:86988",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:86989",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:86990",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:87090",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:87091",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:87092"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-004",
+        "matched_source_rows": [
+          113312,
+          113313,
+          113314,
+          114254,
+          114255,
+          114256
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H057",
+        "slk_km": 93.85,
+        "window_km": [
+          93.75,
+          93.94999999999999
+        ],
+        "cross_categories": [
+          1
+        ],
+        "cross_band": [
+          0.0,
+          0.0
+        ],
+        "along_combined_band": [
+          6.0,
+          25.0
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:113312",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:113313",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:113314",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:114254",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:114255",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:114256"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-005",
+        "matched_source_rows": [
+          4337,
+          4338,
+          4339,
+          4898,
+          4899,
+          4900
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H002",
+        "slk_km": 2.65,
+        "window_km": [
+          2.55,
+          2.75
+        ],
+        "cross_categories": [
+          1
+        ],
+        "cross_band": [
+          0.0,
+          0.0
+        ],
+        "along_combined_band": [
+          51.0,
+          100.0
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:4337",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:4338",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:4339",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:4898",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:4899",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:4900"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-006",
+        "matched_source_rows": [
+          88205,
+          88206,
+          88207,
+          88232,
+          88233,
+          88234
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H030",
+        "slk_km": 0.89,
+        "window_km": [
+          0.79,
+          0.99
+        ],
+        "cross_categories": [
+          2,
+          3
+        ],
+        "cross_band": [
+          4.333333333333333,
+          18.333333333333332
+        ],
+        "along_combined_band": [
+          14.333333333333334,
+          30.833333333333332
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:88205",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:88206",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:88207",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:88232",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:88233",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:88234"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-007",
+        "matched_source_rows": [
+          83560,
+          83561,
+          83562,
+          84342,
+          84343,
+          84344
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H017",
+        "slk_km": 27.55,
+        "window_km": [
+          27.45,
+          27.650000000000002
+        ],
+        "cross_categories": [
+          3
+        ],
+        "cross_band": [
+          6.0,
+          25.0
+        ],
+        "along_combined_band": [
+          26.0,
+          50.0
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:83560",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:83561",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:83562",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:84342",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:84343",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:84344"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-008",
+        "matched_source_rows": [
+          85955,
+          85956,
+          85957,
+          86192,
+          86193,
+          86194
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H021",
+        "slk_km": 16.36,
+        "window_km": [
+          16.259999999999998,
+          16.46
+        ],
+        "cross_categories": [
+          1
+        ],
+        "cross_band": [
+          0.0,
+          0.0
+        ],
+        "along_combined_band": [
+          1.0,
+          5.0
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:85955",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:85956",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:85957",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:86192",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:86193",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:86194"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-009",
+        "matched_source_rows": [
+          170558,
+          170559,
+          170560
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "M049",
+        "slk_km": 76.35,
+        "window_km": [
+          76.25,
+          76.44999999999999
+        ],
+        "cross_categories": [
+          2
+        ],
+        "cross_band": [
+          1.0,
+          5.0
+        ],
+        "along_combined_band": [
+          12.0,
+          50.0
+        ],
+        "carriageways": [
+          "S"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:170558",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:170559",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:170560"
+        ]
+      },
+      {
+        "site_id": "TEST-AUSRAP-010",
+        "matched_source_rows": [
+          81102,
+          81103,
+          81104,
+          81818,
+          81819,
+          81820
+        ],
+        "method": "point_window_equal_mean",
+        "location_basis": "supplied_road_reference",
+        "road_no": "H015",
+        "slk_km": 6.45,
+        "window_km": [
+          6.3500000000000005,
+          6.55
+        ],
+        "cross_categories": [
+          1
+        ],
+        "cross_band": [
+          0.0,
+          0.0
+        ],
+        "along_combined_band": [
+          0.6666666666666666,
+          3.3333333333333335
+        ],
+        "carriageways": [
+          "L",
+          "R"
+        ],
+        "status": "matched",
+        "matched_record_ids": [
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:81102",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:81103",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:81104",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:81818",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:81819",
+          "ausrap:4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d:81820"
+        ]
+      }
+    ],
+    "status_counts": {
+      "matched": 10
+    }
+  }
+}

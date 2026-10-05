@@ -1,0 +1,19 @@
+{
+  "row_count": 10,
+  "column_count": 29,
+  "model_predictions_match_saved_run_atol": 1e-09,
+  "saved_features_unchanged": true,
+  "source_snapshot_unchanged": true,
+  "observations_blank": true,
+  "accuracy_metrics_computed": false,
+  "external_requests_made": false,
+  "ausrap_source_rows": 189222,
+  "comparison_status_counts": {
+    "matched": 10
+  },
+  "prediction_status_counts": {
+    "predicted": 9,
+    "predicted_with_warning": 1
+  },
+  "workbook_sha256": "4d6041024fa31e6bb9db722338c558ff2a21b4ad4cfa2004a8acf08436c8309f"
+}
