@@ -1,0 +1,5 @@
+direction,method,n,mae,rmse
+Cross-road,Model (road-grouped OOF),45,15.496201026832761,29.954300735094673
+Cross-road,Existing iRAP flow estimate (recoded),45,18.04629629629629,36.47781119909117
+Along-road,Model (road-grouped OOF),43,21.172481172737573,38.92634331088962
+Along-road,Existing iRAP flow estimate (recoded),43,52.476744186046524,74.72840142360982

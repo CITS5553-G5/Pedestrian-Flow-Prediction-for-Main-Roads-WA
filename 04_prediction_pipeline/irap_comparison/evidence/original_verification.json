@@ -1,0 +1,63 @@
+{
+  "verified_at_utc": "2026-10-03T15:22:35.645040+00:00",
+  "source_files_unchanged": 7,
+  "survey_evidence_unchanged": 6,
+  "unique_sites": 49,
+  "site_columns": 19,
+  "error_rows": 98,
+  "independent_source_metrics": [
+    {
+      "direction": "Cross-road",
+      "method": "Model (road-grouped OOF)",
+      "n": 45,
+      "mae": 15.496201026832766,
+      "rmse": 29.95430073509467
+    },
+    {
+      "direction": "Cross-road",
+      "method": "Existing iRAP flow estimate (recoded)",
+      "n": 45,
+      "mae": 18.04629629629629,
+      "rmse": 36.47781119909117
+    },
+    {
+      "direction": "Along-road",
+      "method": "Model (road-grouped OOF)",
+      "n": 43,
+      "mae": 21.172481172737573,
+      "rmse": 38.92634331088962
+    },
+    {
+      "direction": "Along-road",
+      "method": "Existing iRAP flow estimate (recoded)",
+      "n": 43,
+      "mae": 52.47674418604653,
+      "rmse": 74.72840142360982
+    }
+  ],
+  "formula_errors": 0,
+  "native_charts": [
+    {
+      "direction": "Cross-road",
+      "method_points_each": 45,
+      "native_series": 3,
+      "xy_references_and_caches_match": true
+    },
+    {
+      "direction": "Along-road",
+      "method_points_each": 43,
+      "native_series": 3,
+      "xy_references_and_caches_match": true
+    }
+  ],
+  "unit_tests_passed": 9,
+  "workbook_sha256": "94aef125112758aa16ac2785d92a5f7deb5901a1a7a896a3fa0157f8773bce56",
+  "verification_method": "Independent source calculation; read-only XLSX values, formula caches and native chart XY references/cache inspection.",
+  "resolved_local_document_links": 58,
+  "pre_existing_missing_links": [
+    "03_model_development/selected_model_explained_en.md"
+  ],
+  "native_application_check": "LibreOffice headless PDF export failed; Microsoft Excel application not exercised. Structural XY references and caches checked directly.",
+  "workbook_perturbation_check": "In-memory change of first crossing observation by +1 updated both crossing MAEs as expected; along-road metrics unchanged; restoration recovered all original metrics. Saved workbook untouched.",
+  "saved_workbook_visual_check": "Reimported final XLSX and rendered Summary and Errors; all four sheets visually reviewed."
+}

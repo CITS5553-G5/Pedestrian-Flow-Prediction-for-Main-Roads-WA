@@ -1,0 +1,76 @@
+{
+  "created_at_utc": "2026-10-04T13:27:16.892545+00:00",
+  "prediction_basis": "road_grouped_oof",
+  "analysis_version": "descriptive_analysis_v1",
+  "source_hashes_relative_to_case": {
+    "irap_comparison.xlsx": "60ea69a5ba18c192dc65f23d0f7a2d9623b77d747eb928fe9e18e57c5c7064f4",
+    "comparison_report.md": "567d4a2312e56a80868af8b5b7543f94c25ca096b8d33a16dca92643f32189aa",
+    "evidence/site_comparison.csv": "4c9fc6e6881f71fc6b79d42994513912b67629303239678c97ece6facc04497a",
+    "evidence/paired_errors.csv": "11a2ba365f67a9290183ebf0838b015b914068b2d62ca4a4e2b534f125dcc8d5",
+    "evidence/metrics.csv": "ffc1b7b714c0b61fe13212fc91623d4f865ed53fa7cace6efe1f4c409cbcd964",
+    "evidence/comparison.json": "1af69545f962fe18211d4b458080ce81fc4888466f6a4a21c524db600d1cb568",
+    "evidence/manifest.json": "c00f2c636ad7f339c1f8f6330a6542b92db1b8587645112a0814a595bf82897c",
+    "evidence/preflight_audit.json": "c1d17983fe53dc3befc53afd61cce3c2ad91a6df27b5f7a057c1772cd22de01f"
+  },
+  "sources_unchanged": true,
+  "site_count": 49,
+  "paired_counts": {
+    "Cross-road": 45,
+    "Along-road": 43
+  },
+  "workbook_chart_sources": [
+    {
+      "direction": "Cross-road",
+      "xy_ranges": [
+        [
+          "'Errors'!$O$2:$O$46",
+          "'Errors'!$P$2:$P$46"
+        ],
+        [
+          "'Errors'!$O$2:$O$46",
+          "'Errors'!$Q$2:$Q$46"
+        ],
+        [
+          "'Errors'!$O$2:$O$46",
+          "'Errors'!$R$2:$R$46"
+        ]
+      ]
+    },
+    {
+      "direction": "Along-road",
+      "xy_ranges": [
+        [
+          "'Errors'!$T$2:$T$44",
+          "'Errors'!$U$2:$U$44"
+        ],
+        [
+          "'Errors'!$T$2:$T$44",
+          "'Errors'!$V$2:$V$44"
+        ],
+        [
+          "'Errors'!$T$2:$T$44",
+          "'Errors'!$W$2:$W$44"
+        ]
+      ]
+    }
+  ],
+  "all_workbook_helper_values_verified": true,
+  "headline_metrics_reproduced": true,
+  "native_chart_references_verified": true,
+  "model_retrained": false,
+  "production_model_invoked": false,
+  "external_data_requests": false,
+  "figures": 6,
+  "planned_report_sections": 8,
+  "packages": {
+    "python": "3.12.14",
+    "numpy": "2.5.3",
+    "pandas": "2.2.3",
+    "matplotlib": "3.11.2",
+    "reportlab": "4.4.9"
+  },
+  "report_sha256": "d800ebb285299e8c1a5729a3d257715db41c611030f01d02f773c2b83d290a0d",
+  "html_sha256": "901bfd99baed9e049a7ec7449c3115e53d6b8a495f61db344f4b6652bae3f94e",
+  "builder_sha256": "802bb0159e5766b10b9cafc74337c953cbf8e6ae6733dd4e7a2c834bd7b18bd2",
+  "interpretation": "Descriptive diagnostics only; subgroup and omission checks are post-hoc. No uncertainty interval, significance test or external validation claim."
+}
