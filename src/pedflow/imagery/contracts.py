@@ -25,7 +25,7 @@ class ImageryConfig:
 
     feature_set_version: str = "imagery_notebook_v1"
     model: str = "gemini-3.7-flash"
-    max_workers: int = 10
+    max_workers: int = 50
     # None disables local pacing; provider cooldowns still apply after failures.
     maps_requests_per_minute: float | None = None
     llm_requests_per_minute: float | None = None

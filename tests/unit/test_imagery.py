@@ -38,9 +38,9 @@ def extractor(site):
     }, {"image_count": 2, "warnings": []}
 
 
-def test_100_sites_are_bounded_to_ten_workers_and_keep_identity():
+def test_100_sites_are_bounded_to_fifty_workers_and_keep_identity():
     lock = threading.Lock()
-    barrier = threading.Barrier(10, timeout=5)
+    barrier = threading.Barrier(50, timeout=5)
     active = peak = 0
     seen = []
 
@@ -58,8 +58,8 @@ def test_100_sites_are_bounded_to_ten_workers_and_keep_identity():
                 active -= 1
 
     source = sites(100)
-    result = build_imagery_features(source, ImageryConfig(max_workers=10), extractor=slow)
-    assert peak == 10
+    result = build_imagery_features(source, ImageryConfig(), extractor=slow)
+    assert peak == 50
     assert len(seen) == len(set(seen)) == 100
     assert result.features.site_id.tolist() == source.site_id.tolist()
     assert result.features.commercial_buildings.tolist() == list(range(100))
@@ -130,7 +130,8 @@ def test_invalid_configuration(field, value):
 def test_config_load_and_prompt_identity():
     root = Path(__file__).resolve().parents[2]
     config = load_imagery_config(root / "configs/prediction/imagery_v1.json")
-    assert config.max_workers == 10
+    assert config.max_workers == 50
+    assert ImageryConfig().max_workers == 50
     assert config.maps_requests_per_minute is None
     assert config.llm_requests_per_minute is None
     assert ImageryConfig().maps_requests_per_minute is None
