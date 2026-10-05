@@ -13,9 +13,11 @@ from pedflow.context.contracts import FeatureResult
 from pedflow.context.sources import abs_meshblock_sa1
 from pedflow.exceptions import ConfigurationError, ContractError
 from pedflow.imagery.contracts import ExtractionError
+from pedflow.io import read_sites
 from pedflow.modeling import load_model
 from pedflow.prediction import predict_sites
 from pedflow.prediction.io import write_prediction_outputs
+from pedflow.prediction.location import resolve_locations
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -87,10 +89,16 @@ def test_road_only_input_predicts_from_measured_coordinate(providers):
     assert pd.notna(row.pred_peak_cross_ped_per_h)
 
 
-def test_current_50_site_batch_reaches_model_and_export(providers, tmp_path):
-    source = pd.read_excel(ROOT / "data/processed/batch_input_dataset.xlsx", sheet_name="Batch_Input").head(50)
+@pytest.mark.parametrize("path", [
+    "data/processed/batch_input_dataset.xlsx", "data/templates/batch_input_template.xlsx",
+])
+def test_mixed_batches_reach_model_and_preserve_location_warnings(providers, tmp_path, path):
+    source = read_sites(ROOT / path)
     table = providers[0]
     table.drop(index=table.index, inplace=True)
+    resolved = resolve_locations(source)
+    assert resolved.location_status.isin(["matched", "ambiguous_carriageway"]).all()
+    warning = resolved.location_status.eq("ambiguous_carriageway")
     for site_id in source.site_id:
         table.loc[len(table)] = [site_id, "Commercial", "matched"]
     providers[2].side_effect = lambda site: (
@@ -98,13 +106,46 @@ def test_current_50_site_batch_reaches_model_and_export(providers, tmp_path):
         {"image_count": 6, "warnings": [], "source": "offline fixture"},
     )
     result = predict_sites(source, ROOT)
-    assert len(result.predictions) == 50
-    assert result.predictions.location_status.eq("matched").all()
-    assert result.predictions.status.eq("predicted").all()
-    assert result.predictions[list(("pred_peak_cross_ped_per_h", "pred_peak_along_ped_per_h"))].notna().all().all()
+    assert len(result.predictions) == len(source)
+    assert result.predictions.loc[~warning, "status"].eq("predicted").all()
+    assert result.predictions.loc[warning, "status"].eq("predicted_with_warning").all()
+    predictions = ["pred_peak_cross_ped_per_h", "pred_peak_along_ped_per_h"]
+    assert result.predictions[predictions].notna().all().all()
+    assert result.predictions.loc[warning, "message"].eq("road:ambiguous_carriageway").all()
+    pd.testing.assert_frame_equal(result.predictions[["latitude", "longitude"]], source[["latitude", "longitude"]])
+    assert providers[2].call_count == len(source)
     output = write_prediction_outputs(result, tmp_path)["workbook"]
     saved = pd.read_excel(output, sheet_name="Prediction_Output")
     assert saved.site_id.tolist() == source.site_id.tolist()
+    observations = ["obs_peak_cross_ped_per_h", "obs_peak_along_ped_per_h"]
+    expected_observations = source[observations].apply(pd.to_numeric, errors="coerce")
+    pd.testing.assert_frame_equal(saved[observations], expected_observations)
+    assert saved.loc[source.site_group.eq("random"), observations].isna().all().all()
+    assert saved.columns.tolist() == result.predictions.columns.tolist()
+
+
+def test_ambiguous_road_only_row_does_not_request_features(providers):
+    batch = read_sites(ROOT / "data/processed/batch_input_dataset.xlsx")
+    source = batch.loc[batch.location_precheck.eq("ambiguous_carriageway"), ["site_id", "road_no", "slk_km"]].iloc[:1]
+    assert len(source) == 1
+    result = predict_sites(source, ROOT)
+    assert result.predictions.status.eq("not_predicted").all()
+    assert result.predictions.location_status.eq("ambiguous_carriageway").all()
+    assert result.predictions[list(("pred_peak_cross_ped_per_h", "pred_peak_along_ped_per_h"))].isna().all().all()
+    providers[1].assert_not_called()
+    providers[3].assert_not_called()
+
+
+def test_conflicting_road_and_coordinates_still_do_not_request_features(providers):
+    other = resolve_locations(pd.DataFrame({"site_id": ["001"], "road_no": ["H001"], "slk_km": [357.36]}))
+    source = other[["site_id", "latitude", "longitude"]].copy()
+    source["road_no"] = "H001"
+    source["slk_km"] = 356.36
+    result = predict_sites(source, ROOT)
+    assert result.predictions.location_status.eq("road_coordinate_conflict").all()
+    assert result.predictions.status.eq("not_predicted").all()
+    providers[1].assert_not_called()
+    providers[3].assert_not_called()
 
 
 def test_unresolved_road_row_does_not_block_other_locations(providers):

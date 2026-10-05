@@ -73,6 +73,8 @@ def predict_sites(
     eligible = input_sites.latitude.notna() & input_sites.longitude.notna() & ~input_sites.location_status.isin(
         ["road_reference_not_found", "ambiguous_carriageway", "road_coordinate_conflict", "road_lookup_failed"]
     )
+    # Entered coordinates still locate features when only the carriageway is ambiguous.
+    eligible |= input_sites.input_type.eq("both") & input_sites.location_status.eq("ambiguous_carriageway")
     # A failed reverse lookup does not prevent coordinate-based feature extraction.
     eligible |= input_sites.input_type.eq("coordinates")
     sites = validate_and_normalise_sites(input_sites.loc[eligible]).reset_index(drop=True) if eligible.any() else None
