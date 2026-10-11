@@ -10,6 +10,10 @@ OOF evaluation is separate from operational prediction. Its reproduction procedu
 
 Valid supplied coordinates remain eligible for prediction when only carriageway matching is ambiguous, with the warning retained. Road/coordinate conflicts and unresolved road-only locations still receive no prediction. The maintained concurrency default is 50 sites, and exported strings are stored as text. Fresh live-service acceptance and imagery-feature consistency checks remain unverified because no working Gemini key was available for that verification.
 
+## Credential file update: 9 October 2026
+
+The retained `combined_google_mapillary_feature_extraction.ipynb` now reads its Google Maps and Gemini credentials from `GOOGLE_MAPS_API_KEY` and `GEMINI_API_KEY` environment variables. The two hard-coded credential values were removed from the current notebook. This file update does not verify credential revocation or remove earlier Git-history copies.
+
 ## Initial review record: 4 October 2026
 
 The review covered the active `03_Project` workspace and examined the older `pedflow-frontend-update` worktree for credential residue and delivery descriptions. The initial review did not change business code, models, input data or reviewed outputs. Temporary test and reproduction files were kept outside the delivered repository.

@@ -44,6 +44,8 @@ data/external_raw/overture_places/*
 !data/external_raw/overture_places/*/
 data/external_raw/overture_places/*/*
 !data/external_raw/overture_places/*/README.md
+# Downloaded Microsoft building tiles and release index stay local.
+# Reviewed building feature workbooks remain versioned under 06_outputs/.
 data/external_raw/microsoft_building_footprints/*/australia_tiles/*.csv.gz
 data/external_raw/microsoft_building_footprints/*/dataset-links.csv
 data/external_raw/pta_stops/*
