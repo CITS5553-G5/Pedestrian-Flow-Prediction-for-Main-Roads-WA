@@ -1,71 +1,60 @@
-# Delivery handover
+# Customer handover
 
-Updated 5 October 2026. The [delivery folder](../04_prediction_pipeline/README.md) contains the reviewed comparison and final-model example; the [run guide](04_prediction_pipeline/prediction_workflow.md) describes operational use.
+Updated 15 October 2026. This guide identifies the delivered materials, local data requirements, verification status and limits of use. Follow the [setup guide](SETUP.md) for installation and the [prediction run guide](04_prediction_pipeline/prediction_workflow.md) for operational instructions.
 
-## Delivered state
+## Delivered materials
 
-The workflow accepts any positive number of locations, with batch size determined by the populated rows in the submitted input table. No predefined location count or observed/random split is required. It resolves road geometry, extracts ABS and imagery features, predicts crossing and along-road peak-hour flows, and attaches existing AusRAP categories, bands and client-recoded estimates. It uses one input contract for surveyed, unknown and mixed batches. Observations are optional supplied fields, never predictors or automatically looked-up survey counts.
+The workflow predicts peak crossing and along-road pedestrian flows in pedestrians/hour from submitted locations. It resolves road positions, extracts ABS and imagery features, applies the released model and attaches existing AusRAP reference values when the local reference source is available. Observed counts are optional input fields and are never predictors.
 
-The model is `pedestrian-linear-v1`, exported from Yashika's saved R bundle without refitting. The feature set remains `commercial_buildings`, `footpath_both_sides`, and `abs_mb_category_simple`. Release SHA-256 is `f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042`. The reviewed imagery recipe and model coefficients have not changed during delivery cleanup.
+| Material | Purpose |
+| --- | --- |
+| [Prediction workflow](04_prediction_pipeline/prediction_workflow.md) | Input preparation, batch execution, output fields and recovery |
+| [Comparison workbook and reports](../04_prediction_pipeline/irap_comparison/README.md) | Saved model-validation predictions, observations, existing AusRAP estimates and supporting evidence |
+| [Offline prediction example](../04_prediction_pipeline/prediction_example/README.md) | Ten locations replayed from saved features without external requests |
+| [Original imagery research notebook](../02_feature_extraction/imagery/Image_Feature_Extraction_Pipeline.ipynb) | Complete research process, image previews, feature extraction, batching and export |
+| [Reviewed imagery workflow notebook](../02_feature_extraction/imagery/Run_Reviewed_Imagery_Workflow.ipynb) | Shared extraction implementation with concurrency and checkpoints |
+| [Model explanation](03_model_development/selected_model_explained.md) | Selected features, calculations and validation interpretation |
+| [Research code](../03_model_development/README.md) and [reviewed outputs](../06_outputs/README.md) | Modelling methods, retained feature tables, validation results and fitted research bundles |
 
-Workflow version is `prediction_v2`, still selected through `configs/prediction/workflow_v1.json`. The main output is `prediction_output_v5`, 29 columns. The [AusRAP reference contract](04_prediction_pipeline/ausrap_reference.md) contains the ordered dictionary and matching rules. Production computes no MAE/RMSE and exports no per-side flow columns. `cway` remains location information and must not be mistaken for a side-flow output.
+The deployed model is `pedestrian-linear-v1`. It uses `commercial_buildings`, `footpath_both_sides` and `abs_mb_category_simple`. Each prediction uses the same final fitted model; running a batch does not retrain it. Current versions are `prediction_v2` for the workflow and `prediction_output_v5` for the 29-column result schema.
 
-The independent [OOF workbook and report](../04_prediction_pipeline/irap_comparison/comparison_report.md) retain all 49 survey sites and paired evaluation of 45 crossing / 43 along-road sites. Those historic metrics are not recalculated by production inference. The final-model [ten-site example](../04_prediction_pipeline/prediction_example/README.md) replays saved features and makes no external requests.
+## Prepare the environment and data
 
-The delivered [illustrated analysis report](../04_prediction_pipeline/irap_comparison/analysis_report.pdf) contains six figures, diagnostic statistics and all 49 site values. Along-road gains are widespread (36/43 sites); crossing gains are narrower (24/45 sites) and depend strongly on two influential improvements. These are descriptive analyses of the same saved OOF results. Diagnostic evidence is indexed [here](../04_prediction_pipeline/irap_comparison/evidence/analysis/README.md). The reviewed reports and historical provenance records are retained; their generation script is not included.
+Install Python 3.11 and the project dependencies using [setup](SETUP.md). Supply your own `GOOGLE_MAPS_API_KEY` and `GEMINI_API_KEY` in the repository-root `.env` for live imagery extraction. The [imagery notebook guide](../02_feature_extraction/imagery/README.md) explains both notebooks and their credential configuration.
 
-## Files and runtime requirements
+| Local material | Required for |
+| --- | --- |
+| `data/external_raw/main_roads_slk/road_slk.sqlite.gz` | Road/SLK location matching and the offline example |
+| `data/external_raw/Mesh Block Counts, 2021.xlsx` | ABS features for live location prediction |
+| `data/raw/AusRAP Data - Words - MSDS.xlsx` | Existing AusRAP references and the complete offline example |
+| A filled input workbook, CSV or Parquet table | Locations to predict; use the [input templates](../data/templates/README.md) |
 
-| Purpose | Required material | Result |
-| --- | --- | --- |
-| Fresh location prediction | Filled batch template or CSV/Parquet; project package/configs/model; local Main Roads SLK snapshot; ABS Mesh Block counts; live ABS access and configured Maps/Gemini services; AusRAP Words source for references | `predictions.xlsx`, `predictions.manifest.json`, and imagery checkpoint |
-| Offline demonstration | Delivered `evidence/saved_run.json`, project package/configs/model, Main Roads snapshot and Words source | Same 29-column predictions and reference schema, with saved-feature provenance |
+GitHub includes only the README under `data/raw/`. Obtain the required raw files through the agreed data handover and place them at the exact paths in the [raw-source guide](../data/raw/README.md). Data reconciliation and historical evaluation require additional sources documented there. Processed datasets, templates and reviewed research outputs remain versioned.
 
-The main road snapshot is `data/external_raw/main_roads_slk/road_slk.sqlite.gz`. ABS counts default to `data/external_raw/Mesh Block Counts, 2021.xlsx`. Existing references default to `data/raw/AusRAP Data - Words - MSDS.xlsx`. The current `data/processed/batch_input_dataset.xlsx` is a 20-location customer-use simulation: 10 observed and 10 random sites. The template independently retains a 100-location example (49 observed and 51 random); neither size is required by the service. The [input notes](../data/processed/README.md) and [current batch manifest](../data/processed/batch_input_dataset.manifest.json) describe the processed file; the [historical template preparation record](../data/templates/batch_input_example_100.manifest.json) retains the original sampling provenance. Local road checks have 18 matched / 2 ambiguous sites in the current batch, and 87 / 13 in the template. Valid entered coordinates allow prediction with a carriageway warning. These counts are local location checks, not live prediction success counts.
+A batch can contain any positive number of locations, using coordinates, road number plus SLK, or both. Each row needs a unique `site_id`. Unknown observed counts stay blank. The supplied 20-location processed example and 100-location template example do not constrain new batch sizes or the mix of locations.
 
-The shared Python setup uses 3.11 and `requirements.txt`. The local pre-existing `.venv` had a broken interpreter link during cleanup and was not reused. Verification used a separate Python 3.11 environment with the relevant pinned runtime and test dependencies. Recreate a machine-local environment using [setup](SETUP.md); do not distribute or depend on this machine's `.venv`. No fresh live-service batch or fresh R execution is claimed by this cleanup.
+## Run and inspect the results
 
-## Raw-source distribution policy (15 October 2026)
-
-Files and subdirectories under `data/raw/` are now provisioned locally and excluded from Git; only the [raw-source setup guide](../data/raw/README.md) is versioned. Obtain the required CSV/XLSX files through the project handover and restore their exact relative paths before running dependent workflows. The Words workbook is required for operational AusRAP references and the complete offline replay; data reconciliation and historical evaluation need their additional documented sources. Processed datasets and reviewed research outputs remain versioned. Earlier dated merge-verification records describe file preservation at that time; this distribution policy changes Git tracking, not the locally retained data or model values.
-
-## Reproduction and acceptance
-
-After installing the project, run these from the repository root. Choose new output folders so reviewed results are not overwritten.
+After setup and local data preparation, reproduce the saved-feature example from the repository root:
 
 ```bash
 python tools/replay_prediction_example.py --output-directory outputs/predictions/example_reproduction
-python -m pytest tests/unit/test_irap_comparison.py tests/unit/test_ausrap_reference.py tests/unit/test_model.py tests/integration/test_ausrap_client_parity.py tests/integration/test_prediction_workflow.py tests/integration/test_prediction_location.py tests/integration/test_prediction_tracer.py -q
 ```
 
-The updated offline regression checks passed 184 tests and 36 subtests on 5 October 2026, including both the 20-row processed simulation and the 100-row template example with simulated feature providers. Three research-source test modules were excluded because the available test environment lacks `geopandas`; a complete-environment full-suite pass is not claimed. The ten-site offline replay also passed, with unchanged features and predictions, ten matched references, nine normal statuses and one retained imagery warning. Observations stayed blank and accuracy metrics were not computed. Fresh live ABS/imagery acceptance remains pending without a working Gemini key.
+For a live batch, replace the input path and worksheet below with your prepared file. Use a new output directory for each run.
 
-Customer prediction does not run OOF evaluation, refit models or require the historical research-input hash checks. Read the delivered reports directly. Optional research reproduction is documented separately in the [developer evaluation notes](05_model_evaluation/reproduction.md); the active reformatted training workbook currently differs from the pinned preflight file hash, so that developer command requires the reviewed research snapshot.
+```bash
+pedflow-predict --input path/to/locations.xlsx --sheet Batch_Input --output-directory outputs/predictions/customer_run_001
+```
 
-The [delivery verification](../04_prediction_pipeline/irap_comparison/evidence/delivery_verification.json) records final workbook hashes, English-cell checks, formula caches and native chart checks. Spreadsheet rendering was reviewed; Microsoft Excel application execution is not claimed. The maintained workbook builder was also exercised separately, with its chart compatibility repair.
+The output workbook contains `Prediction_Output`, `Features` and `Metadata`. It is accompanied by a run manifest and, for imagery extraction, a checkpoint. Inspect `location_status`, prediction `status`/`message` and `comparison_status`/`comparison_notes` independently. Failed predictions remain blank, and missing values must not be treated as zero.
 
-For a live acceptance batch, use the chosen input sheet and run `pedflow-predict` into a fresh output folder. Resolve road-only ambiguities before running; a valid supplied coordinate permits prediction with a carriageway warning. Inspect `location_status`, `status`/`message`, and `comparison_status`/`comparison_notes` independently. Exit 0 reports prediction completeness, not AusRAP coverage. Unknown observed values must remain blank and failures must remain visible in output order. Resume only with a compatible existing checkpoint.
+A valid supplied coordinate can remain usable when carriageway matching is ambiguous, with the warning retained. Unresolved road-only locations require correction before prediction. If the AusRAP source is unavailable, model predictions can still succeed while reference matching reports `source_unavailable`. A successful command exit therefore does not establish reference coverage. Recovery with `--resume` requires a compatible existing checkpoint; details are in the run guide.
 
-## Boundaries and remaining work
+## Verification and limits of use
 
-The previous 49-site location precheck found 36 matched / 13 ambiguous carriageways with road references; coordinate-only matching found 33 matched / 16 ambiguous roads. Entered coordinates remain usable when only carriageway matching is ambiguous; road-only inputs still need a unique position. The saved OOF evaluation does not depend on fresh imagery or rerunning those positions.
+Offline verification on 15 October 2026 passed 199 tests and 36 subtests. The ten-location replay preserved saved features and predictions, produced 29 result columns, matched all ten references and retained one imagery warning. These checks demonstrate calculation and workflow behaviour with saved or simulated features; fresh live ABS/Maps/Gemini acceptance remains outstanding. Review a live sample with your own credentials and inputs before operational use.
 
-The AusRAP source contains 189,222 records. Whole-network prediction has not been run, and source records are not necessarily unique physical locations. Network prediction requires explicit prediction units, geometry and feature-coverage review, and a plan for external requests. Use the optional snapshot-bound `ausrap_record_id` when comparison should reference one original row rather than a ±0.1 km aggregate.
+The comparison retains all 49 surveyed sites, with paired evaluation on 45 crossing and 43 along-road sites. It uses out-of-fold predictions from model development, while operational prediction uses the final model fitted to all 49 sites. Model and feature selection used these survey data, so the comparison is internal validation. Crossing improvements are sensitive to a small number of influential sites. A sensitivity refit excluding the two corrected-target sites has not been performed; its impact is not established. See the [comparison notes](../04_prediction_pipeline/irap_comparison/comparison_report.md).
 
-The OOF result is internal validation because model/feature selection used the survey data. Refitting without corrected sites `250341-04` and `260335-38` is outside the current agreed delivery scope and was not performed; no negligible-impact claim is made. Dashboard integration is outside this workflow update.
-
-## Delivery structure and cleanup
-
-`04_prediction_pipeline/` remains the numbered delivery hub, `src/pedflow/` remains the implementation, `06_outputs/` retains reviewed research evidence, and future unreviewed runs use Git-ignored `outputs/`. All maintained delivery documents and workbook definitions are English with no language suffix. Source datasets, scientific evidence, selected research results, model releases and pinned requirements remain in place.
-
-Superseded working notes, historical outputs and intermediate research artefacts are retained under Git-ignored `07_test/`. The local cleanup manifest records original paths and file fingerprints for recovery. These backups are separate from maintained delivery files and runtime inputs.
-
-Git changes that existed before cleanup were preserved, including the new evaluation/AusRAP modules and tests. This delivery does not create a commit or push. Include the active new source, tests, tools, English documents and `04_prediction_pipeline` files when the team reviews and commits the handover; do not commit `07_test` or credentials.
-
-## Main-branch merge verification (15 October 2026)
-
-The merge retains the approved research outputs, fitted research bundles, processed examples and compact source references. Their 34 retained files, excluding the reconciled raw-data README, match the pre-merge branch byte-for-byte. Microsoft building download caches remain Git-ignored. The superseded combined Google/Mapillary notebook is removed from the shared workspace; its local copy is retained under ignored `07_test/imagery_retired_20261015/`. The credential template has empty values. The [detailed model explanation](03_model_development/selected_model_details.md) preserves the incoming equations and interpretation with portable links and current example descriptions.
-
-The complete collected Python suite passed **199 tests and 36 subtests** using Python 3.11.16 and the applicable dependencies pinned in `requirements.txt`. The ten-site offline replay passed with 29 output columns, unchanged saved features and predictions, ten matched AusRAP references, nine normal statuses and one retained warning. No external service requests, model training or fresh R execution were performed. Model release SHA-256 remains `f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042`.
-
-The separate model-analysis directory reorganisation was saved before merging and remains available in the named Git stash `WIP: model analysis relocation before PR 8 merge`; it is not part of this reconciliation. Restore and review that work separately before publishing its files.
+Whole-network prediction and independent validation at new locations remain unverified. The dashboard is a prototype without a connection to the released model. The delivered analytical PDF is a static report whose generation script is not included. Workbook checks included rendered review and formula/chart verification; execution in the Microsoft Excel application has not been verified. Historical evaluation reproduction has separate source-snapshot requirements described in the [research reproduction guide](05_model_evaluation/reproduction.md).

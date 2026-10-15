@@ -19,4 +19,4 @@ Start with the [delivery handover](HANDOVER.md), [prediction run guide](04_predi
 | [Comparison notes](../04_prediction_pipeline/irap_comparison/comparison_report.md) | Reviewed results, source meanings, exclusions and workbook behaviour |
 | [Workflow review](DELIVERY_REVIEW_20261004.md) | Dated findings, subsequent fixes and remaining verification limits |
 
-Operational setup and prediction guides describe the maintained runtime. Research reproduction has separate snapshot requirements and is not a prerequisite for prediction. Use the dated handover and workflow review to distinguish completed checks from pending live-service validation.
+Operational setup and prediction guides describe the maintained runtime. Research reproduction has separate snapshot requirements and is not a prerequisite for prediction. The customer handover summarises delivered materials, local data preparation and acceptance limits. The dated workflow review is a separate historical technical record.
