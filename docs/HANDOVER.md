@@ -25,6 +25,10 @@ The main road snapshot is `data/external_raw/main_roads_slk/road_slk.sqlite.gz`.
 
 The shared Python setup uses 3.11 and `requirements.txt`. The local pre-existing `.venv` had a broken interpreter link during cleanup and was not reused. Verification used a separate Python 3.11 environment with the relevant pinned runtime and test dependencies. Recreate a machine-local environment using [setup](SETUP.md); do not distribute or depend on this machine's `.venv`. No fresh live-service batch or fresh R execution is claimed by this cleanup.
 
+## Raw-source distribution policy (15 October 2026)
+
+Files and subdirectories under `data/raw/` are now provisioned locally and excluded from Git; only the [raw-source setup guide](../data/raw/README.md) is versioned. Obtain the required CSV/XLSX files through the project handover and restore their exact relative paths before running dependent workflows. The Words workbook is required for operational AusRAP references and the complete offline replay; data reconciliation and historical evaluation need their additional documented sources. Processed datasets and reviewed research outputs remain versioned. Earlier dated merge-verification records describe file preservation at that time; this distribution policy changes Git tracking, not the locally retained data or model values.
+
 ## Reproduction and acceptance
 
 After installing the project, run these from the repository root. Choose new output folders so reviewed results are not overwritten.

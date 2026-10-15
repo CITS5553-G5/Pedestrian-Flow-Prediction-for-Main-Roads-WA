@@ -95,6 +95,14 @@ Confirm that `data/external_raw/Mesh Block Counts, 2021.xlsx` exists. If stored
 elsewhere, update `sources.abs_meshblock_sa1.options.counts_path` in the Context
 configuration.
 
+Raw source files are supplied separately from GitHub. Before running data
+reconciliation or research evaluation, place the required CSV/XLSX files under
+`data/raw/` using the exact paths in the [raw-data setup guide](data/raw/README.md).
+The local `data/raw/AusRAP Data - Words - MSDS.xlsx` is also required for the
+documented AusRAP references and complete offline replay. Without that reference
+source, live model predictions can still succeed while comparison reports
+`source_unavailable`. Only `data/raw/README.md` is tracked in that directory.
+
 | Configuration | Controls |
 | --- | --- |
 | `configs/prediction/context_abs_v1.json` | ABS source path, input worksheet and export formats |

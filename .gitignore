@@ -34,9 +34,9 @@ dist/
 *.inspect.ndjson
 
 # Private-team data policy
-# Only source files directly used by the current feature/model pipeline,
-# approved processed datasets and shared schemas are versioned. Original survey
-# evidence and unselected candidate datasets remain in approved archival storage.
+# Approved processed datasets, shared schemas, reviewed research outputs and
+# selected public references are versioned. Raw client/source files under
+# data/raw/ stay local and are supplied through the agreed project handover.
 data/cache/
 data/tmp/
 data/external_raw/overture_places/*
@@ -60,16 +60,9 @@ data/external_raw/wa_health_establishments/*/*
 !data/external_raw/wa_health_establishments/*/README.md
 data/external_raw/dplh_activity_centres/
 data/external_raw/dplh_region_scheme_boundaries/
-data/raw/Obs Count Data/*
-!data/raw/Obs Count Data/README.md
-!data/raw/Obs Count Data/*/
-data/raw/Obs Count Data/*/*
-!data/raw/Obs Count Data/*/README.md
-data/raw/Ped_iRAP_merged.fst
-data/raw/R scripts for process and linkage/*
-!data/raw/R scripts for process and linkage/README.md
-data/raw/SS_all_index PBI 2010-2024 Download.xlsx
-data/raw/ST_all_index PBI 2010-2025 Download.xlsx
+# Raw source files are provisioned locally; only this setup guide is shared.
+/data/raw/*
+!/data/raw/README.md
 
 # Reviewed research outputs are versioned under 06_outputs/.
 # Reviewed prediction deliverables are versioned under 04_prediction_pipeline/.
