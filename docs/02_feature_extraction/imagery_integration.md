@@ -1,7 +1,10 @@
 # Imagery extraction
 
-`src/pedflow/imagery/` implements the notebook recipe. The notebook and
-`pedflow-imagery` call this shared module. Normal prediction uses
+`src/pedflow/imagery/` implements the reviewed imagery recipe. The
+[shared workflow notebook](../../02_feature_extraction/imagery/Run_Reviewed_Imagery_Workflow.ipynb)
+and `pedflow-imagery` call this module. The
+[original research notebook](../../02_feature_extraction/imagery/Image_Feature_Extraction_Pipeline.ipynb)
+separately exposes the complete historical implementation, including image previews, the prompt, batching and export. Normal prediction uses
 [the unified command](../04_prediction_pipeline/prediction_workflow.md).
 
 ## Configuration and recipe
@@ -70,6 +73,4 @@ throughput; throughput with pacing disabled and feature equivalence remain unver
 The historical training workbook lacks complete imagery provenance; compare a reviewed
 live sample with training features before client delivery.
 
-The original notebook is preserved locally under
-`07_test/imagery_before_migration_20260920/`. Do not publish this archive: historical
-cells or outputs may contain credentials.
+The complete original research notebook is retained in the formal imagery directory with its stored research outputs and without embedded API credentials. Both imagery notebooks load your own Maps and Gemini keys from the repository-root `.env` or the process environment; see the [notebook setup](../../02_feature_extraction/imagery/README.md). Earlier untouched backups remain local under Git-ignored `07_test/` and are separate from the cleaned customer copy.
