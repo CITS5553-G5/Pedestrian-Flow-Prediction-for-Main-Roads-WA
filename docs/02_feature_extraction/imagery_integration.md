@@ -15,7 +15,7 @@ image (640×640, scale 2), and centre/N/S/E/W Street View images (640×640, head
 pitch 0, FOV 90). The 50 m offset is measured in EPSG:3857 map coordinates.
 Only `commercial_buildings` and `footpath_both_sides` are returned as model features.
 
-Up to 10 workers take sites from a shared queue. Each LLM request contains images
+Up to 50 workers take sites from a shared queue by default. Each LLM request contains images
 from one site. Results return in input order. Local request pacing is disabled by
 default for both Maps and Gemini: `maps_requests_per_minute` and
 `llm_requests_per_minute` are `null`. Available workers start requests immediately,

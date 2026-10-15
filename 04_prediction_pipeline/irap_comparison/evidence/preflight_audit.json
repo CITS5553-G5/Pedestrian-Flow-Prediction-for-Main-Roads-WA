@@ -1,0 +1,1667 @@
+{
+  "audit_date": "2026-10-03",
+  "timezone": "Australia/Perth",
+  "scope": "Preflight protocol verification only; no new model accuracy metrics or prediction run.",
+  "protocol_version": "irap_comparison_protocol_v1",
+  "source_commit": "9123d7df0c2b03b9ca316ad766d99cc0025ff5ad",
+  "source_files": [
+    {
+      "path": "data/processed/model_dataset.xlsx",
+      "size_bytes": 29406,
+      "sha256": "b91a8764f93051e0ca40a714adb50937490dcf08a9ac8a7485b7fcd7765998ae"
+    },
+    {
+      "path": "data/raw/Ped_iRAP_merged.csv",
+      "size_bytes": 6044,
+      "sha256": "dd6f0c76d0c12d5dd41908430bb437a5032631c9e719f97e3fd0edb881a659d2"
+    },
+    {
+      "path": "data/raw/AusRAP Data - Words - MSDS.xlsx",
+      "size_bytes": 53519162,
+      "sha256": "4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d"
+    },
+    {
+      "path": "src/pedflow/modeling/releases/pedestrian_linear_v1.json",
+      "size_bytes": 2744,
+      "sha256": "f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042"
+    },
+    {
+      "path": "src/pedflow/prediction/schema.py",
+      "size_bytes": 764,
+      "sha256": "2ec0bfdef965104c1c55064b0bc49169949d01fffa2d201e3f3fc0f8694eafca"
+    },
+    {
+      "path": "data/templates/prediction_output_template.xlsx",
+      "size_bytes": 14486,
+      "sha256": "d832cb592ae00b9d960fca14a8a4deaf271bdb32c73ca10159fa0e7767fbd2ab"
+    },
+    {
+      "path": "06_outputs/03_model_development/03_yashika_model_comparison/03_model_comparison_oof_predictions.csv",
+      "size_bytes": 74923,
+      "sha256": "a1814afe831a83b283447c6b1c97b5aed1bfa4b077176428c01d5836dd7fe4fd"
+    }
+  ],
+  "method": {
+    "baseline": "client compact table mean estimates",
+    "label_to_code": {
+      "None": 1,
+      "1 pedestrian": 2,
+      "2 to 3 pedestrians": 3,
+      "4 to 5 pedestrians": 4,
+      "6 to 7 pedestrians": 5,
+      "8+ pedestrians": 6
+    },
+    "recount": {
+      "1": 0,
+      "2": 3,
+      "3": 15,
+      "4": 38,
+      "5": 75,
+      "6": 150,
+      "7": 250,
+      "8": 350,
+      "9": 450
+    },
+    "window_half_width_km": 0.1,
+    "overlap": "same ROAD_NO and segment_start <= SLK + 0.1 and segment_end >= SLK - 0.1",
+    "normalize_reversed_segment_bounds": true,
+    "floating_point_policy": "Direct float comparison without rounding or epsilon; preserves the current client baseline match.",
+    "numeric_verification_absolute_tolerance": 1e-09,
+    "aggregation": "Unweighted mean over matched source rows; along-road sums driver and passenger recoded flows before mean.",
+    "band_aggregation": "Mean of official label endpoints; along-road sums side endpoints before mean. Derived descriptive intervals, not confidence intervals.",
+    "carriageway_filter": false,
+    "deduplicate_source_rows": false
+  },
+  "continuous_category_convention": {
+    "name": "positive_upper_bound_v1",
+    "source": "Project convention extending the referenced integer labels, not a quoted official continuous-value rule.",
+    "zero_is_separate": true,
+    "positive_upper_bounds": [
+      5,
+      25,
+      50,
+      100,
+      200,
+      300,
+      400,
+      500,
+      900
+    ],
+    "upper_bound_inclusive": true,
+    "above_900_category": 11,
+    "round_before_classification": false,
+    "invalid_values": "Missing, negative and non-finite values have no category."
+  },
+  "summary": {
+    "sites": 49,
+    "cross_eligible": 45,
+    "along_eligible": 43,
+    "mixed_cross_category_count": 24,
+    "segment_count_range": [
+      2,
+      8
+    ],
+    "mismatches": [],
+    "mixed_cway_sites": [
+      "250303-02",
+      "250303-07",
+      "250303-17",
+      "250341-03",
+      "250341-05",
+      "250341-06",
+      "250341-07",
+      "260335-29",
+      "260335-33",
+      "260335-38",
+      "260335-39",
+      "260335-52"
+    ],
+    "max_abs_cross_reproduction_difference": 3.197442310920451e-14,
+    "max_abs_along_reproduction_difference": 3.197442310920451e-14
+  },
+  "survey_evidence": [
+    {
+      "site_id": "250341-01",
+      "path": "data/raw/Obs Count Data/250341 Regional Surveys - Kimberley RESULTS/01.1 Broome Hwy - Broome SLK 31.60 THURSDAY 5th JUNE 2025.xlsm",
+      "sha256": "d0af64879b354557df051eeba22b7946f90c53686e18303b57aa7d2d2d2e7c76",
+      "sheet": "Pedestrian Data",
+      "headers": {
+        "B5": "PEDESTRIAN CROSSING (15 min)",
+        "G5": "PEDESTRIAN SOUTH (15 min)",
+        "L5": "PEDESTRIAN WALKWAY (15 min)",
+        "Q5": "PED CROSSING (Hourly)",
+        "S5": "PED EAST (Hourly)",
+        "U5": "PED WEST (Hourly)"
+      },
+      "diagram_walkway": "Walkway"
+    },
+    {
+      "site_id": "250341-01",
+      "path": "data/raw/Obs Count Data/250341 Regional Surveys - Kimberley RESULTS/01.2 Broome Hwy - Broome SLK 31.60 FRIDAY 6th JUNE 2025.xlsm",
+      "sha256": "6586612e9c0713deb1f666fbabbb7ff5480d27064aa8e809f5226dfd23bb81e2",
+      "sheet": "Pedestrian Data",
+      "headers": {
+        "B5": "PEDESTRIAN CROSSING (15 min)",
+        "G5": "PEDESTRIAN SOUTH (15 min)",
+        "L5": "PEDESTRIAN WALKWAY (15 min)",
+        "Q5": "PED CROSSING (Hourly)",
+        "S5": "PED EAST (Hourly)",
+        "U5": "PED WEST (Hourly)"
+      },
+      "diagram_walkway": "Walkway"
+    },
+    {
+      "site_id": "250341-01",
+      "path": "data/raw/Obs Count Data/250341 Regional Surveys - Kimberley RESULTS/01.3 Broome Hwy - Broome SLK 31.60 SATURDAY 7th JUNE 2025.xlsm",
+      "sha256": "69e458f9291c1b04e8b7194b9a9a0d82749fa5f98b51c3930696671c09cb72e6",
+      "sheet": "Pedestrian Data",
+      "headers": {
+        "B5": "PEDESTRIAN CROSSING (15 min)",
+        "G5": "PEDESTRIAN SOUTH (15 min)",
+        "L5": "PEDESTRIAN WALKWAY (15 min)",
+        "Q5": "PED CROSSING (Hourly)",
+        "S5": "PED EAST (Hourly)",
+        "U5": "PED WEST (Hourly)"
+      },
+      "diagram_walkway": "Walkway"
+    },
+    {
+      "site_id": "260335-38",
+      "path": "data/raw/Obs Count Data/260335 Vulnerable Users RESULTS/38.1 Carnarvon Rd Carnarvon SLK 5.04 THURSDAY 14th MAY 2026.xlsm",
+      "sha256": "eaae21df64213fb1899e7e516a6716a4177299c978e23a3d64984538e0838595",
+      "sheet": "Pedestrian Data",
+      "headers": {
+        "B5": "PEDESTRIAN CROSSING (15 min)",
+        "G5": "PEDESTRIAN WEST (15 min)",
+        "L5": "PED CROSSING (Hourly)",
+        "N5": "PED WEST (Hourly)"
+      },
+      "diagram_walkway": null
+    },
+    {
+      "site_id": "260335-38",
+      "path": "data/raw/Obs Count Data/260335 Vulnerable Users RESULTS/38.2 Carnarvon Rd Carnarvon SLK 5.04 FRIDAY 15th MAY 2026.xlsm",
+      "sha256": "ba11d923b563c881164687c275e3bd8333b53a5423a0aa1b2329ad09e869bff5",
+      "sheet": "Pedestrian Data",
+      "headers": {
+        "B5": "PEDESTRIAN CROSSING (15 min)",
+        "G5": "PEDESTRIAN WEST (15 min)",
+        "L5": "PED CROSSING (Hourly)",
+        "N5": "PED WEST (Hourly)"
+      },
+      "diagram_walkway": null
+    },
+    {
+      "site_id": "260335-38",
+      "path": "data/raw/Obs Count Data/260335 Vulnerable Users RESULTS/38.3 Carnarvon Rd Carnarvon SLK 5.04 SATURDAY 16th MAY 2026.xlsm",
+      "sha256": "d14e34297d517d2ecb3f69fb879e9112063f248960b2dd61d3415a914f855fd9",
+      "sheet": "Pedestrian Data",
+      "headers": {
+        "B5": "PEDESTRIAN CROSSING (15 min)",
+        "G5": "PEDESTRIAN WEST (15 min)",
+        "L5": "PED CROSSING (Hourly)",
+        "N5": "PED WEST (Hourly)"
+      },
+      "diagram_walkway": null
+    }
+  ],
+  "survey_visual_review": {
+    "250341-01": "Thursday Aerial and Cam 46 embedded images were inspected. South + walkway counting zones do not establish complete coverage of both road sides.",
+    "260335-38": "Thursday Aerial and Cam 1E embedded images were inspected. Three daily source tables record west-side northbound/southbound flows only."
+  },
+  "sites": [
+    {
+      "site_id": "250303-01",
+      "source_location_id": "M074-52.8",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        1
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        185731,
+        185732,
+        185733
+      ],
+      "cross_band_mean": [
+        0.0,
+        0.0
+      ],
+      "along_band_mean": [
+        0.0,
+        0.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-02",
+      "source_location_id": "H009-155.15",
+      "available": true,
+      "n_segments": 8,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        73600,
+        73601,
+        73602,
+        73603,
+        76821,
+        76822,
+        76823,
+        76824
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        4.75,
+        20.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-03",
+      "source_location_id": "H045-36.1",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        92800,
+        92801,
+        92802
+      ],
+      "cross_band_mean": [
+        12.666666666666666,
+        33.333333333333336
+      ],
+      "along_band_mean": [
+        68.66666666666667,
+        136.66666666666666
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-04",
+      "source_location_id": "H009-278.3",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        74822,
+        74823,
+        74824
+      ],
+      "cross_band_mean": [
+        2.6666666666666665,
+        11.666666666666666
+      ],
+      "along_band_mean": [
+        10.333333333333334,
+        43.333333333333336
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-05",
+      "source_location_id": "H009-57.9",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        3,
+        5,
+        6
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        72654,
+        72655,
+        72656,
+        72657
+      ],
+      "cross_band_mean": [
+        41.0,
+        87.5
+      ],
+      "along_band_mean": [
+        52.0,
+        105.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-06",
+      "source_location_id": "H009-111.3",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        73186,
+        73187,
+        73188
+      ],
+      "cross_band_mean": [
+        12.666666666666666,
+        33.333333333333336
+      ],
+      "along_band_mean": [
+        102.0,
+        200.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-07",
+      "source_location_id": "H009-185.5",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        4
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        73898,
+        73899,
+        73900,
+        76836,
+        76837,
+        76838
+      ],
+      "cross_band_mean": [
+        26.0,
+        50.0
+      ],
+      "along_band_mean": [
+        34.333333333333336,
+        68.33333333333333
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-08",
+      "source_location_id": "M042-1.1",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        165637,
+        165638,
+        165639,
+        165640
+      ],
+      "cross_band_mean": [
+        16.0,
+        37.5
+      ],
+      "along_band_mean": [
+        54.5,
+        115.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-09",
+      "source_location_id": "H009-83.5",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        72908,
+        72909,
+        72910
+      ],
+      "cross_band_mean": [
+        12.666666666666666,
+        33.333333333333336
+      ],
+      "along_band_mean": [
+        68.66666666666667,
+        136.66666666666666
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-10",
+      "source_location_id": "H009-242.9",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        74469,
+        74470,
+        74471
+      ],
+      "cross_band_mean": [
+        12.666666666666666,
+        33.333333333333336
+      ],
+      "along_band_mean": [
+        68.66666666666667,
+        136.66666666666666
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-11",
+      "source_location_id": "H043-85.8",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        5
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        91400,
+        91401,
+        91402
+      ],
+      "cross_band_mean": [
+        21.0,
+        50.0
+      ],
+      "along_band_mean": [
+        102.0,
+        200.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-12",
+      "source_location_id": "H043-140.6",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        91959,
+        91960,
+        91961
+      ],
+      "cross_band_mean": [
+        12.666666666666666,
+        33.333333333333336
+      ],
+      "along_band_mean": [
+        85.33333333333333,
+        168.33333333333334
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-13",
+      "source_location_id": "H009-170.3",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        73747,
+        73748,
+        73749
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        85.33333333333333,
+        168.33333333333334
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-14",
+      "source_location_id": "H009-131.65",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        73389,
+        73390,
+        73391,
+        73392
+      ],
+      "cross_band_mean": [
+        21.0,
+        43.75
+      ],
+      "along_band_mean": [
+        64.5,
+        128.75
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-15",
+      "available": false,
+      "cross_eligible": false,
+      "along_eligible": false,
+      "exclusion_reason": "client_reference_values_missing"
+    },
+    {
+      "site_id": "250303-16",
+      "source_location_id": "M023-19.16",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        136412,
+        136413,
+        136414
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        52.0,
+        105.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250303-17",
+      "source_location_id": "H043-3.9",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "cross_difference": 0.0,
+      "along_difference": -3.197442310920451e-14,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        90704,
+        90705,
+        90706,
+        91999,
+        92000,
+        92001
+      ],
+      "cross_band_mean": [
+        10.0,
+        23.333333333333332
+      ],
+      "along_band_mean": [
+        11.0,
+        26.666666666666668
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250341-01",
+      "source_location_id": "H042-31.6",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2,
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        90561,
+        90562,
+        90563
+      ],
+      "cross_band_mean": [
+        11.0,
+        26.666666666666668
+      ],
+      "along_band_mean": [
+        37.0,
+        80.0
+      ],
+      "along_eligible": false,
+      "cross_eligible": true,
+      "exclusion_reason": "along_coverage_unconfirmed_south_walkway"
+    },
+    {
+      "site_id": "250341-02",
+      "source_location_id": "H011-44.46",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        1,
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        79679,
+        79680,
+        79681
+      ],
+      "cross_band_mean": [
+        0.6666666666666666,
+        3.3333333333333335
+      ],
+      "along_band_mean": [
+        8.0,
+        33.333333333333336
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250341-03",
+      "source_location_id": "H047-41.88",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        1,
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        93463,
+        93464,
+        93465,
+        93481,
+        93482,
+        93483
+      ],
+      "cross_band_mean": [
+        0.6666666666666666,
+        3.3333333333333335
+      ],
+      "along_band_mean": [
+        26.0,
+        52.5
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250341-04",
+      "source_location_id": "H006-2522.8",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        47811,
+        47812,
+        47813
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        102.0,
+        200.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250341-05",
+      "source_location_id": "H046-0.06",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        92803,
+        92804,
+        92932,
+        92933
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250341-06",
+      "source_location_id": "H051-7.03",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        2,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 3.552713678800501e-15,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        106914,
+        106915,
+        106916,
+        106953,
+        106954,
+        106955
+      ],
+      "cross_band_mean": [
+        2.6666666666666665,
+        11.666666666666666
+      ],
+      "along_band_mean": [
+        5.166666666666667,
+        12.5
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "250341-07",
+      "source_location_id": "H044-4.59",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        92427,
+        92428,
+        92429,
+        92438,
+        92439,
+        92440
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        26.0,
+        52.5
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-28",
+      "source_location_id": "H005-553.12",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        21825,
+        21826,
+        21827
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        85.33333333333333,
+        168.33333333333334
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-29",
+      "source_location_id": "H005-589.84",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        2,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        22192,
+        22193,
+        22194,
+        22672,
+        22673,
+        22674
+      ],
+      "cross_band_mean": [
+        2.6666666666666665,
+        11.666666666666666
+      ],
+      "along_band_mean": [
+        1.8333333333333333,
+        8.333333333333334
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-30",
+      "source_location_id": "H049-19.47",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        95800,
+        95801,
+        95802
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        12.0,
+        50.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-31",
+      "available": false,
+      "cross_eligible": false,
+      "along_eligible": false,
+      "exclusion_reason": "client_reference_values_missing"
+    },
+    {
+      "site_id": "260335-32",
+      "available": false,
+      "cross_eligible": false,
+      "along_eligible": false,
+      "exclusion_reason": "client_reference_values_missing"
+    },
+    {
+      "site_id": "260335-33",
+      "source_location_id": "H001-402.89",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        2,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        4019,
+        4020,
+        4021,
+        4298,
+        4299,
+        4300
+      ],
+      "cross_band_mean": [
+        2.6666666666666665,
+        11.666666666666666
+      ],
+      "along_band_mean": [
+        4.333333333333333,
+        18.333333333333332
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-34",
+      "source_location_id": "M031-270.1",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        153219,
+        153220,
+        153221
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        12.0,
+        50.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-35",
+      "source_location_id": "H009-463.98",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": 3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        76270,
+        76271,
+        76272
+      ],
+      "cross_band_mean": [
+        19.333333333333332,
+        41.666666666666664
+      ],
+      "along_band_mean": [
+        102.0,
+        200.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-36",
+      "source_location_id": "H001-356.36",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        3559,
+        3560,
+        3561
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        7.0,
+        30.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-37",
+      "source_location_id": "H008-0.6",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        67331,
+        67332,
+        67333,
+        67334
+      ],
+      "cross_band_mean": [
+        11.0,
+        31.25
+      ],
+      "along_band_mean": [
+        77.0,
+        152.5
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-38",
+      "source_location_id": "H044-5.04",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        92431,
+        92432,
+        92442,
+        92443
+      ],
+      "cross_band_mean": [
+        16.0,
+        37.5
+      ],
+      "along_band_mean": [
+        13.5,
+        28.75
+      ],
+      "along_eligible": false,
+      "cross_eligible": true,
+      "exclusion_reason": "along_coverage_west_only"
+    },
+    {
+      "site_id": "260335-39",
+      "source_location_id": "H004-366.31",
+      "available": true,
+      "n_segments": 6,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        16286,
+        16287,
+        16288,
+        16317,
+        16318,
+        16319
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        4.333333333333333,
+        18.333333333333332
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-40",
+      "available": false,
+      "cross_eligible": false,
+      "along_eligible": false,
+      "exclusion_reason": "client_reference_row_absent"
+    },
+    {
+      "site_id": "260335-41",
+      "source_location_id": "M045-168.38",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        168797,
+        168798,
+        168799
+      ],
+      "cross_band_mean": [
+        4.333333333333333,
+        18.333333333333332
+      ],
+      "along_band_mean": [
+        72.0,
+        150.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-42",
+      "source_location_id": "M032-0.55",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        154055,
+        154056,
+        154057
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        10.333333333333334,
+        43.333333333333336
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-43",
+      "source_location_id": "H053-30.57",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3,
+        4
+      ],
+      "cross_difference": -3.197442310920451e-14,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        112258,
+        112259,
+        112260
+      ],
+      "cross_band_mean": [
+        12.666666666666666,
+        33.333333333333336
+      ],
+      "along_band_mean": [
+        85.33333333333333,
+        168.33333333333334
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-44",
+      "source_location_id": "M031-34.78",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        150869,
+        150870,
+        150871
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        12.0,
+        50.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-45",
+      "source_location_id": "H005-257.49",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        18915,
+        18916,
+        18917
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        52.0,
+        100.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-46",
+      "source_location_id": "M002-86.13",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        119948,
+        119949,
+        119950
+      ],
+      "cross_band_mean": [
+        2.6666666666666665,
+        11.666666666666666
+      ],
+      "along_band_mean": [
+        8.666666666666666,
+        36.666666666666664
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-47",
+      "source_location_id": "M031-216.22",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        1,
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        152680,
+        152681,
+        152682
+      ],
+      "cross_band_mean": [
+        4.0,
+        16.666666666666668
+      ],
+      "along_band_mean": [
+        51.333333333333336,
+        101.66666666666667
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-48",
+      "source_location_id": "M026-40.44",
+      "available": true,
+      "n_segments": 2,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        138651,
+        138652
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        9.5,
+        40.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-49",
+      "source_location_id": "M031-66.8",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 2.842170943040401e-14,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        151203,
+        151204,
+        151205
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        43.666666666666664,
+        85.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-50",
+      "source_location_id": "H006-233.1",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        2
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        24945,
+        24946,
+        24947
+      ],
+      "cross_band_mean": [
+        1.0,
+        5.0
+      ],
+      "along_band_mean": [
+        12.0,
+        50.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-51",
+      "source_location_id": "M028-22.51",
+      "available": true,
+      "n_segments": 3,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "S"
+      ],
+      "matched_rows": [
+        139608,
+        139609,
+        139610
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        68.66666666666667,
+        136.66666666666666
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    },
+    {
+      "site_id": "260335-52",
+      "source_location_id": "M041-193.82",
+      "available": true,
+      "n_segments": 4,
+      "cross_codes": [
+        3
+      ],
+      "cross_difference": 0.0,
+      "along_difference": 0.0,
+      "cways": [
+        "L",
+        "R"
+      ],
+      "matched_rows": [
+        165613,
+        165614,
+        165626,
+        165627
+      ],
+      "cross_band_mean": [
+        6.0,
+        25.0
+      ],
+      "along_band_mean": [
+        51.0,
+        100.0
+      ],
+      "along_eligible": true,
+      "cross_eligible": true,
+      "exclusion_reason": null
+    }
+  ]
+}

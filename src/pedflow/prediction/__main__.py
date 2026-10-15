@@ -42,6 +42,7 @@ def main() -> int:
         ).items():
             print(f"{name}: {path}")
         print(f"Run {result.metadata['run_id']}: {result.metadata['status_counts']}")
+        print(f"AusRAP reference: {result.metadata.get('ausrap', {}).get('status_counts', {})}")
         return 0 if result.predictions.status.isin(["predicted", "predicted_with_warning"]).all() else 2
     except (PedflowError, OSError) as exc:
         print(f"Prediction failed: {exc}", file=sys.stderr)

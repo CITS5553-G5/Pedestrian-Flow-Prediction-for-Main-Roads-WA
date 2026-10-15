@@ -1,8 +1,8 @@
 """Validate locations, extract ABS and imagery, then run the released model."""
 
+import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
-import hashlib
 from pathlib import Path
 from uuid import uuid4
 
@@ -14,6 +14,7 @@ from pedflow.exceptions import ContractError
 from pedflow.imagery.workflow import build_imagery_features
 from pedflow.modeling import simplify_abs_categories
 from pedflow.modeling.model import FEATURES
+from pedflow.prediction.ausrap import DEFAULT_SOURCE, attach_reference
 from pedflow.prediction.config import load_settings
 from pedflow.prediction.location import RoadLocator, resolve_locations
 from pedflow.prediction.schema import FEATURE_COLUMNS, OUTPUT_COLUMNS, OUTPUT_SCHEMA_VERSION
@@ -50,6 +51,7 @@ def predict_sites(
     resume: bool = False,
     progress=None,
     locator=None,
+    ausrap_index=None,
 ) -> PredictionResult:
     """One service for all interfaces; no training, fallback values or file export.
 
@@ -71,6 +73,8 @@ def predict_sites(
     eligible = input_sites.latitude.notna() & input_sites.longitude.notna() & ~input_sites.location_status.isin(
         ["road_reference_not_found", "ambiguous_carriageway", "road_coordinate_conflict", "road_lookup_failed"]
     )
+    # Entered coordinates still locate features when only the carriageway is ambiguous.
+    eligible |= input_sites.input_type.eq("both") & input_sites.location_status.eq("ambiguous_carriageway")
     # A failed reverse lookup does not prevent coordinate-based feature extraction.
     eligible |= input_sites.input_type.eq("coordinates")
     sites = validate_and_normalise_sites(input_sites.loc[eligible]).reset_index(drop=True) if eligible.any() else None
@@ -83,7 +87,11 @@ def predict_sites(
         predictions["status"] = "not_predicted"
         predictions["message"] = predictions.location_status
         features = pd.DataFrame({"site_id": input_sites.site_id}).reindex(columns=FEATURE_COLUMNS)
-        return PredictionResult(predictions, features, {
+        predictions, reference = attach_reference(
+            predictions, input_sites, root, settings.get("ausrap_source", DEFAULT_SOURCE),
+            index=ausrap_index,
+        )
+        return PredictionResult(predictions.reindex(columns=OUTPUT_COLUMNS), features, {
             "run_id": uuid4().hex, "workflow_version": settings["workflow_version"],
             "output_schema_version": OUTPUT_SCHEMA_VERSION, "coordinate_crs": "EPSG:4326",
             "model_version": model.model_version, "started_at_utc": started,
@@ -91,6 +99,7 @@ def predict_sites(
             "prediction_units": "pedestrians_per_hour", "status_counts": {"not_predicted": len(input_sites)},
             "configuration": settings, "location_status_counts": input_sites.location_status.value_counts().to_dict(),
             "road_snapshot_sha256": snapshot_sha256,
+            "prediction_basis": "released_model_inference", "ausrap": reference,
         })
     context = build_context_features(sites, context_config, root)
     context.features = validate_feature_table(
@@ -166,8 +175,12 @@ def predict_sites(
     features = pd.DataFrame({"site_id": input_sites.site_id}).merge(
         features.reindex(columns=FEATURE_COLUMNS), on="site_id", how="left", validate="one_to_one"
     ).reindex(columns=FEATURE_COLUMNS)
+    predictions, reference = attach_reference(
+        predictions, input_sites, root, settings.get("ausrap_source", DEFAULT_SOURCE),
+        index=ausrap_index,
+    )
     return PredictionResult(
-        predictions=predictions,
+        predictions=predictions.reindex(columns=OUTPUT_COLUMNS),
         features=features,
         metadata={
             "run_id": uuid4().hex,
@@ -185,5 +198,6 @@ def predict_sites(
             "imagery": imagery.metadata,
             "location_status_counts": input_sites.location_status.value_counts().to_dict(),
             "road_snapshot_sha256": snapshot_sha256,
+            "prediction_basis": "released_model_inference", "ausrap": reference,
         },
     )

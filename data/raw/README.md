@@ -1,18 +1,16 @@
-# Raw client sources
+# Raw source evidence
 
-Obtain client data through the agreed private handover and place it locally at the paths below. Preserve the filenames, worksheet names and source contents. These files are ignored by Git for new additions; do not upload them to the public repository or overwrite them with predictions.
+The approved source files below are versioned for the documented research and reference workflow. Preserve source contents and do not overwrite them with prediction results.
 
-The current data-audit notebook, `01_data_preparation/01_model_dataset_etl_reconciliation.ipynb`, requires these three files in `data/raw/`:
-
-| Local path | Purpose |
+| File | Purpose |
 | --- | --- |
-| `data/raw/Ped_iRAP_merged.csv` | Client numeric pedestrian references and observed-count comparisons |
-| `data/raw/AusRAP Data - Words - MSDS.xlsx` | Road segments, coordinate linkage and original categorical pedestrian bands |
-| `data/raw/Road_Network.csv` | Road-number and SLK validation |
+| `Ped_iRAP_merged.csv` | Compact pedestrian references and observed-count reconciliation |
+| `AusRAP Data - Words - MSDS.xlsx` | Road segments, original categorical pedestrian bands and operational AusRAP reference matching |
+| `Road_Network.csv` | Road-number and SLK validation |
 
-The audit also requires the separately supplied reviewed workbook `data/processed/model_dataset.xlsx`, with its `Model_Data` worksheet. Model-development notebooks use this workbook for training. The current audit validates the reviewed table and creates a candidate copy; it does not fully rebuild the training table from raw surveys.
+The [reconciliation notebook](../../01_data_preparation/01_model_dataset_etl_reconciliation.ipynb) also requires the reviewed `data/processed/model_dataset.xlsx` and its `Model_Data` worksheet. It audits the approved table and creates a separate candidate copy; it does not claim to rebuild every target from original survey files absent from a clone. Model-development notebooks use the separate reviewed modelling workbook for training.
 
-For review of the original survey evidence, retain the original workbooks under `data/raw/Obs Count Data/`, preserving these batch folder names:
+Original survey workbooks remain local under `Obs Count Data/`, preserving these batch folder names:
 
 ```text
 250303 South West Vulnerable Road Users RESULTS/
@@ -20,6 +18,8 @@ For review of the original survey evidence, retain the original workbooks under 
 260335 Vulnerable Users RESULTS/
 ```
 
-Keep the client's original processing and linkage scripts in `data/raw/R scripts for process and linkage/` when that historical processing needs to be reviewed. The original workbooks and scripts are optional audit evidence for the current notebook, not inputs to formal prediction. The `.fst` copy and the `SS_all_index` / `ST_all_index` workbooks are not required by the current audit or prediction workflow.
+Original processing and linkage scripts belong under `R scripts for process and linkage/`. These original workbooks and scripts are Git-ignored and supplied through approved project storage. They are optional for the current reconciliation notebook but required when a particular historical audit explicitly calls for them. The `.fst` copy and the `SS_all_index` / `ST_all_index` workbooks are not required by the current notebook or prediction workflow.
 
-To run predictions with the released model, none of the client files in `data/raw/` or the training workbook is required. Prepare your own input in `data/processed/` using `data/templates/batch_input_template.xlsx`, replacing its example rows with your locations. Keep `data/templates/prediction_output_template.xlsx`, the released model JSON and prediction configurations available. The workflow also needs the local ABS workbook and Main Roads SLK snapshot described in the [prediction setup](../../README.md#runtime-configuration), plus your API credentials in `.env`. Prediction results are generated locally in `outputs/`.
+The [historical evaluation guide](../../docs/05_model_evaluation/reproduction.md) identifies the exact research snapshot and six survey workbooks needed for strict provenance verification. The [preflight audit](../../04_prediction_pipeline/irap_comparison/evidence/preflight_audit.json) records relative evidence paths and fingerprints.
+
+For new-location prediction, prepare a batch using the [input contract](../processed/README.md). Model inference does not require the training workbook, merged survey CSV or original survey workbooks. The workflow uses the AusRAP Words workbook after inference to attach existing reference values; those values are not predictors. ABS counts, the Main Roads SLK snapshot, model/configuration files, output template and live service credentials have separate requirements in the [project setup](../../README.md#runtime-configuration). New runs write to Git-ignored `outputs/`.

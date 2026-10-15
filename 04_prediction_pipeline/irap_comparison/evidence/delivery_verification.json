@@ -1,0 +1,61 @@
+{
+  "verified_at_utc": "2026-10-04T08:40:55.778721+00:00",
+  "workbook_sha256": "60ea69a5ba18c192dc65f23d0f7a2d9623b77d747eb928fe9e18e57c5c7064f4",
+  "original_workbook_sha256": "94aef125112758aa16ac2785d92a5f7deb5901a1a7a896a3fa0157f8773bce56",
+  "unchanged_comparison_sheets": [
+    "Summary",
+    "Site_Comparison",
+    "Errors"
+  ],
+  "unique_sites": 49,
+  "site_columns": 19,
+  "error_rows": 98,
+  "cross_eligible": 45,
+  "along_eligible": 43,
+  "missing_reference_sites": 4,
+  "mixed_crossing_category_sites": 24,
+  "formula_count": 996,
+  "formula_cache_errors": 0,
+  "native_charts": [
+    {
+      "xml_part": "xl/drawings/charts/chart1.xml",
+      "series": 3,
+      "points_per_series": 45,
+      "xy_references_and_caches_match": true
+    },
+    {
+      "xml_part": "xl/drawings/charts/chart2.xml",
+      "series": 3,
+      "points_per_series": 43,
+      "xy_references_and_caches_match": true
+    }
+  ],
+  "maintained_workbooks_checked": [
+    "04_prediction_pipeline/irap_comparison/irap_comparison.xlsx",
+    "data/templates/prediction_output_template.xlsx",
+    "04_prediction_pipeline/prediction_example/predictions.xlsx"
+  ],
+  "english_cell_checks_passed": true,
+  "active_text_files_scanned": 176,
+  "active_text_han_occurrences": 0,
+  "scientific_inputs_and_survey_evidence_unchanged": true,
+  "model_release_sha256": "f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042",
+  "intentional_pinned_file_change": "data/templates/prediction_output_template.xlsx: English definitions and readability only; output schema unchanged",
+  "relocated_audit_unchanged": true,
+  "evaluation_cli_reproduced_after_cleanup": true,
+  "offline_prediction_replayed_after_cleanup": true,
+  "workbook_builder_exercised": true,
+  "tests_passed": 83,
+  "subtests_passed": 33,
+  "live_external_requests_made": false,
+  "fresh_r_execution": false,
+  "visual_qa": "Final XLSX files reimported and rendered: comparison summary/definitions and prediction counts, notes, dictionary and provenance reviewed. Microsoft Excel application not exercised.",
+  "cleanup_summary": {
+    "moved_files": 121,
+    "deleted_files": 154,
+    "moved_bytes": 14299618,
+    "deleted_bytes": 2901512
+  },
+  "local_document_links_checked": 155,
+  "missing_local_document_links": []
+}

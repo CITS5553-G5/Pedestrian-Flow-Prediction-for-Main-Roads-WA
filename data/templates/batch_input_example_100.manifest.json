@@ -1,0 +1,754 @@
+{
+  "dataset_version": "batch_input_100_v1",
+  "schema_version": "batch_input_v3",
+  "created_date": "2026-10-04",
+  "sheet": "Batch_Input",
+  "row_count": 100,
+  "group_counts": {
+    "observed": 49,
+    "random": 51
+  },
+  "source_sha256": {
+    "data/processed/model_dataset.xlsx": "b91a8764f93051e0ca40a714adb50937490dcf08a9ac8a7485b7fcd7765998ae",
+    "data/raw/AusRAP Data - Words - MSDS.xlsx": "4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d",
+    "data/raw/Road_Network.csv": "4f7bc46364acb0b114d6393fc14b2df1182520b18fd0db001a61d760d5a097a1",
+    "data/external_raw/main_roads_slk/road_slk.sqlite.gz": "dbff75c0d70ca4f48b60e633ac1101e9b98694d35e878cda20d0c4e4cc3d2d22",
+    "src/pedflow/modeling/releases/pedestrian_linear_v1.json": "f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042"
+  },
+  "observed_source_sheet": "Model_Data",
+  "observed_rule": "Copy all 49 site IDs, coordinates, road references and observed targets unchanged. Carriageway is not available in this source and remains blank.",
+  "random_sampling": {
+    "seed": 20261004,
+    "source_record_count": 189222,
+    "sampling_unit": "Unique road number and midpoint SLK; keep lowest source Excel row for duplicate units.",
+    "valid_unique_unit_count": 181648,
+    "excluded_invalid_source_rows": 0,
+    "ranking": "Sort ascending by SHA256 of ASCII <seed>:<source_excel_row>, then source Excel row.",
+    "selection": "Take the first 51 ranked units whose source carriageway resolves to one Main Roads measured position and passes location matching; enforce 100 m separation from observations and already selected random points.",
+    "distance_rule": "Local planar metres: latitude*110540 and longitude*111320*cos(mean latitude).",
+    "carriageway_mapping": {
+      "L": "Left",
+      "R": "Right",
+      "S": "Single"
+    },
+    "coordinates": "Interpolate the pinned Main Roads measured geometry at (normalized start SLK + end SLK)/2, using the source carriageway.",
+    "candidates_inspected": 51,
+    "rejected_candidate_counts": {},
+    "selected_units": [
+      {
+        "source_row": 56914,
+        "road": "H007",
+        "start": 247.04,
+        "end": 247.14,
+        "cway": "S",
+        "slk_km": 247.08999999999997,
+        "site_id": "AUSRAP-001",
+        "cway_input": "Single",
+        "latitude": -26.702487182220615,
+        "longitude": 114.57210581276603
+      },
+      {
+        "source_row": 11660,
+        "road": "H003",
+        "start": 623.07,
+        "end": 623.17,
+        "cway": "S",
+        "slk_km": 623.12,
+        "site_id": "AUSRAP-002",
+        "cway_input": "Single",
+        "latitude": -31.84968874780569,
+        "longitude": 128.01545091372415
+      },
+      {
+        "source_row": 112481,
+        "road": "H057",
+        "start": 9.2,
+        "end": 9.3,
+        "cway": "L",
+        "slk_km": 9.25,
+        "site_id": "AUSRAP-003",
+        "cway_input": "Left",
+        "latitude": -32.65156192958784,
+        "longitude": 115.80080067114092
+      },
+      {
+        "source_row": 41510,
+        "road": "H006",
+        "start": 1892.58,
+        "end": 1892.68,
+        "cway": "S",
+        "slk_km": 1892.63,
+        "site_id": "AUSRAP-004",
+        "cway_input": "Single",
+        "latitude": -19.703841929835132,
+        "longitude": 121.23046530434794
+      },
+      {
+        "source_row": 173885,
+        "road": "M054",
+        "start": 11.79,
+        "end": 11.89,
+        "cway": "S",
+        "slk_km": 11.84,
+        "site_id": "AUSRAP-005",
+        "cway_input": "Single",
+        "latitude": -28.856894346382873,
+        "longitude": 114.73064188130571
+      },
+      {
+        "source_row": 176867,
+        "road": "M061",
+        "start": 0.5,
+        "end": 0.6,
+        "cway": "S",
+        "slk_km": 0.55,
+        "site_id": "AUSRAP-006",
+        "cway_input": "Single",
+        "latitude": -33.48869648593479,
+        "longitude": 115.72276114662752
+      },
+      {
+        "source_row": 58555,
+        "road": "H007",
+        "start": 421.94,
+        "end": 422.04,
+        "cway": "S",
+        "slk_km": 421.99,
+        "site_id": "AUSRAP-007",
+        "cway_input": "Single",
+        "latitude": -25.29379805809398,
+        "longitude": 113.92885752941184
+      },
+      {
+        "source_row": 156288,
+        "road": "M037",
+        "start": 40.85,
+        "end": 40.95,
+        "cway": "S",
+        "slk_km": 40.900000000000006,
+        "site_id": "AUSRAP-008",
+        "cway_input": "Single",
+        "latitude": -33.3708112848471,
+        "longitude": 116.20164142857156
+      },
+      {
+        "source_row": 90205,
+        "road": "H041",
+        "start": 2.8,
+        "end": 2.9,
+        "cway": "S",
+        "slk_km": 2.8499999999999996,
+        "site_id": "AUSRAP-009",
+        "cway_input": "Single",
+        "latitude": -30.802610031427605,
+        "longitude": 121.44733393548393
+      },
+      {
+        "source_row": 186269,
+        "road": "M076",
+        "start": 9.76,
+        "end": 9.86,
+        "cway": "S",
+        "slk_km": 9.809999999999999,
+        "site_id": "AUSRAP-010",
+        "cway_input": "Single",
+        "latitude": -17.799682940626624,
+        "longitude": 122.28108489258322
+      },
+      {
+        "source_row": 187506,
+        "road": "M076",
+        "start": 133.46,
+        "end": 133.56,
+        "cway": "S",
+        "slk_km": 133.51,
+        "site_id": "AUSRAP-011",
+        "cway_input": "Single",
+        "latitude": -16.918612531204182,
+        "longitude": 122.7951975437542
+      },
+      {
+        "source_row": 159134,
+        "road": "M037",
+        "start": 324.06,
+        "end": 324.16,
+        "cway": "S",
+        "slk_km": 324.11,
+        "site_id": "AUSRAP-012",
+        "cway_input": "Single",
+        "latitude": -33.09899121574287,
+        "longitude": 118.99153057400723
+      },
+      {
+        "source_row": 167301,
+        "road": "M045",
+        "start": 18.7,
+        "end": 18.8,
+        "cway": "S",
+        "slk_km": 18.75,
+        "site_id": "AUSRAP-013",
+        "cway_input": "Single",
+        "latitude": -31.401512739044723,
+        "longitude": 115.64707574566476
+      },
+      {
+        "source_row": 14188,
+        "road": "H004",
+        "start": 156.95,
+        "end": 157.05,
+        "cway": "S",
+        "slk_km": 157.0,
+        "site_id": "AUSRAP-014",
+        "cway_input": "Single",
+        "latitude": -30.344785856319643,
+        "longitude": 115.47230971428574
+      },
+      {
+        "source_row": 8896,
+        "road": "H003",
+        "start": 346.44,
+        "end": 346.54,
+        "cway": "S",
+        "slk_km": 346.49,
+        "site_id": "AUSRAP-015",
+        "cway_input": "Single",
+        "latitude": -32.30212734604232,
+        "longitude": 125.2273340085654
+      },
+      {
+        "source_row": 38706,
+        "road": "H006",
+        "start": 1627.17,
+        "end": 1627.27,
+        "cway": "S",
+        "slk_km": 1627.22,
+        "site_id": "AUSRAP-016",
+        "cway_input": "Single",
+        "latitude": -20.39000527324201,
+        "longitude": 118.76891529875529
+      },
+      {
+        "source_row": 34526,
+        "road": "H006",
+        "start": 1203.4,
+        "end": 1203.5,
+        "cway": "S",
+        "slk_km": 1203.45,
+        "site_id": "AUSRAP-017",
+        "cway_input": "Single",
+        "latitude": -23.201069157565275,
+        "longitude": 119.46165061279468
+      },
+      {
+        "source_row": 125773,
+        "road": "M011",
+        "start": 55.2,
+        "end": 55.3,
+        "cway": "S",
+        "slk_km": 55.25,
+        "site_id": "AUSRAP-018",
+        "cway_input": "Single",
+        "latitude": -26.37813420846817,
+        "longitude": 113.99663469148942
+      },
+      {
+        "source_row": 62672,
+        "road": "H007",
+        "start": 836.1,
+        "end": 836.2,
+        "cway": "S",
+        "slk_km": 836.1500000000001,
+        "site_id": "AUSRAP-019",
+        "cway_input": "Single",
+        "latitude": -22.57047594785998,
+        "longitude": 115.48627477205886
+      },
+      {
+        "source_row": 150379,
+        "road": "M030",
+        "start": 419.51,
+        "end": 419.61,
+        "cway": "S",
+        "slk_km": 419.56,
+        "site_id": "AUSRAP-020",
+        "cway_input": "Single",
+        "latitude": -20.49486756516995,
+        "longitude": 119.03714664473688
+      },
+      {
+        "source_row": 61439,
+        "road": "H007",
+        "start": 712.8,
+        "end": 712.9,
+        "cway": "S",
+        "slk_km": 712.8499999999999,
+        "site_id": "AUSRAP-021",
+        "cway_input": "Single",
+        "latitude": -23.105512159318284,
+        "longitude": 114.52505340000008
+      },
+      {
+        "source_row": 251,
+        "road": "H001",
+        "start": 24.9,
+        "end": 25.0,
+        "cway": "L",
+        "slk_km": 24.95,
+        "site_id": "AUSRAP-022",
+        "cway_input": "Left",
+        "latitude": -32.134062990017206,
+        "longitude": 116.01794040639277
+      },
+      {
+        "source_row": 91418,
+        "road": "H043",
+        "start": 87.43,
+        "end": 87.53,
+        "cway": "S",
+        "slk_km": 87.48,
+        "site_id": "AUSRAP-023",
+        "cway_input": "Single",
+        "latitude": -33.86421861981618,
+        "longitude": 115.09585968965521
+      },
+      {
+        "source_row": 83707,
+        "road": "H017",
+        "start": 42.1,
+        "end": 42.2,
+        "cway": "L",
+        "slk_km": 42.150000000000006,
+        "site_id": "AUSRAP-024",
+        "cway_input": "Left",
+        "latitude": -31.90956573444698,
+        "longitude": 115.92377529411765
+      },
+      {
+        "source_row": 3238,
+        "road": "H001",
+        "start": 324.09,
+        "end": 324.19,
+        "cway": "S",
+        "slk_km": 324.14,
+        "site_id": "AUSRAP-025",
+        "cway_input": "Single",
+        "latitude": -34.35328325493449,
+        "longitude": 117.54087430232568
+      },
+      {
+        "source_row": 147952,
+        "road": "M030",
+        "start": 175.76,
+        "end": 175.86,
+        "cway": "S",
+        "slk_km": 175.81,
+        "site_id": "AUSRAP-026",
+        "cway_input": "Single",
+        "latitude": -21.973698317526395,
+        "longitude": 120.09873859090916
+      },
+      {
+        "source_row": 140471,
+        "road": "M028",
+        "start": 108.82,
+        "end": 108.92,
+        "cway": "S",
+        "slk_km": 108.87,
+        "site_id": "AUSRAP-027",
+        "cway_input": "Single",
+        "latitude": -29.922063537645247,
+        "longitude": 116.04053747596159
+      },
+      {
+        "source_row": 25752,
+        "road": "H006",
+        "start": 313.85,
+        "end": 313.95,
+        "cway": "S",
+        "slk_km": 313.9,
+        "site_id": "AUSRAP-028",
+        "cway_input": "Single",
+        "latitude": -29.753808153775868,
+        "longitude": 117.04640291304351
+      },
+      {
+        "source_row": 46415,
+        "road": "H006",
+        "start": 2383.08,
+        "end": 2383.18,
+        "cway": "S",
+        "slk_km": 2383.13,
+        "site_id": "AUSRAP-029",
+        "cway_input": "Single",
+        "latitude": -17.84820117988726,
+        "longitude": 124.38474192242842
+      },
+      {
+        "source_row": 145388,
+        "road": "M029",
+        "start": 338.27,
+        "end": 338.37,
+        "cway": "S",
+        "slk_km": 338.32,
+        "site_id": "AUSRAP-030",
+        "cway_input": "Single",
+        "latitude": -22.187017272066765,
+        "longitude": 118.01430381818194
+      },
+      {
+        "source_row": 23542,
+        "road": "H006",
+        "start": 91.8,
+        "end": 91.9,
+        "cway": "S",
+        "slk_km": 91.85,
+        "site_id": "AUSRAP-031",
+        "cway_input": "Single",
+        "latitude": -31.165404386782434,
+        "longitude": 116.18133203402131
+      },
+      {
+        "source_row": 49595,
+        "road": "H006",
+        "start": 2701.78,
+        "end": 2701.88,
+        "cway": "S",
+        "slk_km": 2701.83,
+        "site_id": "AUSRAP-032",
+        "cway_input": "Single",
+        "latitude": -18.729471230194765,
+        "longitude": 126.85920076923081
+      },
+      {
+        "source_row": 26561,
+        "road": "H006",
+        "start": 394.59,
+        "end": 394.69,
+        "cway": "S",
+        "slk_km": 394.64,
+        "site_id": "AUSRAP-033",
+        "cway_input": "Single",
+        "latitude": -29.285493999194422,
+        "longitude": 117.56699320000014
+      },
+      {
+        "source_row": 146851,
+        "road": "M030",
+        "start": 68.4,
+        "end": 68.5,
+        "cway": "S",
+        "slk_km": 68.45,
+        "site_id": "AUSRAP-034",
+        "cway_input": "Single",
+        "latitude": -22.827252241578172,
+        "longitude": 120.0026107802818
+      },
+      {
+        "source_row": 160184,
+        "road": "M038",
+        "start": 70.32,
+        "end": 70.42,
+        "cway": "S",
+        "slk_km": 70.37,
+        "site_id": "AUSRAP-035",
+        "cway_input": "Single",
+        "latitude": -32.781555631506514,
+        "longitude": 117.513167814424
+      },
+      {
+        "source_row": 186407,
+        "road": "M076",
+        "start": 23.56,
+        "end": 23.66,
+        "cway": "S",
+        "slk_km": 23.61,
+        "site_id": "AUSRAP-036",
+        "cway_input": "Single",
+        "latitude": -17.675939930680716,
+        "longitude": 122.28002470744637
+      },
+      {
+        "source_row": 40052,
+        "road": "H006",
+        "start": 1761.77,
+        "end": 1761.87,
+        "cway": "S",
+        "slk_km": 1761.82,
+        "site_id": "AUSRAP-037",
+        "cway_input": "Single",
+        "latitude": -20.024597856535127,
+        "longitude": 119.9204532142858
+      },
+      {
+        "source_row": 47631,
+        "road": "H006",
+        "start": 2504.68,
+        "end": 2504.78,
+        "cway": "S",
+        "slk_km": 2504.73,
+        "site_id": "AUSRAP-038",
+        "cway_input": "Single",
+        "latitude": -18.109914002052818,
+        "longitude": 125.4364330234987
+      },
+      {
+        "source_row": 53639,
+        "road": "H006",
+        "start": 3119.12,
+        "end": 3119.22,
+        "cway": "S",
+        "slk_km": 3119.17,
+        "site_id": "AUSRAP-039",
+        "cway_input": "Single",
+        "latitude": -15.962867193048824,
+        "longitude": 128.41900558064523
+      },
+      {
+        "source_row": 156613,
+        "road": "M037",
+        "start": 71.68,
+        "end": 71.78,
+        "cway": "S",
+        "slk_km": 71.73,
+        "site_id": "AUSRAP-040",
+        "cway_input": "Single",
+        "latitude": -33.417061456759335,
+        "longitude": 116.5065860677967
+      },
+      {
+        "source_row": 123023,
+        "road": "M007",
+        "start": 64.6,
+        "end": 64.7,
+        "cway": "S",
+        "slk_km": 64.65,
+        "site_id": "AUSRAP-041",
+        "cway_input": "Single",
+        "latitude": -22.663833218451895,
+        "longitude": 114.13929314741037
+      },
+      {
+        "source_row": 15542,
+        "road": "H004",
+        "start": 291.6,
+        "end": 291.7,
+        "cway": "S",
+        "slk_km": 291.65,
+        "site_id": "AUSRAP-042",
+        "cway_input": "Single",
+        "latitude": -29.309048759431274,
+        "longitude": 115.00831188280152
+      },
+      {
+        "source_row": 34215,
+        "road": "H006",
+        "start": 1172.3,
+        "end": 1172.4,
+        "cway": "S",
+        "slk_km": 1172.35,
+        "site_id": "AUSRAP-043",
+        "cway_input": "Single",
+        "latitude": -23.316417832646813,
+        "longitude": 119.71072750000008
+      },
+      {
+        "source_row": 40998,
+        "road": "H006",
+        "start": 1841.38,
+        "end": 1841.48,
+        "cway": "S",
+        "slk_km": 1841.43,
+        "site_id": "AUSRAP-044",
+        "cway_input": "Single",
+        "latitude": -19.829142026939877,
+        "longitude": 120.78576616679496
+      },
+      {
+        "source_row": 31090,
+        "road": "H006",
+        "start": 858.83,
+        "end": 858.93,
+        "cway": "S",
+        "slk_km": 858.88,
+        "site_id": "AUSRAP-045",
+        "cway_input": "Single",
+        "latitude": -25.85074160851343,
+        "longitude": 119.08324168123403
+      },
+      {
+        "source_row": 118037,
+        "road": "M001",
+        "start": 124.2,
+        "end": 124.3,
+        "cway": "S",
+        "slk_km": 124.25,
+        "site_id": "AUSRAP-046",
+        "cway_input": "Single",
+        "latitude": -33.91814343732814,
+        "longitude": 118.33410993258435
+      },
+      {
+        "source_row": 91343,
+        "road": "H043",
+        "start": 79.93,
+        "end": 80.03,
+        "cway": "S",
+        "slk_km": 79.98,
+        "site_id": "AUSRAP-047",
+        "cway_input": "Single",
+        "latitude": -33.800903578312905,
+        "longitude": 115.12332059728513
+      },
+      {
+        "source_row": 15463,
+        "road": "H004",
+        "start": 283.7,
+        "end": 283.8,
+        "cway": "S",
+        "slk_km": 283.75,
+        "site_id": "AUSRAP-048",
+        "cway_input": "Single",
+        "latitude": -29.378607035438908,
+        "longitude": 115.00723235515596
+      },
+      {
+        "source_row": 54307,
+        "road": "H006",
+        "start": 3185.82,
+        "end": 3185.92,
+        "cway": "S",
+        "slk_km": 3185.87,
+        "site_id": "AUSRAP-049",
+        "cway_input": "Single",
+        "latitude": -15.496563547900662,
+        "longitude": 128.1434431290324
+      },
+      {
+        "source_row": 99200,
+        "road": "H049",
+        "start": 359.55,
+        "end": 359.65,
+        "cway": "S",
+        "slk_km": 359.6,
+        "site_id": "AUSRAP-050",
+        "cway_input": "Single",
+        "latitude": -28.46713002552449,
+        "longitude": 121.19459647368427
+      },
+      {
+        "source_row": 18505,
+        "road": "H005",
+        "start": 216.27,
+        "end": 216.37,
+        "cway": "S",
+        "slk_km": 216.32,
+        "site_id": "AUSRAP-051",
+        "cway_input": "Single",
+        "latitude": -31.607001879912936,
+        "longitude": 117.8872700153483
+      }
+    ],
+    "interpretation": "Operational test sample of eligible road/SLK units; not population-weighted or spatially representative, and not a new accuracy-validation sample."
+  },
+  "preflight": {
+    "location_status_counts": {
+      "matched": 87,
+      "ambiguous_carriageway": 13
+    },
+    "comparison_status_counts": {
+      "matched": 99,
+      "matched_no_flow": 1
+    },
+    "sites_requiring_carriageway_confirmation": [
+      {
+        "site_id": "250303-02",
+        "road_no": "H009",
+        "slk_km": 155.15,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250303-07",
+        "road_no": "H009",
+        "slk_km": 185.5,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250303-15",
+        "road_no": "M074",
+        "slk_km": 7.2,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250303-17",
+        "road_no": "H043",
+        "slk_km": 3.9,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250341-03",
+        "road_no": "H047",
+        "slk_km": 41.88,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250341-05",
+        "road_no": "H046",
+        "slk_km": 0.06,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250341-06",
+        "road_no": "H051",
+        "slk_km": 7.03,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "250341-07",
+        "road_no": "H044",
+        "slk_km": 4.59,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "260335-29",
+        "road_no": "H005",
+        "slk_km": 589.84,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "260335-33",
+        "road_no": "H001",
+        "slk_km": 402.89,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "260335-38",
+        "road_no": "H044",
+        "slk_km": 5.04,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "260335-39",
+        "road_no": "H004",
+        "slk_km": 366.31,
+        "location_status": "ambiguous_carriageway"
+      },
+      {
+        "site_id": "260335-52",
+        "road_no": "M041",
+        "slk_km": 193.82,
+        "location_status": "ambiguous_carriageway"
+      }
+    ],
+    "model_execution": "Not run. No live ABS or imagery calls were made.",
+    "comparison_rule": "Production point rule: supplied road/SLK +/- 0.1 km. sampling_source_row is provenance only, not ausrap_record_id and not an exact-record override.",
+    "status_note": "location_precheck is a dated static input audit. Prediction recomputes location status from current inputs."
+  },
+  "cohort_metadata": "site_group, road_name, local_government_name, sampling_source_row and location_precheck describe inputs and are not model predictors. Production output keeps its existing 29-column schema; join site_group by site_id.",
+  "prediction_basis": "All groups use released_model_inference; this batch does not replace the independent OOF evaluation.",
+  "output_sha256": {
+    "data/processed/batch_input_dataset.xlsx": "6cd62cd7bb8201fdb9f593914fe0c0467af6776b4112bf314716475986279c81",
+    "data/templates/batch_input_template.xlsx": "634db1ee9ba3431869d7aa88fa966551afee665030725e5c9ba3143fb7f149b3"
+  },
+  "record_role": "Historical preparation record for the original 100-location example; not the current processed input manifest.",
+  "hash_scope": "Source and output hashes describe the creation snapshot. They do not claim to match subsequently edited workbooks."
+}

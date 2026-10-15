@@ -1,0 +1,52 @@
+{
+  "dataset_version": "customer_simulation_20_v1",
+  "schema_version": "batch_input_v3",
+  "updated_date": "2026-10-05",
+  "sheet": "Batch_Input",
+  "input_path": "data/processed/batch_input_dataset.xlsx",
+  "record_role": "Snapshot of the current customer-use simulation; prediction accepts any positive batch size and does not require this file.",
+  "row_count": 20,
+  "group_counts": {
+    "observed": 10,
+    "random": 10
+  },
+  "site_ids": [
+    "250303-01",
+    "250303-02",
+    "250303-03",
+    "250303-04",
+    "250303-05",
+    "250303-06",
+    "250303-07",
+    "250303-08",
+    "250303-09",
+    "250303-10",
+    "AUSRAP-001",
+    "AUSRAP-002",
+    "AUSRAP-003",
+    "AUSRAP-004",
+    "AUSRAP-005",
+    "AUSRAP-006",
+    "AUSRAP-007",
+    "AUSRAP-008",
+    "AUSRAP-009",
+    "AUSRAP-010"
+  ],
+  "location_status_counts": {
+    "matched": 18,
+    "ambiguous_carriageway": 2
+  },
+  "coordinate_policy": "Valid supplied coordinates allow prediction with a warning when only carriageway matching is ambiguous. Road-only ambiguity requires a unique measured position.",
+  "source_example_record": "data/templates/batch_input_example_100.manifest.json",
+  "source_sha256": {
+    "data/processed/model_dataset.xlsx": "d4f25777ecb6f9d08ae897b866a909a40a37904dcdaf1bf9363d2956b22d4808",
+    "data/raw/AusRAP Data - Words - MSDS.xlsx": "4507ea6fb92f5b06f81d527332640611bd1637adcf727dd061f46b8890f7a80d",
+    "data/raw/Road_Network.csv": "4f7bc46364acb0b114d6393fc14b2df1182520b18fd0db001a61d760d5a097a1",
+    "data/external_raw/main_roads_slk/road_slk.sqlite.gz": "dbff75c0d70ca4f48b60e633ac1101e9b98694d35e878cda20d0c4e4cc3d2d22",
+    "src/pedflow/modeling/releases/pedestrian_linear_v1.json": "f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042"
+  },
+  "output_sha256": {
+    "data/processed/batch_input_dataset.xlsx": "e55c19005af2e1a60ac6de5c027b3fc602028c54a9f6744a7c2af9ba1ed33f1b"
+  },
+  "model_execution": "Not run live; no ABS or imagery service calls made for this manifest."
+}

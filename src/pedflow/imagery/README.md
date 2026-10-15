@@ -32,9 +32,11 @@ __main__.py → Load configuration, API keys and sites
   → io.py: export CSV and manifest
 ```
 
-By default, up to ten sites run concurrently. As one finishes, the next starts
+The maintained configuration allows up to 50 sites to run concurrently. As one finishes, the next starts
 without waiting for a fixed group to complete. Each Gemini request contains
-images from one site only.
+images from one site only. Maps and Gemini request limits are independently
+configurable; both local RPM limits are currently disabled (`null`). The worker
+count is a concurrency setting, not a provider quota or total request count.
 
 ## Inputs, outputs and configuration
 

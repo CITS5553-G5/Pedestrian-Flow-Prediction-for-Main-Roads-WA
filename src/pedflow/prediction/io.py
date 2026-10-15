@@ -1,5 +1,6 @@
 """Fill the maintained formal prediction template and write run provenance."""
 
+import math
 from copy import copy
 from pathlib import Path
 
@@ -15,13 +16,20 @@ from pedflow.prediction.workflow import PredictionResult
 
 
 def metadata_table(metadata: dict) -> pd.DataFrame:
-    """Readable run facts; RAP benchmark data never enters formal inference."""
+    """Readable provenance; AusRAP remains a reference, never a model feature."""
     fields = (
         "run_id", "output_schema_version", "model_version", "coordinate_crs",
         "prediction_units", "started_at_utc", "finished_at_utc", "row_count",
-        "road_snapshot_sha256",
+        "road_snapshot_sha256", "prediction_basis",
     )
     values = {name: metadata.get(name, "") for name in fields}
+    if metadata.get("execution_mode"):
+        values["execution_mode"] = metadata["execution_mode"]
+    if metadata.get("feature_reuse"):
+        reuse = metadata["feature_reuse"]
+        values["reused_feature_source"] = reuse.get("source", reuse.get("workbook", ""))
+        values["original_feature_run_finished_at_utc"] = reuse["original_finished_at_utc"]
+        values["feature_reuse_note"] = "Saved features reused; ABS and imagery were not retrieved again for this output."
     values.update(
         selected_features="commercial_buildings, footpath_both_sides, abs_mb_category_simple",
         location_rule="Road + SLK uses measured road geometry; coordinates use the entered point. Both inputs use coordinates for feature extraction and check the road reference.",
@@ -29,6 +37,18 @@ def metadata_table(metadata: dict) -> pd.DataFrame:
     )
     for status, count in metadata.get("location_status_counts", {}).items():
         values[f"location: {status}"] = count
+    reference = metadata.get("ausrap", {})
+    values.update(
+        ausrap_version=reference.get("version", ""),
+        ausrap_source=(reference.get("source") or {}).get("source_path", reference.get("source_path", "")),
+        ausrap_source_sha256=(reference.get("source") or {}).get("sha256", ""),
+        reference_label="Existing iRAP flow estimate (recoded)",
+        reference_meaning="Client category recoding and source-row aggregation; not an official exact count. Intervals are descriptive, not confidence intervals.",
+        category_rule=reference.get("category_rule", ""),
+        accuracy_metrics="Not computed in prediction runs; unknown sites have no observed counts.",
+    )
+    for status, count in reference.get("status_counts", {}).items():
+        values[f"ausrap: {status}"] = count
     return pd.DataFrame(values.items(), columns=["field", "value"])
 
 
@@ -61,12 +81,13 @@ def write_prediction_outputs(
         data = table.reindex(columns=schema).astype(object)
         data = data.where(pd.notna(data), None)
         for row_number, values in enumerate(data.itertuples(index=False, name=None), start=2):
+            line_count = 1
             for col_number, value in enumerate(values, start=1):
                 cell = sheet.cell(row_number, col_number)
                 if row_number > 2 and not cell.has_style:
                     cell._style = copy(sheet.cell(2, col_number)._style)
                 cell.value = value.item() if isinstance(value, np.generic) else value
-                if col_number == 1 and isinstance(value, str) and value.startswith("="):
+                if isinstance(cell.value, str):
                     cell.data_type = "s"
                 heading = schema[col_number - 1]
                 if heading in {"latitude", "longitude"}:
@@ -75,20 +96,32 @@ def write_prediction_outputs(
                     cell.number_format = "0.000"
                 elif heading.endswith("_per_h"):
                     cell.number_format = "0.00"
-            sheet.row_dimensions[row_number].height = 16
+                elif heading.endswith("_category"):
+                    cell.number_format = "0"
+                if heading in {"message", "comparison_notes"}:
+                    cell.alignment = Alignment(wrap_text=True, vertical="top")
+                    width = sheet.column_dimensions[cell.column_letter].width or 40
+                    line_count = max(line_count, math.ceil(len(str(value or "")) / (width * 0.9)))
+            sheet.row_dimensions[row_number].height = 16 * line_count
         sheet.freeze_panes = "B2"
         last_column = sheet.cell(1, len(schema)).column_letter
         sheet.auto_filter.ref = f"A1:{last_column}{max(2, len(data) + 1)}"
         sheet.sheet_view.showGridLines = False
     run_sheet = book["Metadata"]
-    run_sheet.cell(50, 1, "Run metadata")
-    run_sheet.cell(51, 1, "field")
-    run_sheet.cell(51, 2, "value")
-    for row_number, (field, value) in enumerate(metadata_table(result.metadata).itertuples(index=False, name=None), start=52):
+    run_sheet.cell(62, 1, "Run metadata")
+    run_sheet.cell(63, 1, "field")
+    run_sheet.cell(63, 2, "value")
+    for row_number, (field, value) in enumerate(metadata_table(result.metadata).itertuples(index=False, name=None), start=64):
+        run_sheet.merge_cells(start_row=row_number, start_column=2, end_row=row_number, end_column=4)
         run_sheet.cell(row_number, 1, field)
-        run_sheet.cell(row_number, 2, value)
+        value_cell = run_sheet.cell(row_number, 2, value)
+        if isinstance(value_cell.value, str):
+            value_cell.data_type = "s"
+        run_sheet.cell(row_number, 1).alignment = Alignment(wrap_text=True, vertical="top")
         run_sheet.cell(row_number, 2).alignment = Alignment(wrap_text=True, vertical="top")
-        run_sheet.row_dimensions[row_number].height = 42 if isinstance(value, str) and len(value) > 80 else 16
+        field_lines = math.ceil(len(field) / ((run_sheet.column_dimensions["A"].width or 28) * 0.9))
+        value_height = 42 if isinstance(value, str) and len(value) > 80 else 16
+        run_sheet.row_dimensions[row_number].height = max(16 * field_lines, value_height)
     with atomic_path(workbook) as temporary:
         book.save(temporary)
     manifest = folder / "predictions.manifest.json"

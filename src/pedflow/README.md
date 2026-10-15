@@ -12,6 +12,7 @@ API keys and standalone commands.
 | [imagery](imagery/README.md) | Retrieve images and use Gemini to assess visible features | Site coordinates → commercial building count, footpaths on both sides and extraction status |
 | [modeling](modeling/README.md) | Load trained models and calculate predictions | Three complete features → crossing and along-road pedestrian flows |
 | [prediction](prediction/README.md) | Resolve road/SLK or coordinates, extract features, predict and export | Site table → predictions, features and run metadata |
+| [evaluation](evaluation/README.md) | Reproduce the historical internal OOF comparison from a pinned research snapshot | Saved observations, OOF predictions and reference evidence → paired metrics and comparison tables |
 
 ```text
 pedflow-predict
@@ -38,6 +39,7 @@ features.
 | [io.py](io.py) | Read Excel, CSV and Parquet; preserve text IDs; calculate content fingerprints; write through temporary files before replacing destination files |
 | [paths.py](paths.py) | Locate the project root and resolve relative configuration paths |
 | [exceptions.py](exceptions.py) | Define shared exceptions for configuration, data contracts and source execution |
+| [flow.py](flow.py) | Define versioned continuous-flow categories, reference recoding values and band formatting |
 | [__init__.py](__init__.py) | Identify the Python package and expose its version |
 
 ## Data and configuration
@@ -51,6 +53,10 @@ and `coordinate_crs`. File readers default a missing CRS column to `EPSG:4326`.
 Source modules return features and statuses for each site without calling the
 model. Prediction checks source statuses and feature completeness before inference.
 Failed sites remain in the results; missing features are not replaced with zeros.
+
+Evaluation runs separately from prediction. It reads saved OOF results rather than
+the released model and requires fingerprint-matched research inputs; see the
+[research reproduction guide](../../docs/05_model_evaluation/reproduction.md).
 
 ## Integration verification
 

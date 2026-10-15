@@ -3,8 +3,10 @@
 CITS5553 Group 5 — predict peak crossing and along-road pedestrian flows
 
 ```text
-Location table → ABS + imagery → three selected features → model → predictions.xlsx
+Location table → ABS + imagery → three selected features → model → add AusRAP reference → predictions.xlsx
 ```
+
+The [delivery folder](04_prediction_pipeline/README.md) contains the 49-site comparison workbook, English report and final-model prediction example. Read the [handover](docs/HANDOVER.md) for current status and verification.
 
 ## Repository structure
 
@@ -12,26 +14,30 @@ Location table → ABS + imagery → three selected features → model → predi
 
 | Directory | Purpose |
 | --- | --- |
-| `01_data_preparation/` | Prepare and reconcile survey and road-network data |
-| `02_feature_extraction/` | Develop Context and Imagery features |
-| `03_model_development/` | Train, compare and select models |
-| `04_prediction_pipeline/` | Integrate and demonstrate the prediction workflow |
-| `05_application/` | Dashboard prototype and future backend |
-| `06_outputs/` | Reviewed team outputs |
+| [01_data_preparation](01_data_preparation/README.md) | Prepare and reconcile survey and road-network data |
+| [02_feature_extraction](02_feature_extraction/README.md) | Develop Context and Imagery features |
+| [03_model_development](03_model_development/README.md) | Train, compare and select models |
+| [04_prediction_pipeline](04_prediction_pipeline/README.md) | Reviewed comparison results and reproducible prediction example |
+| [05_application](05_application/README.md) | Dashboard prototype and future backend |
+| [06_outputs](06_outputs/README.md) | Reviewed research outputs |
 
 ### Shared workflow infrastructure
 
 | Directory | Purpose |
 | --- | --- |
-| `src/pedflow/` | Reusable extraction and prediction code |
-| `configs/` | Prediction settings and retained research configurations |
-| `data/` | Source data, processed datasets and templates |
-| `docs/` | Technical documentation |
-| `tests/` | Automated verification |
+| [src/pedflow](src/pedflow/README.md) | Reusable extraction, prediction and research evaluation code |
+| [configs](configs/README.md) | Prediction settings and retained research configurations |
+| [data](data/README.md) | Source data, processed datasets and templates |
+| [docs](docs/README.md) | Technical documentation |
+| [tests](tests/README.md) | Automated verification |
+| [scripts](scripts/README.md) | Public road-reference snapshot download |
+| [`tools/`](tools/README.md) | Model export, delivery reproduction and workbook repair scripts |
 | `outputs/` | Local run results; ignored by Git |
 
-Notebooks and application code use the shared implementation in `src/pedflow/`.
-See the [code guide](src/pedflow/README.md) for module and script responsibilities.
+Operational extraction and prediction use the shared implementation in `src/pedflow/`.
+The maintained feature notebooks call that implementation; model-development notebooks
+also contain separate research code. The frontend remains a demonstration interface
+without a model connection. See the [code guide](src/pedflow/README.md) for module responsibilities.
 
 ## Native setup for Windows and macOS
 
@@ -72,7 +78,8 @@ commands are added, rerun the editable installation (`pip install --no-deps -e .
 ### API keys
 
 If `.env` is absent, copy `.env.example` to `.env`. If it exists, fill its missing
-keys from the template. `.env` stays local; supply your own API credentials.
+values with your own service credentials. `.env` stays local; `.env.example` contains
+placeholders and does not provide working API keys.
 
 | Variable | Used for |
 | --- | --- |
@@ -88,10 +95,6 @@ Confirm that `data/external_raw/Mesh Block Counts, 2021.xlsx` exists. If stored
 elsewhere, update `sources.abs_meshblock_sa1.options.counts_path` in the Context
 configuration.
 
-Keep client source data and processed inputs local. See the
-[raw-data setup](data/raw/README.md) for the files needed for data auditing and
-model training; formal prediction does not require those client source files.
-
 | Configuration | Controls |
 | --- | --- |
 | `configs/prediction/context_abs_v1.json` | ABS source path, input worksheet and export formats |
@@ -106,14 +109,21 @@ changing feature or model versions.
 
 ### Prepare input
 
-When supplied locally, `data/processed/batch_input_dataset.xlsx` contains the
-current 50-location test batch. Otherwise, copy the input template to that path
-and replace its example rows with your locations.
-Formal runs read the specified processed input, with any positive number
-of locations. `data/templates/batch_input_template.xlsx` offers three input
+Prediction accepts any positive number of locations. Batch size is determined by
+the populated rows in the selected input sheet or table; no predefined location
+count or observed/random split is required. Prepare your own input file and select
+it with `--input`. Template example rows can be replaced, added or removed.
+
+`data/templates/batch_input_template.xlsx` provides three input
 sheets: `Batch_Input` (both identifiers and coordinates), `Road_SLK` (road and
 SLK), and `Coordinates` (latitude/longitude). Select one sheet with `--sheet`.
-CSV and Parquet with the same columns are also supported.
+CSV and Parquet with the same columns are also supported. The template's
+`Road_SLK` and `Coordinates` sheets are blank alternatives for new batches.
+`data/processed/batch_input_dataset.xlsx` is a supplied example that can be selected
+for a demonstration run. Its current contents and the template sample are described
+in the [input dataset notes](data/processed/README.md); their row counts do not
+constrain new batches. Valid entered coordinates remain the feature point
+when carriageway matching is ambiguous; the result retains a road warning.
 
 | Column | Requirement | Example |
 | --- | --- | --- |
@@ -123,15 +133,33 @@ CSV and Parquet with the same columns are also supported.
 | `road_no`, `slk_km` | Road number and point SLK pair; required for road input | `H001`, `356.36` |
 | `start_slk`, `end_slk` | Optional official segment bounds instead of `slk_km`; the midpoint SLK is used | `356.30`, `356.40` |
 | `cway` | Optional carriageway code where a divided road is ambiguous | `Single` |
-| `road_name`, `local_government_name` | Optional legacy notes in the 50-site test sheet; not used for matching or modelling | `Albany Highway`, `Albany` |
+| `road_name`, `local_government_name` | Optional descriptive labels; not used for matching or modelling | `Albany Highway`, `Albany` |
+| `obs_peak_cross_ped_per_h`, `obs_peak_along_ped_per_h` | Optional observed targets; unknown values stay blank | `7.33`, `13.00` |
+| `site_group`, `sampling_source_row`, `location_precheck` | Optional batch annotations; not model features; join to output by `site_id` | `observed`, blank, `ambiguous_carriageway` |
 
 When both pairs are present, the entered coordinates drive feature extraction;
 the road reference is checked against the local measured road line. Conflicts
 are flagged without a prediction. A coordinate near, but not exactly on, the
 road is retained as the prediction point and matched to a road within 30 m when
-unambiguous. Road-only points are placed directly on the measured line. The
+unambiguous. Carriageway ambiguity alone does not block a supplied coordinate;
+road-only points require a unique measured position, with `cway` when necessary. The
 [local Main Roads SLK snapshot](data/external_raw/README.md) is
-used for matching; the client's submitted locations are not sent to that service.
+used for matching; submitted locations are not sent to the road-data service.
+
+### Offline prediction example
+
+After setup, reproduce the delivered feature snapshot:
+
+```bash
+python tools/replay_prediction_example.py --output-directory outputs/predictions/example_reproduction
+```
+
+This command uses the saved feature snapshot, released model and local road/AusRAP
+references. It requires no API keys or external service calls. The replay reproduces
+that particular saved example; new batches of any positive size use `pedflow-predict`
+with their own input file.
+See the [example guide](04_prediction_pipeline/prediction_example/README.md) for
+inputs, outputs and verification limits.
 
 ### Complete prediction
 
@@ -141,11 +169,13 @@ pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directo
 
 This command extracts ABS and imagery, joins the three features by `site_id` and
 runs the saved models. No additional script or model training is required.
+The supplied input path is an example; replace `--input` with your prepared file.
+The number of locations read from that file determines the batch and output row count.
 
 | Output | Contents |
 | --- | --- |
-| `predictions.xlsx` | `Prediction_Output`: location details and two pedestrian/hour predictions; `Features`: model inputs and source checks; `Metadata`: definitions and run details |
-| `predictions.manifest.json` | Run versions, settings and source descriptions |
+| `predictions.xlsx` | `Prediction_Output`: 29 columns with locations, model predictions and existing AusRAP references; `Features`: model inputs and source checks; `Metadata`: English field definitions and run details |
+| `predictions.manifest.json` | Run versions, settings, source fingerprint and matched AusRAP source rows |
 | `imagery.checkpoint.json` | Saved imagery progress |
 
 Predictions are in **pedestrians/hour**. Check `status` and `message`; failed sites
@@ -159,10 +189,13 @@ pedflow-predict --input data/processed/batch_input_dataset.xlsx --output-directo
 Resume refreshes ABS, reuses completed imagery and retries failed imagery. See the
 [run guide](docs/04_prediction_pipeline/prediction_workflow.md) for recovery details.
 
-`Features` contains the model inputs and extraction diagnostics. Formal predictions
-do not read RAP pedestrian values or a fixed site register. Existing RAP and
-survey files remain available for separate model evaluation. The released model
-and its three predictors remain unchanged.
+`Features` contains the model inputs and extraction diagnostics. After model
+inference, the workflow adds existing categories, derived flow bands and
+**Existing iRAP flow estimate (recoded)** from the local AusRAP Words workbook.
+Check `comparison_status` and `comparison_notes` separately from prediction status.
+Unknown sites need no observed counts; the prediction workflow computes no
+MAE/RMSE and reads no fixed survey-site register. The released model and its
+three predictors remain unchanged. See the [integration record](docs/04_prediction_pipeline/ausrap_reference.md).
 
 ### Independent modules
 
@@ -184,7 +217,7 @@ Writes `batch_abs_context_features.xlsx`, a Parquet copy and a manifest. Check
 **Imagery — Google Maps + Gemini**
 
 ```bash
-pedflow-imagery --input data/processed/batch_input_dataset.xlsx --output-directory outputs/imagery_features/run_001 --workers 10
+pedflow-imagery --input data/processed/batch_input_dataset.xlsx --output-directory outputs/imagery_features/run_001 --workers 50
 ```
 
 Writes `imagery_features.csv`, a manifest and a checkpoint. Check `imagery_status`,
@@ -199,15 +232,29 @@ there is no separate model-only command. To test the model, use the command belo
 
 ## Verification and current status
 
-Run the existing model and integrated workflow tests offline:
+From the project root, run the existing model and integrated workflow tests offline:
 
 ```bash
 python -m pytest tests/unit/test_model.py tests/integration/test_prediction_tracer.py -q
 ```
 
-These check model results against R references and exercise workflow recovery with
-simulated provider responses. Live sample validation and dashboard integration
-remain pending. Use `--help` with any installed command for its options.
+The model tests compare Python predictions with saved expected outputs in
+[`r_linear_reference.json`](tests/fixtures/modeling/r_linear_reference.json).
+These outputs were generated by [`export_linear_model.R`](tools/export_linear_model.R)
+from the saved selected R model using `stats::predict.lm`, its saved preprocessing,
+the inverse transformation and zero clipping. The 79 cases cover 49 training sites,
+24 synthetic feature combinations and 6 missing or unseen-category cases. They
+verify that Python reproduces the R implementation; they are model predictions,
+not observed pedestrian counts or evidence of accuracy on new sites. See the
+[reference-case notes](tests/fixtures/modeling/README.md) and
+[model export and verification guide](docs/03_model_development/selected_model_integration.md#reproducing-the-release-and-verification)
+for the source bundle and regeneration command. Running these tests reads the saved
+JSON and does not require R or live provider calls.
+
+The integrated workflow test uses simulated ABS, Google Maps and Gemini responses
+to check prediction output and recovery with `--resume`, including reuse of completed
+imagery jobs. Live sample validation and dashboard integration remain pending.
+Use `--help` with any installed command for its options.
 
 ## Optional container environment
 

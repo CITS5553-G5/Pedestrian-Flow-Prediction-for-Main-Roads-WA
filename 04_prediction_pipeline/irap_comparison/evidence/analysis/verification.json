@@ -1,0 +1,37 @@
+{
+  "verified_at_utc": "2026-10-04T13:31:02.063289+00:00",
+  "pdf_pages": 8,
+  "analytical_figures": 6,
+  "appendix_unique_sites": 49,
+  "all_appendix_sites_appear_once": true,
+  "html_sections": 8,
+  "html_embedded_figures": 6,
+  "html_remote_assets": 0,
+  "pdf_text_outside_page": 0,
+  "english_only": true,
+  "independent_recalculation_from_site_counts": [
+    {
+      "direction": "Cross-road",
+      "n": 45,
+      "wins": 24,
+      "mean_gain": 2.550095269463524,
+      "without_top_two_gain": -0.07395926485861157
+    },
+    {
+      "direction": "Along-road",
+      "n": 43,
+      "wins": 36,
+      "mean_gain": 31.304263013308955,
+      "without_top_two_gain": 26.43633299392811
+    }
+  ],
+  "original_explanatory_report_workbook_and_evidence_unchanged": true,
+  "native_excel_chart_input_parity": true,
+  "visual_review": "All eight final PDF pages rendered with Poppler and inspected; no clipping, overlapping content or missing figures observed.",
+  "report_sha256": "d800ebb285299e8c1a5729a3d257715db41c611030f01d02f773c2b83d290a0d",
+  "html_sha256": "901bfd99baed9e049a7ec7449c3115e53d6b8a495f61db344f4b6652bae3f94e",
+  "local_document_links_checked": 174,
+  "missing_local_document_links": [],
+  "model_retrained": false,
+  "new_model_predictions": false
+}

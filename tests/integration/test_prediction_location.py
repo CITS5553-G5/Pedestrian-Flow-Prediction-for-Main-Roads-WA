@@ -1,4 +1,4 @@
-"""Formal location matching and output remain independent of RAP comparison data."""
+"""Location matching and v5 output preserve model and reference distinctions."""
 
 from pathlib import Path
 
@@ -7,20 +7,35 @@ import pytest
 from openpyxl import load_workbook
 
 from pedflow.exceptions import ContractError
+from pedflow.io import read_sites
+from pedflow.prediction.io import write_prediction_outputs
 from pedflow.prediction.location import resolve_locations
 from pedflow.prediction.schema import FEATURE_COLUMNS, OUTPUT_COLUMNS
-from pedflow.prediction.io import write_prediction_outputs
 from pedflow.prediction.workflow import PredictionResult
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_all_current_50_test_sites_match_local_measured_roads():
-    source = pd.read_excel(ROOT / "data/processed/batch_input_dataset.xlsx", sheet_name="Batch_Input").head(50)
+@pytest.mark.parametrize("path", [
+    "data/processed/batch_input_dataset.xlsx", "data/templates/batch_input_template.xlsx",
+])
+def test_example_batches_preserve_observations_and_location_ambiguities(path):
+    source = read_sites(ROOT / path)
+    assert len(source) > 0
+    assert source.site_id.is_unique
+    assert set(source.site_group) == {"random", "observed"}
+    observed = source.loc[source.site_group.eq("observed")].reset_index(drop=True)
+    model = pd.read_excel(ROOT / "data/processed/model_dataset.xlsx", sheet_name="Model_Data")
+    fields = ["site_id", "latitude", "longitude", "road_no", "slk_km",
+              "obs_peak_cross_ped_per_h", "obs_peak_along_ped_per_h"]
+    expected = model.set_index("site_id").loc[observed.site_id].reset_index()
+    pd.testing.assert_frame_equal(observed[fields], expected[fields], check_dtype=False)
+    assert source.loc[source.site_group.eq("random"), fields[-2:]].eq("").all().all()
     matched = resolve_locations(source)
-    assert len(matched) == 50
-    assert matched.location_status.eq("matched").all()
-    assert matched.road_offset_m.max() < 30
+    assert len(matched) == len(source)
+    assert matched.location_status.tolist() == source.location_precheck.tolist()
+    assert matched.loc[source.site_group.eq("random"), "location_status"].eq("matched").all()
+    assert matched.loc[matched.location_status.eq("matched"), "road_offset_m"].max() < 30
 
 
 def test_new_road_slk_and_coordinate_inputs_match_both_directions():
@@ -76,7 +91,7 @@ def test_invalid_incomplete_location_fails_clearly():
         resolve_locations(pd.DataFrame({"site_id": ["x"], "road_no": ["H001"]}))
 
 
-def test_export_has_two_predictions_and_features_but_no_rap_columns(tmp_path):
+def test_export_has_two_predictions_and_nullable_reference_columns(tmp_path):
     prediction = pd.DataFrame([{
         "site_id": "new-location", "input_type": "coordinates", "latitude": -32.0,
         "longitude": 116.0, "location_status": "no_nearby_road",
@@ -90,5 +105,12 @@ def test_export_has_two_predictions_and_features_but_no_rap_columns(tmp_path):
     book = load_workbook(paths["workbook"])
     assert book.sheetnames == ["Metadata", "Prediction_Output", "Features"]
     assert tuple(c.value for c in book["Prediction_Output"][1][:len(OUTPUT_COLUMNS)]) == OUTPUT_COLUMNS
-    assert not any("irap" in column or "obs_" in column for column in OUTPUT_COLUMNS)
-    assert book["Prediction_Output"]["O2"].value == 12.0
+    assert len(OUTPUT_COLUMNS) == 29
+    assert book["Prediction_Output"]["O2"].value is None
+    assert book["Prediction_Output"]["P2"].value == 12.0
+    assert book["Prediction_Output"]["Q2"].value is None
+    assert book["Prediction_Output"]["W2"].value == 15.0
+    assert book["Prediction_Output"]["X2"].value is None
+    assert not any("mae" in c.lower() or "rmse" in c.lower() for c in OUTPUT_COLUMNS)
+    assert book["Metadata"]["B14"].value == "prediction_output_v5"
+    assert book["Metadata"]["A47"].value == "comparison_notes"
