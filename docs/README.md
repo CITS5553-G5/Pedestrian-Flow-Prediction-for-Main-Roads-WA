@@ -17,6 +17,5 @@ Start with the [delivery handover](HANDOVER.md), [prediction run guide](04_predi
 | [Research reproduction](05_model_evaluation/reproduction.md) | Optional historical evaluation, exact input snapshots and fingerprint requirements |
 | [Data analysis report](../04_prediction_pipeline/irap_comparison/analysis_report.pdf) | Six figures analysing errors, influential sites and robustness, with a 49-site appendix |
 | [Comparison notes](../04_prediction_pipeline/irap_comparison/comparison_report.md) | Reviewed results, source meanings, exclusions and workbook behaviour |
-| [Workflow review](DELIVERY_REVIEW_20261004.md) | Dated findings, subsequent fixes and remaining verification limits |
 
-Operational setup and prediction guides describe the maintained runtime. Research reproduction has separate snapshot requirements and is not a prerequisite for prediction. The customer handover summarises delivered materials, local data preparation and acceptance limits. The dated workflow review is a separate historical technical record.
+Operational setup and prediction guides describe the maintained runtime. Research reproduction has separate snapshot requirements and is not a prerequisite for prediction. The customer handover summarises delivered materials, local data preparation and acceptance limits.
