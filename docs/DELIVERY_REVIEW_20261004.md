@@ -14,6 +14,14 @@ Valid supplied coordinates remain eligible for prediction when only carriageway 
 
 The retained `combined_google_mapillary_feature_extraction.ipynb` now reads its Google Maps and Gemini credentials from `GOOGLE_MAPS_API_KEY` and `GEMINI_API_KEY` environment variables. The two hard-coded credential values were removed from the current notebook. This file update does not verify credential revocation or remove earlier Git-history copies.
 
+## Superseded notebook removal: 15 October 2026
+
+The combined Google/Mapillary research notebook was removed from the shared repository by the project owner's decision. Its current local file was preserved byte-for-byte under Git-ignored `07_test/imagery_retired_20261015/`; the maintained imagery implementation remains in `src/pedflow/imagery/`. The earlier credential file update remains a dated historical record.
+
+## Main-branch reconciliation: 15 October 2026
+
+The incoming main-branch cleanup removed approved research outputs, processed examples and compact source references. Conflict resolution retains the feature tables, research model bundles, candidate workbook, site map and documented source data. Downloaded Microsoft building caches remain local and ignored. The obsolete combined-provider notebook remains deleted from the shared repository, with its local archive retained. The merged `.env.example` contains empty placeholders rather than the incoming shared credential values. This records current-file cleanup, not revocation or rewritten Git history.
+
 ## Initial review record: 4 October 2026
 
 The review covered the active `03_Project` workspace and examined the older `pedflow-frontend-update` worktree for credential residue and delivery descriptions. The initial review did not change business code, models, input data or reviewed outputs. Temporary test and reproduction files were kept outside the delivered repository.

@@ -57,3 +57,11 @@ The OOF result is internal validation because model/feature selection used the s
 Superseded working notes, historical outputs and intermediate research artefacts are retained under Git-ignored `07_test/`. The local cleanup manifest records original paths and file fingerprints for recovery. These backups are separate from maintained delivery files and runtime inputs.
 
 Git changes that existed before cleanup were preserved, including the new evaluation/AusRAP modules and tests. This delivery does not create a commit or push. Include the active new source, tests, tools, English documents and `04_prediction_pipeline` files when the team reviews and commits the handover; do not commit `07_test` or credentials.
+
+## Main-branch merge verification (15 October 2026)
+
+The merge retains the approved research outputs, fitted research bundles, processed examples and compact source references. Their 34 retained files, excluding the reconciled raw-data README, match the pre-merge branch byte-for-byte. Microsoft building download caches remain Git-ignored. The superseded combined Google/Mapillary notebook is removed from the shared workspace; its local copy is retained under ignored `07_test/imagery_retired_20261015/`. The credential template has empty values. The [detailed model explanation](03_model_development/selected_model_details.md) preserves the incoming equations and interpretation with portable links and current example descriptions.
+
+The complete collected Python suite passed **199 tests and 36 subtests** using Python 3.11.16 and the applicable dependencies pinned in `requirements.txt`. The ten-site offline replay passed with 29 output columns, unchanged saved features and predictions, ten matched AusRAP references, nine normal statuses and one retained warning. No external service requests, model training or fresh R execution were performed. Model release SHA-256 remains `f85f5ca240093c32cea2e4a023e6b0a73c38ff467c032747b70fd57f8c287042`.
+
+The separate model-analysis directory reorganisation was saved before merging and remains available in the named Git stash `WIP: model analysis relocation before PR 8 merge`; it is not part of this reconciliation. Restore and review that work separately before publishing its files.

@@ -2,6 +2,8 @@
 
 The production release is `pedestrian-linear-v1`, exported without refitting from Yashika's saved R model bundle. It contains two separate linear regressions on `log1p` peak-hour flow: one for crossing and one for along-road flow. Both use the same three features and all 49 training observations from 28 roads.
 
+The [detailed model explanation](selected_model_details.md) includes the full equations, worked examples, grouped-validation results and interpretation limits.
+
 ## Inputs and calculation
 
 `commercial_buildings` is the numeric imagery feature, `footpath_both_sides` is the imagery boolean, and `abs_mb_category_simple` is the ABS class (`Residential`, `Other` or `Commercial`). The official [integration contract](selected_model_integration.md) specifies allowed values, failure handling and the saved preprocessing. Coordinates determine feature extraction but are not regression inputs. Observed counts and existing AusRAP values are not predictors.

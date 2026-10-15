@@ -11,10 +11,7 @@ This folder retains research notebooks. Operational extraction and prediction ar
 | [Buildings](context/07_microsoft_building_footprints.ipynb) | Building-footprint coverage |
 | [Overture](context/09_overture_places.ipynb) | Food/drink and shopping places |
 | [Imagery pipeline](imagery/Image_Feature_Extraction_Pipeline.ipynb) | Research imagery feature extraction |
-| [Combined Google/Mapillary experiment](imagery/combined_google_mapillary_feature_extraction.ipynb) | Separate research implementation; not the maintained production entry point |
 
-The [feature summary](../docs/02_feature_extraction/haoqi-feature_summary.md) explains reviewed candidate fields. Candidate-source research does not mean every feature is used in the selected model. The [reviewed feature tables](../06_outputs/02_feature_extraction/README.md) document source workbooks and join keys; research configurations remain in `configs/research/`. Production imagery uses the configuration-bound recipe in `src/pedflow/imagery/`, independently of the retained combined-provider experiment.
-
-The retained combined Google/Mapillary notebook reads `GOOGLE_MAPS_API_KEY` and `GEMINI_API_KEY` from environment variables. Set both in its execution environment before running the authentication cells; it does not automatically load the project `.env` file.
+The [feature summary](../docs/02_feature_extraction/haoqi-feature_summary.md) explains reviewed candidate fields. Candidate-source research does not mean every feature is used in the selected model. The [reviewed feature tables](../06_outputs/02_feature_extraction/README.md) document source workbooks and join keys; research configurations remain in `configs/research/`. Production imagery uses the configuration-bound recipe in `src/pedflow/imagery/`. The superseded combined-provider experiment was removed from the shared workspace on 15 October 2026; a local copy remains under Git-ignored `07_test/`.
 
 Google Places Aggregate is excluded from the active modelling workflow by the recorded project decision. Its archived experiments are not needed for production. Personal working notes and superseded experiments remain outside the maintained delivery.

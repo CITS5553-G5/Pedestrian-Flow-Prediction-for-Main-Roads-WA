@@ -10,6 +10,7 @@ Start with the [delivery handover](HANDOVER.md), [prediction run guide](04_predi
 | [Data contracts](01_data_preparation/haoqi-shared_data_tables.md) | Shared datasets and prediction input/output contracts |
 | [Imagery](02_feature_extraction/imagery_integration.md) | Extraction, retry and recovery |
 | [Model explanation](03_model_development/selected_model_explained.md) | Final-model coefficients, inputs and OOF versus production |
+| [Detailed model explanation](03_model_development/selected_model_details.md) | Equations, worked examples, grouped validation and interpretation |
 | [Model integration](03_model_development/selected_model_integration.md) | Release and R/Python verification |
 | [AusRAP reference](04_prediction_pipeline/ausrap_reference.md) | Matching, category meanings, 29 output fields and limitations |
 | [Comparison protocol](05_model_evaluation/irap_comparison_protocol.md) | Paired OOF evaluation rules and reviewed exclusions |
