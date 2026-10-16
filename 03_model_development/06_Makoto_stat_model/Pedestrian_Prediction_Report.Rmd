@@ -141,7 +141,7 @@ linear_final_model <- lm(obs_peak_along_ped_per_h ~ commercial_buildings + parki
 summary(linear_final_model)
 ```
 
-`commercial_buildings` remains strongly significant with a positive effect, consistent with the EDA. `parking_areas` is marginally significant (p = 0.082), and its negative coefficient still contradicts the positive relationship observed in the EDA, indicating likely confounding. The model explains about 60% of the variance (adjusted R² = 0.603), slightly lower than the earlier three-predictor model, but with a simpler and more interpretable structure.
+`commercial_buildings` remains strongly significant with a positive effect, consistent with the EDA. `parking_areas` is marginally significant (p = 0.082), and its negative coefficient still contradicts the positive relationship observed in the EDA, indicating likely confounding. The model explains about 60% of the variance (adjusted R² = 0.603), slightly lower than the earlier three-predictor model, but with a simpler and more interpretable structure. Multicollinearity among the predictors of all three final models is checked with variance inflation factors in the Appendix (Multicollinearity Check).
 
 ```{r echo=FALSE}
 par(mfrow = c(2, 2))
@@ -320,7 +320,53 @@ abline(0, 1, col = "red", lty = 2)
 The Actual vs Fitted plot shows a reasonable linear relationship along the diagonal, though with more scatter than the along_ped model, particularly at higher observed values. This is consistent with the lower adjusted R² and reflects the comparatively weaker predictive relationships identified for `cross_ped` during the EDA.
 
 
+## Models Considered but Not Adopted
 
+A negative binomial model was also considered for the count response. However, the observed values are multi-day averages rather than integer counts, so fitting it would have required rounding, which distorts low-count sites. It was therefore not adopted as a formal comparison candidate.
+
+
+## Back-Transformation and Smearing Estimator
+
+Both log models predict on the log scale. Back-transforming with $\exp(\hat{\mu})$ estimates the geometric, not arithmetic, mean of the response, so the back-transformed predictions systematically under-predict (Duan, 1983). Duan's smearing estimator corrects this with a single multiplicative factor estimated from the residuals $\hat{\varepsilon}_i$ of the log model:
+
+$$\hat{S} = \frac{1}{n}\sum_{i=1}^{n} \exp(\hat{\varepsilon}_i)$$
+
+The corrected predictions are $\hat{y} = \exp(\hat{\mu})\,\hat{S}$ for the along model and $\hat{y} = \exp(\hat{\mu})\,\hat{S} - 1$ for the cross model, where the $-1$ reverses the $+1$ offset.
+
+```{r echo=FALSE}
+# Smearing factors (Duan, 1983)
+smear_along <- mean(exp(residuals(log_final_model)))
+smear_cross <- mean(exp(residuals(log_cross_final_model)))
+
+# Observed responses
+y_along <- model_df$obs_peak_along_ped_per_h
+y_cross <- model_df$obs_peak_cross_ped_per_h
+
+# Naive and smeared back-transformed predictions
+naive_along   <- exp(fitted(log_final_model))
+smeared_along <- naive_along * smear_along
+naive_cross   <- exp(fitted(log_cross_final_model)) - 1
+smeared_cross <- exp(fitted(log_cross_final_model)) * smear_cross - 1
+
+# Under-prediction of the naive along predictions on the training data
+ratio_along <- mean(y_along) / mean(naive_along)
+under_pct_along <- round((1 - 1 / ratio_along) * 100)
+
+smear_table <- data.frame(
+  Model = c("Log (along)", "Log (cross)"),
+  `Smearing factor` = c(smear_along, smear_cross),
+  `Observed mean` = c(mean(y_along), mean(y_cross)),
+  `Naive mean` = c(mean(naive_along), mean(naive_cross)),
+  `Smeared mean` = c(mean(smeared_along), mean(smeared_cross)),
+  check.names = FALSE
+)
+kable(smear_table, digits = 3,
+      caption = "Smearing factors and mean predictions on the training data (pedestrians per hour)")
+```
+
+For the along model, the smearing factor is $\hat{S}$ = `r sprintf("%.3f", smear_along)`. `r if (under_pct_along > 0) paste0("On the training data, the naive back-transformed predictions under-predict the observed mean by about ", under_pct_along, "%.") else "On the training data, the naive back-transformed predictions do not under-predict the observed mean."` Because the bias is multiplicative, its absolute size grows with the predicted count, so the busiest sites are affected most. For the cross model, the smearing factor is `r sprintf("%.3f", smear_cross)`.
+
+These values are in-sample and are not comparable with the grouped cross-validation results of the team benchmark. The correction is documented here rather than built into the deployed model: it should be applied once pedestrian counts from new sites confirm that the uncorrected model under-predicts.
 
 
 # Appendix 
@@ -384,4 +430,44 @@ anova(log_cross_m2, log_cross_m1)  # does overture_other_shopping_count_500m add
 anova(log_cross_m3, log_cross_m2)  # does footpath_both_sides add value?
 anova(log_cross_m4, log_cross_m3)  # does education_low_year_3cat add value?
 ```
+
+### Multicollinearity Check (VIF)
+
+Variance inflation factors are computed for the three final models with `car::vif()`. For factor predictors, the generalised VIF (GVIF) is reported with its adjusted value $\mathrm{GVIF}^{1/(2\,\mathrm{Df})}$, which is comparable with $\sqrt{\mathrm{VIF}}$ for a numeric predictor. For numeric predictors, GVIF equals the ordinary VIF.
+
+```{r echo=FALSE}
+library(car)
+
+vif_table <- function(model, label) {
+  v <- vif(model)
+  if (is.matrix(v)) {
+    data.frame(Model = label, Term = rownames(v),
+               GVIF = v[, "GVIF"], Df = v[, "Df"],
+               `GVIF^(1/(2*Df))` = v[, "GVIF^(1/(2*Df))"],
+               check.names = FALSE, row.names = NULL)
+  } else {
+    data.frame(Model = label, Term = names(v),
+               GVIF = unname(v), Df = 1,
+               `GVIF^(1/(2*Df))` = sqrt(unname(v)),
+               check.names = FALSE, row.names = NULL)
+  }
+}
+
+vif_all <- rbind(
+  vif_table(linear_final_model, "Linear (along)"),
+  vif_table(log_final_model, "Log (along)"),
+  vif_table(log_cross_final_model, "Log (cross)")
+)
+max_gvif <- max(vif_all$GVIF)
+r_park_comm <- cor(model_df$parking_areas, model_df$commercial_buildings)
+
+kable(vif_all, digits = 2, caption = "Variance inflation factors of the final models")
+```
+
+The largest GVIF across the three final models is `r sprintf("%.2f", max_gvif)`. `r if (max_gvif < 5) "All VIFs are below 5, so multicollinearity is not a serious concern for these models." else "At least one VIF is 5 or above, so the affected coefficients should be interpreted with caution."` A low VIF does not, however, allow the negative coefficient of `parking_areas` in the linear model to be read causally: `parking_areas` is correlated with `commercial_buildings` (r = `r sprintf("%.2f", r_park_comm)`), so its coefficient reflects the effect conditional on commercial density and may be confounded.
+
+
+# References
+
+Duan, N. (1983). Smearing estimate: A nonparametric retransformation method. *Journal of the American Statistical Association*, 78(383), 605–610.
 
